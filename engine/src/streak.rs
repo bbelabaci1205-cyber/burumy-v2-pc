@@ -1,0 +1,125 @@
+// SPDX-License-Identifier: LicenseRef-Burumy-Proprietary
+//! Streaks for 1:1 chats, worked out on the phone only (the server never
+//! learns them). A day counts when both people sent at least one message
+//! that day (the phone's own calendar day). The streak is the run of such
+//! days ending today, or ending yesterday while today is still open.
+
+use std::collections::BTreeSet;
+
+pub const DAY_MS: i64 = 24 * 60 * 60 * 1000;
+
+/// Streaks are shown from this many days on.
+pub const SHOW_FROM: u32 = 3;
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Streak {
+    pub days: u32,
+    /// Today is not done yet: one more day without both writing ends it.
+    pub at_risk: bool,
+}
+
+fn day(ts_ms: u64, tz_offset_min: i32) -> i64 {
+    (ts_ms as i64 + tz_offset_min as i64 * 60_000).div_euclid(DAY_MS)
+}
+
+/// `msgs`: (time ms, sent by me).
+pub fn streak(msgs: &[(u64, bool)], now_ms: u64, tz_offset_min: i32) -> Streak {
+    let mut mine = BTreeSet::new();
+    let mut theirs = BTreeSet::new();
+    for (ts, me) in msgs {
+        if *me {
+            mine.insert(day(*ts, tz_offset_min));
+        } else {
+            theirs.insert(day(*ts, tz_offset_min));
+        }
+    }
+    let both = |d: i64| mine.contains(&d) && theirs.contains(&d);
+    let today = day(now_ms, tz_offset_min);
+    let (mut d, at_risk) = if both(today) {
+        (today, false)
+    } else {
+        (today - 1, true)
+    };
+    let mut days = 0;
+    while both(d) {
+        days += 1;
+        d -= 1;
+    }
+    Streak {
+        days,
+        at_risk: at_risk && days > 0,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const H: u64 = 60 * 60 * 1000;
+    // 2026-11-23 12:00 UTC
+    const NOW: u64 = 1_795_435_200_000;
+
+    fn at(days_ago: u64, hour: u64) -> u64 {
+        (NOW / DAY_MS as u64 - days_ago) * DAY_MS as u64 + hour * H
+    }
+
+    #[test]
+    fn counts_days_where_both_wrote() {
+        let m = vec![
+            (at(2, 9), true),
+            (at(2, 10), false),
+            (at(1, 9), true),
+            (at(1, 22), false),
+            (at(0, 8), true),
+            (at(0, 9), false),
+        ];
+        assert_eq!(
+            streak(&m, NOW, 0),
+            Streak {
+                days: 3,
+                at_risk: false
+            }
+        );
+        // Today only I wrote: streak of 2 (until yesterday), at risk.
+        let m2: Vec<_> = m
+            .iter()
+            .filter(|(t, me)| !(*t >= at(0, 0) && !*me))
+            .cloned()
+            .collect();
+        assert_eq!(
+            streak(&m2, NOW, 0),
+            Streak {
+                days: 2,
+                at_risk: true
+            }
+        );
+        // A gap day breaks it.
+        let m3 = vec![
+            (at(3, 9), true),
+            (at(3, 9), false),
+            (at(1, 9), true),
+            (at(1, 9), false),
+        ];
+        assert_eq!(
+            streak(&m3, NOW, 0),
+            Streak {
+                days: 1,
+                at_risk: true
+            }
+        );
+        assert_eq!(streak(&[], NOW, 0), Streak::default());
+        // One side only never counts.
+        assert_eq!(
+            streak(&[(at(0, 1), true), (at(1, 1), true)], NOW, 0).days,
+            0
+        );
+    }
+
+    #[test]
+    fn uses_the_phone_calendar_day() {
+        // 23:30 and 00:30 UTC are the same day in Korea (UTC+9).
+        let m = vec![(at(1, 23) + H / 2, true), (at(0, 0) + H / 2, false)];
+        assert_eq!(streak(&m, NOW, 0).days, 0);
+        assert_eq!(streak(&m, NOW, 9 * 60).days, 1);
+    }
+}

@@ -1,0 +1,5 @@
+target/
+*.db
+web/www/pkg/
+app/test/failures/
+app/android/app/src/main/jniLibs/

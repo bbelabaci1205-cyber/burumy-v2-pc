@@ -1,0 +1,1567 @@
+{
+  "@@locale": "en",
+  "appName": "Burumy",
+  "tabChats": "Chats",
+  "tabContacts": "Contacts",
+  "tabSettings": "Settings",
+  "signUpTitle": "Start with an ID",
+  "signUpId": "ID",
+  "signUpPassword": "Password",
+  "signUpInvite": "Invite code",
+  "signUpButton": "Sign Up",
+  "logInButton": "Log In",
+  "recoveryKeyTitle": "Chat Recovery Key",
+  "recoveryKeyBody": "You need this to open old chats on a new phone. Write it down somewhere safe.",
+  "chatsEmpty": "No chats yet",
+  "messageLocked": "This message can't be opened yet",
+  "sendFailedNoEncryption": "Can't send to a chat that isn't encrypted",
+  "themeGreen": "Green",
+  "themeBlue": "Blue",
+  "language": "Language",
+  "signUpSub": "All you need is an ID and a password. No phone number.",
+  "haveAccount": "I already have an account",
+  "noAccount": "Create a new account",
+  "logInTitle": "Welcome back",
+  "fieldRequired": "Enter your ID and password",
+  "passwordRule": "Use 8 or more characters with letters and numbers",
+  "somethingWrong": "Something went wrong. Try again in a moment.",
+  "newChat": "New Chat",
+  "newChatHint": "Their ID",
+  "start": "Start",
+  "cancel": "Cancel",
+  "messageHint": "Message",
+  "encryptedNotice": "This chat is end-to-end encrypted. Not even Burumy can read it.",
+  "photo": "Photo",
+  "video": "Video",
+  "voice": "Voice Message",
+  "file": "File",
+  "you": "You",
+  "today": "Today",
+  "yesterday": "Yesterday",
+  "settingsLook": "Appearance",
+  "settingsColor": "Color",
+  "settingsLanguage": "Language",
+  "languageAuto": "Same as Phone",
+  "languageKo": "한국어",
+  "languageEn": "English",
+  "settingsSecurity": "Security",
+  "makeRecoveryKey": "Create Chat Recovery Key",
+  "copied": "Copied",
+  "logOut": "Log Out",
+  "myId": "My ID",
+  "contactsEmpty": "No contacts yet",
+  "done": "Done",
+  "searchById": "Search by ID",
+  "contactsSection": "My Contacts",
+  "searchResults": "People Found",
+  "noOneFound": "No one found",
+  "attachPhoto": "Photo or Video",
+  "attachFile": "File",
+  "sending": "Sending",
+  "read": "Read",
+  "enterRecoveryKey": "Enter Chat Recovery Key",
+  "enterRecoveryKeyBody": "Enter the Chat Recovery Key from your old phone to open your old chats.",
+  "recoveryKeyHint": "12 words",
+  "recoveryDone": "Your old chats are open",
+  "recoveryWrong": "That key doesn't match. Please check it again.",
+  "recoveryOn": "On",
+  "open": "Open",
+  "newGroup": "New Group",
+  "newChannel": "New Channel",
+  "addMembers": "Add Members",
+  "next": "Next",
+  "groupName": "Group Name",
+  "channelName": "Channel Name",
+  "create": "Create",
+  "channelInfo": "In a channel only you can post. Subscribers can read.",
+  "groupInfo": "Group chats are end-to-end encrypted too.",
+  "channelReadOnly": "Only the channel owner can post",
+  "reply": "Reply",
+  "edit": "Edit",
+  "copy": "Copy",
+  "delete": "Delete",
+  "editing": "Edit Message",
+  "edited": "edited",
+  "typing": "typing…",
+  "deleted": "Message deleted",
+  "undo": "Undo",
+  "channel": "Channel",
+  "group": "Group",
+  "orById": "Or start a 1:1 chat by ID",
+  "lockTitle": "Enter your password",
+  "lockWrong": "Wrong password",
+  "appLock": "App Lock",
+  "appLockOff": "Off",
+  "appLockOn": "On",
+  "setPassword": "Set Password",
+  "newPassword": "New password",
+  "confirmPassword": "Once more",
+  "passwordMismatch": "The passwords don't match",
+  "changePassword": "Change Password",
+  "currentPassword": "Current password",
+  "hidePassword": "Hide Password",
+  "deletePassword": "Delete Password",
+  "hidePasswordInfo": "Opening with this password hides the chosen people and chats from every list. They stay hidden after you open with your normal password.",
+  "deletePasswordInfo": "Opening with this password erases the chosen people and chats. 1:1 chats are quietly erased on the friend's side too, and groups and channels are left quietly over a few days. Nobody is notified. This can't be undone.",
+  "hideList": "People & Chats to Hide",
+  "deleteList": "People & Chats to Erase",
+  "notSet": "None",
+  "removePassword": "Remove Password",
+  "save": "Save",
+  "releaseHidden": "Show Hidden People Again",
+  "releaseHiddenDone": "Visible again",
+  "passwordUsed": "Same as another password",
+  "chooseCount": "{count} chosen",
+  "enterToManage": "Enter your normal password to change lock settings",
+  "streaks": "Streaks",
+  "streakInfo": "When you both message each other every day for 3+ days in a 1:1 chat, a flame shows next to the name. Worked out on your phone only.",
+  "sticker": "Sticker",
+  "stickers": "Stickers",
+  "pin": "Pin",
+  "unpin": "Unpin",
+  "pinnedMessage": "Pinned Message",
+  "timer": "Auto-Delete",
+  "timerOff": "Off",
+  "timer1d": "1 day",
+  "timer1w": "1 week",
+  "timer1m": "1 month",
+  "timerLine": "Auto-delete: {duration}",
+  "timerOffLine": "Auto-delete turned off",
+  "timerInfo": "New messages in this chat are deleted for everyone after the time you choose.",
+  "attachOnce": "View Once Photo",
+  "viewOncePhoto": "View once photo",
+  "viewOnceTap": "Tap to open",
+  "viewOnceOpened": "Opened",
+  "viewOnceOpenedLine": "View once photo was opened",
+  "viewOnceInfo": "You can't see it again after closing",
+  "profile": "Profile",
+  "name": "Name",
+  "changePhoto": "Change Photo",
+  "photoServerNote": "Your profile photo and name are stored on our server so people you chat with can see them. Unlike messages, they are not end-to-end encrypted.",
+  "chatInfo": "Info",
+  "members": "Members",
+  "membersCount": "{count} members",
+  "owner": "Owner",
+  "admin": "Admin",
+  "leaveChat": "Leave Chat",
+  "leaveChannel": "Leave Channel",
+  "leavingIn": "Leaving in {seconds}s",
+  "chatPin": "Pin",
+  "chatUnpin": "Unpin",
+  "chatMute": "Mute",
+  "chatUnmute": "Unmute",
+  "chatArchive": "Archive",
+  "chatUnarchive": "Unarchive",
+  "archive": "Archived Chats",
+  "archiveEmpty": "No archived chats",
+  "archiveFooter": "Archived chats are kept on this phone only. The server doesn't know which chats you archived.",
+  "searchChats": "Search",
+  "searchNone": "No matching chats",
+  "forward": "Forward",
+  "forwarded": "Forwarded",
+  "forwardTo": "Forward to",
+  "forwardDone": "Forwarded",
+  "forwardFailed": "You can't send to this chat",
+  "searchInChat": "Search",
+  "searchCount": "{n} of {total}",
+  "searchNoHits": "No results",
+  "@searchCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "linkPreviews": "Link Previews",
+  "linkPreviewInfo": "When you send a link, your phone reads the page title and picture and puts them, encrypted, into the message. People who get it don't contact the site.",
+  "voiceHoldHint": "Hold to record a voice message",
+  "voiceNoMic": "Please allow microphone access",
+  "voiceSlideCancel": "‹ Slide to cancel",
+  "voiceReleaseCancel": "Release to cancel",
+  "poll": "Poll",
+  "attachPoll": "Poll",
+  "newPoll": "New Poll",
+  "pollQuestion": "Question",
+  "pollOptions": "Options",
+  "pollOption": "Option",
+  "pollAddOption": "Add an Option",
+  "pollAnonymous": "Anonymous Voting",
+  "pollMultiple": "Multiple Answers",
+  "pollMultipleShort": "multiple",
+  "pollAnonInfo": "Other members can't see who chose what. Votes go, encrypted, only to the maker's phone; the chat gets just the numbers.",
+  "pollOpenInfo": "Everyone in the chat can see who chose what.",
+  "pollChannelInfo": "Channel polls are always anonymous, so subscribers stay hidden.",
+  "pollCreate": "Create",
+  "pollVoters": "{n, plural, =1{1 vote} other{{n} votes}}",
+  "pollNoVotes": "No votes yet",
+  "pollOpenKind": "Public Poll",
+  "pollAnonKind": "Anonymous Poll",
+  "pollClosedKind": "Final Results",
+  "pollVote": "Vote",
+  "pollClose": "Stop Poll",
+  "pollRetract": "Retract Vote",
+  "@pollVoters": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "attachBubble": "Bubble",
+  "bubbleSendTitle": "Send a Bubble",
+  "bubbleSendInfo": "A bubble floats on {name}'s home screen. What's inside stays hidden; popping it opens it once.",
+  "bubbleRecord": "Record",
+  "bubblesWaiting": "{n, plural, =1{1 bubble} other{{n} bubbles}}",
+  "bubbleTapToPop": "Tap to pop",
+  "bubbleSent": "Bubble sent",
+  "bubblePopped": "Popped",
+  "bubbleOnce": "You can see this once. It's gone when you close it.",
+  "bubbleGone": "This bubble has already popped",
+  "@bubbleSendInfo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@bubblesWaiting": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "callVoice": "Voice Call",
+  "callVideo": "Video Call",
+  "callCalling": "Calling…",
+  "callConnecting": "Connecting…",
+  "callEnded": "Call Ended",
+  "callNoAnswer": "No answer",
+  "callDeclined": "Declined",
+  "callBusy": "Busy on another call",
+  "callFailed": "Couldn't connect",
+  "callAccept": "Accept",
+  "callDecline": "Decline",
+  "callEnd": "End",
+  "callMute": "Mute",
+  "callSpeaker": "Speaker",
+  "callCamera": "Camera",
+  "callFlip": "Flip",
+  "callE2ee": "End-to-end encrypted",
+  "callLineOut": "Outgoing Call",
+  "callLineIn": "Incoming Call",
+  "callLineMissed": "Missed Call",
+  "callLineDeclined": "Declined Call",
+  "callLineCancelled": "Cancelled Call",
+  "callLineNow": "Ongoing Call",
+  "callNotSetUp": "Calls aren't available in this build yet",
+  "callBack": "Call Back",
+  "callPreview": "Call",
+  "noticeNew": "New message",
+  "noticeTextHidden": "Hide Text in Notifications",
+  "noticeTextHiddenInfo": "When on, notifications only say 'New message', without chat name or text. Notification text is only opened on this phone.",
+  "noticeChannel": "Messages",
+  "wipeAfter": "Erase After Wrong Tries",
+  "wipeAfterInfo": "After this many wrong passwords in a row, every chat on this phone is erased. 1:1 chats are erased on the friend's phone too, and groups and channels are left quietly over a few days.",
+  "wipeTimes": "{n} tries",
+  "@wipeTimes": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "wipeWarning": "{n} more wrong tries erase every chat",
+  "@wipeWarning": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "deleteForBoth": "Delete for Both",
+  "deleteForBothInfo": "This chat is deleted on your phone and your friend's phone.",
+  "deletingIn": "Deleting in {seconds}s",
+  "@deletingIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "erasedByFriend": "A friend deleted your chat for both · {name}",
+  "@erasedByFriend": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "editorReset": "Reset",
+  "editorCrop": "Crop",
+  "editorFilters": "Filters",
+  "editorAdjust": "Adjust",
+  "filterNone": "Original",
+  "filterVivid": "Vivid",
+  "filterWarm": "Warm",
+  "filterCool": "Cool",
+  "filterDramatic": "Dramatic",
+  "filterMono": "Mono",
+  "filterSilver": "Silver",
+  "filterNoir": "Noir",
+  "filterFade": "Faded",
+  "filterFilm": "Film",
+  "adjExposure": "Exposure",
+  "adjBrilliance": "Brilliance",
+  "adjHighlights": "Highlights",
+  "adjShadows": "Shadows",
+  "adjContrast": "Contrast",
+  "adjBrightness": "Brightness",
+  "adjBlackPoint": "Black Point",
+  "adjSaturation": "Saturation",
+  "adjVibrance": "Vibrance",
+  "adjWarmth": "Warmth",
+  "adjTint": "Tint",
+  "adjFade": "Fade",
+  "adjVignette": "Vignette",
+  "inviteFrom": "Invited by {name}",
+  "@inviteFrom": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteAccept": "Join",
+  "inviteDecline": "Decline",
+  "callWaiting": "Call waiting",
+  "callWaitingVideo": "Video call waiting",
+  "callWaitingTitle": "Calls during a call",
+  "callWaitingWait": "Call waiting",
+  "callWaitingMissed": "Missed call",
+  "callWaitingBusy": "Say I'm busy",
+  "callWaitingInfo": "Call waiting: the caller hears it ring and you can answer it. Missed call: nothing shows during your call and it becomes a missed call. Say I'm busy: the caller sees you are on a call.",
+  "tabCalls": "Calls",
+  "callsAll": "All",
+  "callsMissed": "Missed",
+  "callsEmpty": "No calls yet",
+  "callsEmptyMissed": "No missed calls",
+  "callsNew": "New call",
+  "settingsAppearance": "Appearance",
+  "settingsNotifications": "Notifications",
+  "settingsChatsPage": "Chats",
+  "settingsPrivacy": "Privacy and Security",
+  "privacyInfo": "Manage app lock, hide and delete passwords and your chat recovery key.",
+  "contactsAddById": "Add a friend by ID",
+  "contactsInvite": "Invite friends",
+  "inviteText": "Chat with me on Burumy. My ID is {id}.",
+  "@inviteText": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteCopied": "Invite copied. Paste it to a friend.",
+  "chatsMenuArchive": "Archive",
+  "sortByName": "By name",
+  "sortByRecent": "Recent chats first",
+  "colorTheme": "Colour theme",
+  "nightMode": "Night mode",
+  "nightSystem": "Same as phone",
+  "nightLight": "Off",
+  "nightDark": "On",
+  "textSize": "Text size",
+  "bubbleCorners": "Message corners",
+  "bubbleSample": "Hello! 👋",
+  "stickersEmoji": "Stickers and emoji",
+  "doubleTapInfo": "Double-tap a message to add this reaction.",
+  "quickReaction": "Quick reaction",
+  "doubleTapReact": "Double-tap to react",
+  "powerSaving": "Power saving",
+  "powerSavingInfo": "Save battery by turning down motion effects.",
+  "uiEffects": "Interface effects",
+  "uiEffectsInfo": "When off, screens change without animation.",
+  "messageNotices": "Message notifications",
+  "notifyDirect": "Private chats",
+  "notifyGroup": "Groups",
+  "notifyChannel": "Channels",
+  "resetNotices": "Reset all notification settings",
+  "enterSends": "Send with Enter",
+  "swipeReply": "Swipe left to reply",
+  "dataStorage": "Data and storage",
+  "whoEveryone": "Everybody",
+  "whoContacts": "My contacts",
+  "whoNobody": "Nobody",
+  "blockedUsers": "Blocked users",
+  "defaultTimer": "Auto-delete messages",
+  "defaultTimerInfo": "New chats you start will delete messages for everyone after this time.",
+  "privacyWho": "Privacy",
+  "whoInfo": "Calls from others become missed calls; their messages and invitations stay hidden.",
+  "whoCalls": "Calls",
+  "whoMessages": "Messages",
+  "whoInvites": "Group and channel invites",
+  "readTypingInfo": "When off, others do not see when you read or type.",
+  "sendRead": "Send read receipts",
+  "sendTyping": "Send typing indicator",
+  "devices": "Devices",
+  "encryptionKeys": "Encryption keys",
+  "blockedInfo": "Blocked people cannot reach you with messages or invites. They are not told.",
+  "blockSomeone": "Block someone",
+  "unblock": "Unblock",
+  "blockFailed": "Could not block. Check the ID.",
+  "userIdHint": "ID",
+  "deviceVerified": "Verified",
+  "deviceNotVerified": "Not verified yet",
+  "thisDevice": "This device",
+  "logOutOthers": "Log out all other devices",
+  "otherDevices": "Other devices",
+  "passwordAgainInfo": "For safety, enter your account password again.",
+  "keysInfo": "Compare these keys in person to make sure no one is in the middle. Tap to copy.",
+  "myIdentityKey": "My identity key",
+  "thisDeviceKey": "This device key",
+  "savedMessages": "Saved messages",
+  "chatBackup": "Chat backup",
+  "editShort": "Edit",
+  "idLabel": "ID",
+  "blockUser": "Block user",
+  "veilDots": "Hide chat",
+  "veilDotsInfo": "Messages in this chat are covered with sparkling dots and show only while you hold them. Tap once to open the menu.",
+  "readHere": "Read receipts in this chat",
+  "veilBlur": "Sensitive chat",
+  "veilBlurInfo": "A sensitive chat sits under frosted glass and is clear only while your finger rests on it, so people nearby can't read it.",
+  "tabMedia": "Media",
+  "tabFiles": "Files",
+  "tabLinks": "Links",
+  "nothingShared": "Nothing yet",
+  "bio": "Bio",
+  "bioInfo": "Anyone with your ID can see your bio. Up to 70 characters.",
+  "markRead": "Read",
+  "hideFromList": "Hide from list",
+  "hiddenChats": "Hidden chats",
+  "hiddenChatsInfo": "Chats you hid from the list. Messages and notifications still arrive. Tap one to show it again.",
+  "showInList": "Show in list",
+  "filterAll": "All",
+  "filterUnread": "Unread",
+  "filterPeople": "Contacts",
+  "filterGroups": "Groups",
+  "filterChannels": "Channels",
+  "filterBots": "Bots",
+  "myFolders": "My folders",
+  "newFolder": "New folder",
+  "folderName": "Folder name",
+  "folderKinds": "Include chats",
+  "folderInfo": "Every chat of the kinds you pick goes in. You can also add or leave out chats one by one below. Folders are saved on this device only.",
+  "folderChats": "Pick chats",
+  "deleteFolder": "Delete folder",
+  "listTop": "Show search and folders on top",
+  "listTopInfo": "Off gives the chat list more room. Search and folders are in the menu at the top left.",
+  "saveToSaved": "Save to Saved Messages",
+  "savedDone": "Saved to Saved Messages",
+  "sendQuietly": "Send without sound",
+  "sendLater": "Schedule message",
+  "scheduleSend": "Send at this time",
+  "scheduledDone": "Scheduled",
+  "scheduledCount": "{count} scheduled",
+  "@scheduledCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scheduledInfo": "Scheduled messages wait on this phone, encrypted. They go at the set time if the app is open, or the next time you open it.",
+  "sendNow": "Send now",
+  "fmtBold": "Bold",
+  "fmtItalic": "Italic",
+  "fmtUnderline": "Underline",
+  "fmtStrike": "Strikethrough",
+  "fmtCode": "Monospace",
+  "fmtSpoiler": "Spoiler",
+  "fmtLink": "Link",
+  "more": "More",
+  "contactEdit": "Edit contact",
+  "contactNameInfo": "Only you see this name, on this phone. They won't know.",
+  "memo": "Note",
+  "memoHint": "Something to remember about them",
+  "memoInfo": "Notes stay on this phone too.",
+  "clearChat": "Clear messages",
+  "clearChatInfo": "Cleared only on your screen. Theirs stays as it is.",
+  "clearChatDone": "Messages cleared",
+  "send": "Send",
+  "attachGallery": "Gallery",
+  "attachCamera": "Camera",
+  "attachLibrary": "Choose photos",
+  "attachPickFile": "Choose files",
+  "attachFileInfo": "Photos can go as original files too. Up to 20 at a time.",
+  "selectedCount": "{count} selected",
+  "@selectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "onceOnInfo": "They can view it only once",
+  "onceNoCaption": "View-once media has no caption",
+  "captionHint": "Add a caption",
+  "checklist": "Checklist",
+  "newChecklist": "New checklist",
+  "checklistTitle": "Title",
+  "checklistTitleHint": "What needs doing?",
+  "checklistItems": "Tasks",
+  "checklistItemsInfo": "Up to {count} tasks.",
+  "@checklistItemsInfo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "checklistItemHint": "Task",
+  "checklistAddItem": "Add a task",
+  "checklistOthersMark": "Others can mark tasks done",
+  "checklistOthersAdd": "Others can add tasks",
+  "checklistOthersInfo": "Checklists are encrypted like messages. Ticks or tasks from people you didn't allow are ignored on every phone.",
+  "checklistDone": "{done} of {total} done",
+  "@checklistDone": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "meetup": "Event",
+  "newMeetup": "New event",
+  "meetupTitleHint": "What's happening?",
+  "meetupPlaceHint": "Place (optional)",
+  "meetupWhen": "When",
+  "meetupInfo": "Events and answers are encrypted like messages. The server never knows who's coming.",
+  "meetupYes": "Going",
+  "meetupMaybe": "Maybe",
+  "meetupNo": "Can't go",
+  "meetupCancel": "Cancel event",
+  "meetupCancelled": "This event was cancelled",
+  "meetupPast": "This event has passed",
+  "contactCard": "Contact",
+  "pickContact": "Share a contact",
+  "noContacts": "No contacts yet",
+  "contactMessage": "Message",
+  "removeAdmin": "Remove admin",
+  "makeAdmin": "Make admin",
+  "removeSubscriber": "Remove subscriber",
+  "removeMember": "Remove from group",
+  "subscribersCount": "{count} subscribers",
+  "@subscribersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "subscribers": "Subscribers",
+  "hideMembersOnInfo": "Only admins see the member list.",
+  "subscribersHiddenInfo": "Only admins can see subscribers. Other subscribers never know who follows.",
+  "editGroup": "Edit group",
+  "editChannel": "Edit channel",
+  "aboutHint": "Description (optional)",
+  "signPosts": "Sign posts",
+  "signPostsInfo": "When on, the admin's name shows on each post.",
+  "hideMembers": "Hide member list",
+  "hideMembersInfo": "When on, only admins can see who is in the group.",
+  "add": "Add",
+  "openLinkAsk": "Open this link?",
+  "openLink": "Open",
+  "location": "Location",
+  "locationSend": "Send my current location",
+  "locationFinding": "Finding where you are",
+  "locationAccuracy": "Accurate to about {meters} m",
+  "@locationAccuracy": {
+    "placeholders": {
+      "meters": {
+        "type": "int"
+      }
+    }
+  },
+  "locationDenied": "Location access is off. Allow Burumy to use your location in Settings.",
+  "locationOff": "Location services are turned off on this phone.",
+  "locationUnavailable": "Your location can't be found right now. Try again in a moment.",
+  "locationRetry": "Try again",
+  "openPhoneSettings": "Open Settings",
+  "locationOpenMap": "Open in Maps",
+  "locationPrivacy": "Your location is read once, at the moment you send it. It is encrypted, only people in this chat see it, and no map company gets it.",
+  "attachAllPhotos": "All photos",
+  "photosDenied": "Photo access is off",
+  "settingsProfileSub": "{id} · Profile, photo, name",
+  "@settingsProfileSub": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "securityCheck": "Security check {done}/{total}",
+  "@securityCheck": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "securityAllDone": "All done. Your account is well protected.",
+  "securityLeft": "{n} left. Tap to finish.",
+  "@securityLeft": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "securityCheckTitle": "Security check",
+  "securityCheckInfo": "Do these two things and your chats stay safe even if you lose or change your phone.",
+  "checkRecovery": "Make a chat recovery key",
+  "checkRecoveryInfo": "Use it to open your old chats on a new phone. If you lose it, nobody can bring them back.",
+  "checkDevice": "Confirm this device",
+  "checkDeviceInfo": "Confirming this device is yours lets friends chat with you safely.",
+  "checkDone": "Done",
+  "checkTodo": "To do",
+  "stateOn": "On",
+  "stateOff": "Off",
+  "accountManage": "Account",
+  "accountManageInfo": "Your ID, password, signed-in devices and encryption keys in one place.",
+  "faq": "FAQ",
+  "featureTour": "What Burumy can do",
+  "featureTourInfo": "Everything you can do in Burumy at a glance.",
+  "aboutApp": "About",
+  "appVersion": "Version {version}",
+  "@appVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "openSourceLicenses": "Open source licenses",
+  "aboutInfo": "Burumy is a messenger where nobody can read your chats. Not the operator, not the server.",
+  "powerMode": "Power saving mode",
+  "powerBelowValue": "Below {pct}%",
+  "@powerBelowValue": {
+    "placeholders": {
+      "pct": {
+        "type": "int"
+      }
+    }
+  },
+  "powerAlways": "Always",
+  "powerNever": "Off",
+  "powerModeInfo": "When the battery is below this level, moving effects pause. The web can't read the battery, so only 'Always' works there.",
+  "faqQ1": "Are my chats really safe?",
+  "faqA1": "All 1:1 and group chats are end-to-end encrypted. The server and the operator can't read them.",
+  "faqQ2": "Can I sign up without a phone number?",
+  "faqA2": "Yes. You only need an ID and a password. We don't use phone numbers or contacts.",
+  "faqQ3": "Will I lose my chats if I change phones?",
+  "faqA3": "Make a chat recovery key and you can open your old chats on a new phone. Only you have the key, so if you lose it nobody can bring them back.",
+  "faqQ4": "Who can find me?",
+  "faqA4": "Only people who know your ID. Nobody can find you by name or phone number.",
+  "faqQ5": "How do I turn on disappearing messages?",
+  "faqA5": "Tap the timer button at the top of a chat and pick a time. Messages sent after that disappear when the time is up.",
+  "faqQ6": "What is a bubble?",
+  "faqA6": "A photo that disappears once it's opened. The home-screen widget shows only the bubble, never the content.",
+  "faqQ7": "Can I lock the app?",
+  "faqA7": "Set a password in Settings > Privacy and Security and the app asks for it every time it opens.",
+  "faqQ8": "Can I edit or delete a sent message?",
+  "faqA8": "Touch and hold a message to edit or delete it. Deleted messages disappear for the other person too.",
+  "tourE2e": "End-to-end encryption",
+  "tourE2eBody": "Every chat opens only on your phone and theirs.",
+  "tourTimer": "Disappearing messages",
+  "tourTimerBody": "Messages delete themselves after the time you pick.",
+  "tourOnce": "View once",
+  "tourOnceBody": "Send photos and videos that can be opened only once.",
+  "tourBubble": "Bubbles",
+  "tourBubbleBody": "Float a photo bubble to a friend. It pops when opened.",
+  "tourStreak": "Streaks",
+  "tourStreakBody": "Chat with a friend every day and the 🔥 count goes up.",
+  "tourGroups": "Groups and channels",
+  "tourGroupsBody": "Groups for friends, channels for news to many people.",
+  "tourTools": "Polls · checklists · meetups",
+  "tourToolsBody": "Decide, share tasks and plan meetups right in the chat.",
+  "tourLocation": "Send location",
+  "tourLocationBody": "Send where you are. The map opens only when tapped.",
+  "myQr": "My QR code",
+  "myQrInfo": "Show this to a friend to share your ID in one go.",
+  "verifyThisDevice": "Confirm this device",
+  "verifiedDone": "Confirmed",
+  "verifyNeeded": "Needed",
+  "undoSend": "Undo send (5 s)",
+  "undoSendInfo": "Messages wait 5 seconds before they really go, so you can take them back.",
+  "sendingIn": "Sending in {n} s",
+  "veilAll": "Hide all chats",
+  "veilAllInfo": "Messages in every chat are covered and show only while you hold them. People nearby can't read them. This device only.",
+  "panic": "Panic gesture",
+  "panicInfo": "Double-tap with two fingers to lock at once. No sound or vibration. App lock must be on.",
+  "@sendingIn": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "appearanceInfo": "Change how Burumy looks: colour theme, night mode, text size and chat background.",
+  "themePlain": "Plain",
+  "themeSecure": "Secure",
+  "themeNature": "Nature",
+  "themeDaily": "Daily",
+  "themeHiphop": "Hip-hop bright",
+  "themePhoto": "My photo",
+  "myPhotoBackground": "Use my photo as background",
+  "myColor": "My colour",
+  "glassEffect": "Glass",
+  "glassClear": "Clear",
+  "glassNormal": "Default",
+  "glassSolid": "Solid",
+  "glassInfo": "Solid shows clean panels instead of see-through glass. Power saving switches to this too.",
+  "autoNight": "Auto night mode",
+  "autoNightOff": "Off",
+  "autoNightSystem": "Follow phone",
+  "textSizeDefault": "Default",
+  "textSizePreview": "Did we say left or right at yesterday's meeting?",
+  "textSizePreviewReply": "Right. I'm sure.",
+  "notificationsInfo": "Choose how new messages reach you, including alerts while you use the app and focus hours.",
+  "inAppNotices": "While using the app",
+  "inAppStyle": "Alert style",
+  "inAppSilent": "None",
+  "inAppBanner": "Banner",
+  "inAppStyleInfo": "A banner shows at the top for a moment. With None, nothing shows while you use the app.",
+  "inAppSound": "Sounds in the app",
+  "inAppPreview": "Previews in the app",
+  "focusSchedule": "Focus hours",
+  "focusInfo": "No alerts during these hours. Messages still arrive; it all happens on this phone.",
+  "focusFrom": "Starts",
+  "focusTo": "Ends",
+  "focusDays": "Days",
+  "focusEveryDay": "Every day",
+  "showNotices": "Show alerts",
+  "messagePreview": "Message preview",
+  "messagePreviewInfo": "When off, alerts only say 'New message'.",
+  "sound": "Sound",
+  "soundNone": "None",
+  "sound_nuri": "Burumy",
+  "sound_pop": "Pop",
+  "sound_drop": "Drop",
+  "sound_bell": "Bell",
+  "sound_chord": "Chord",
+  "sound_breeze": "Breeze",
+  "sound_knock": "Knock",
+  "sound_twinkle": "Twinkle",
+  "soundInfo": "Sounds made by Burumy. Tap one to hear it.",
+  "noticeExceptions": "Exceptions",
+  "addException": "Add an exception",
+  "exceptionsInfo": "Chats here follow their own setting first.",
+  "noticeOnHere": "Alerts on",
+  "noticeOffHere": "Alerts off",
+  "removeException": "Remove exception",
+  "pickChat": "Choose a chat",
+  "alwaysAllow": "Always allow",
+  "alwaysDeny": "Never allow",
+  "addUsers": "Add people",
+  "peopleCount": "{n}",
+  "@peopleCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "whoExceptionsInfo": "People here come before the setting above. This phone applies it.",
+  "bigEmoji": "Big emoji",
+  "bigEmojiInfo": "One to three emoji alone are shown big, without a bubble.",
+  "burumyStickers": "Burumy stickers",
+  "stickerCount": "{n} stickers",
+  "@stickerCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "stickerPacksInfo": "Characters switched off leave the sticker panel. Stickers you receive still show.",
+  "clearRecentStickers": "Clear recent stickers",
+  "pack_buru": "Buru",
+  "pack_dugi": "Dugi",
+  "pack_rumi": "Rumi",
+  "pack_mongi": "Mongi",
+  "pack_duru": "Duru",
+  "pack_burumi": "Buru & Mi",
+  "dataInfo": "See the space Burumy uses and choose when photos download.",
+  "storageUsage": "Storage used",
+  "storageApp": "Chats and settings",
+  "storageCache": "Temporary files",
+  "clearCache": "Clear temporary files",
+  "storageInfo": "Chats are kept. Temporary files download again when needed.",
+  "storageWeb": "On the web, the browser manages storage.",
+  "autoDownload": "Auto-download media",
+  "autoDlCell": "On cellular",
+  "autoDlWifi": "On Wi-Fi",
+  "autoDownloadInfo": "When off, photos download when you tap them. Power saving always waits for a tap.",
+  "autoplayGif": "Autoplay GIFs",
+  "autoplayGifInfo": "When off, GIFs stay on their first frame.",
+  "powerJobs": "Battery-heavy features",
+  "powerJobsInfo": "Power saving pauses these. They come back when the battery is fine.",
+  "sizeBytes": "{n} B",
+  "@sizeBytes": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "chatsInfo": "How you send and reply, quick replies, away replies, and AI features that run only on this phone.",
+  "aiFeatures": "AI features",
+  "scamWarning": "Scam link warnings",
+  "scamWarningInfo": "Flags odd links (look-alike, number-only or shortened addresses). Checked on this phone only; nothing is sent anywhere.",
+  "scamLink": "Careful: suspicious link",
+  "quickReplies": "Quick replies",
+  "quickRepliesInfo": "Pick them from the phrase button in the composer. Up to 20.",
+  "addQuickReply": "Add a phrase",
+  "quickReplyHint": "e.g. In a meeting, I'll call you later",
+  "awayReply": "Away reply",
+  "awayReplyInfo": "When on, new 1:1 messages get this reply once. At most once every 6 hours per person. Sent by this phone when it receives the message.",
+  "awayReplyText": "Reply text",
+  "awayReplyDefault": "I'm away right now. I'll reply when I can.",
+  "awayTag": "Auto-reply",
+  "editProfile": "Edit profile",
+  "firstName": "First name",
+  "lastName": "Last name (optional)",
+  "nameHint": "Add your name and a photo so friends can recognise you.",
+  "newPhoto": "Set a new photo",
+  "removePhoto": "Remove photo",
+  "idInfo": "Friends can find you with this ID. Tap to copy.",
+  "themeHiphopWhite": "Hip-hop white",
+  "themeHiphopDark": "Hip-hop dark",
+  "manageTools": "Admin tools",
+  "manageToolsInfo": "Only admins see this. Messages are never sent to the server for this; your phone does the work.",
+  "toolsJoin": "Joining",
+  "toolsPosts": "Posts",
+  "toolsStats": "Records and stats",
+  "roomRules": "Rules",
+  "roomRulesHint": "e.g. 1. Be kind\n2. No ads\n3. Credit photos",
+  "roomRulesInfo": "Rules show even before joining. Don't put secrets here.",
+  "rulesAgree": "Ask to agree to the rules",
+  "rulesAgreeInfo": "New members must agree before they can write.",
+  "agreeRules": "I'll follow the rules",
+  "welcomeMessage": "Welcome message",
+  "welcomeHint": "e.g. Welcome! Have a look at the pinned post first 😊",
+  "welcomeInfo": "Shown once when someone opens the chat for the first time.",
+  "reactionsSetting": "Reactions",
+  "reactionsAll": "All reactions",
+  "reactionsSome": "Some reactions",
+  "reactionsNone": "No reactions",
+  "reactionsInfo": "Choose which emoji people can react with.",
+  "reactionsMax": "Max reactions per post",
+  "reactionsMaxInfo": "How many different reactions one message can have.",
+  "reactionsPick": "Allowed reactions",
+  "hideCounts": "Hide reaction and vote counts",
+  "hideCountsInfo": "Members don't see the numbers. Admins still do.",
+  "autoMod": "Auto-moderation",
+  "autoModInfo": "An admin's phone removes posts that break the rules. The server can't read messages, so this waits until an admin's app is open.",
+  "bannedWords": "Banned words",
+  "addBannedWord": "Add a banned word",
+  "bannedWordsInfo": "Messages with these words are removed. The list stays on this phone.",
+  "modRules": "Rules",
+  "modNewLinks": "Block links from new members",
+  "modNewLinksInfo": "Links from people first seen less than 24 hours ago",
+  "modFlood": "Remove flooding",
+  "modFloodInfo": "More than 5 messages in 10 seconds",
+  "roomStats": "Stats",
+  "statsMembers": "Members",
+  "statsPerDay": "Messages a day",
+  "statsActive": "Wrote in 30 days",
+  "statsMessages30": "Messages, last 30 days",
+  "statsHours": "Busy hours",
+  "statsBusiest": "Busiest hour: {hour}:00",
+  "@statsBusiest": {
+    "placeholders": {
+      "hour": {
+        "type": "String"
+      }
+    }
+  },
+  "statsInfo": "Worked out on this phone from the chat on this phone. Nothing is sent, and there are no per-person numbers.",
+  "modLog": "Admin log",
+  "modLogEmpty": "Nothing yet",
+  "modLogInfo": "Only admin actions done on this phone. The last 200 are kept.",
+  "logRemoved": "Removed a message from {name} ({why})",
+  "@logRemoved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "why": {
+        "type": "String"
+      }
+    }
+  },
+  "logBanned": "Banned {name}",
+  "@logBanned": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "logUnbanned": "Unbanned {name}",
+  "@logUnbanned": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "logSetting": "Changed a setting: {what}",
+  "@logSetting": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "whyWord": "banned word",
+  "whyLink": "new member link",
+  "whyFlood": "flooding",
+  "movingBoard": "Moving board",
+  "movingInfo": "Enter how many were in your old group to see how many have moved over.",
+  "oldMembers": "Members in the old group",
+  "movedCount": "{now} of {old} have moved",
+  "@movedCount": {
+    "placeholders": {
+      "now": {
+        "type": "String"
+      },
+      "old": {
+        "type": "String"
+      }
+    }
+  },
+  "bannedUsers": "Banned people",
+  "bannedEmpty": "No one is banned",
+  "unban": "Unban",
+  "banMember": "Ban",
+  "roomLevel": "Level",
+  "levelN": "Level {n}",
+  "@levelN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "levelNext": "To the next level: {members} members · {active} active · {days} days",
+  "@levelNext": {
+    "placeholders": {
+      "members": {
+        "type": "String"
+      },
+      "active": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "levelMax": "Top level reached",
+  "levelInfo": "Levels come from members, people who wrote in the last 4 weeks, and the room's age. For now this phone works it out.",
+  "chatThemeHere": "Background for this chat",
+  "chatThemeHereInfo": "Only on your phone. Nobody else's background changes.",
+  "useDefault": "Use my default",
+  "discussion": "Discussion",
+  "discussionInfo": "Link a group: every post gets a comments button, and comments live in that group.",
+  "discussionNone": "None",
+  "comments": "Comments",
+  "deleteChannel": "Delete channel",
+  "deleteGroup": "Delete group",
+  "deleteRoomInfo": "Everyone is removed and you leave too. This can't be undone.",
+  "deleteRoomConfirm": "Delete for good?",
+  "saveFailed": "Couldn't save. Please try again shortly.",
+  "rulesReadFirst": "Read and agree to the rules to write",
+  "readRules": "Read the rules",
+  "welcomeTitle": "Welcome",
+  "pollVoted": "Voted",
+  "hideCountsInfoGroup": "Members don't see the numbers. Admins still do.",
+  "pollQuizKind": "Quiz",
+  "quizMode": "Quiz mode",
+  "quizModeInfo": "Pick one right answer. People see it with the explanation right after answering, and can't change their answer.",
+  "quizPickAnswer": "Tap a circle to mark the right answer",
+  "quizExplain": "Explanation (optional)",
+  "quizRight": "Correct!",
+  "quizWrong": "Not quite",
+  "pollDeadline": "Closes",
+  "pollDeadlineNone": "Never",
+  "pollIn1h": "In 1 hour",
+  "pollIn1d": "In 1 day",
+  "pollIn3d": "In 3 days",
+  "pollIn1w": "In 1 week",
+  "pollLeftMin": "{min} min left",
+  "@pollLeftMin": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      }
+    }
+  },
+  "pollLeftHours": "{hours} h left",
+  "@pollLeftHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "pollLeftDays": "{days} days left",
+  "@pollLeftDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "pollDeadlineInfo": "After this, no one can vote.",
+  "cardLottery": "Giveaway",
+  "cardForm": "Form",
+  "cardFaq": "FAQ",
+  "cardGuide": "Guide menu",
+  "cardLinks": "Link buttons",
+  "cardTemplates": "Templates",
+  "cardAudio": "Audio",
+  "cardRich": "Formatted post",
+  "cardCheckin": "Safety check-in",
+  "newLottery": "New giveaway",
+  "newForm": "New form",
+  "newFaq": "Make an FAQ",
+  "newGuide": "Make a guide menu",
+  "newCheckin": "New safety check-in",
+  "cardTitleLabel": "Title",
+  "lotteryPrize": "Prize",
+  "lotteryPrizeHint": "e.g. 2 coffee coupons",
+  "lotteryPrizeInfo": "Members tap Join. When it ends, my phone picks winners at random.",
+  "lotteryWinners": "Winners",
+  "lotteryEnds": "Ends",
+  "lotteryEndsManual": "When I close it",
+  "lotteryAnnounce": "Announce winners",
+  "lotteryAnnounceInfo": "When off, only the winners are told. Only I see the list.",
+  "lotteryInfo": "Members can't see who joined. Admins can't win. The draw runs on my phone, so open the app after it ends.",
+  "lotteryJoin": "Join",
+  "lotteryLeave": "Leave",
+  "lotteryJoined": "{n} joined",
+  "@lotteryJoined": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "lotteryDraw": "Draw now",
+  "lotteryWon": "You won!",
+  "lotteryWinnersN": "{n} winners",
+  "@lotteryWinnersN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "lotteryNoWinner": "Nobody joined, so there is no winner",
+  "lotteryEndsAt": "Ends {when}",
+  "@lotteryEndsAt": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "lotteryDrawAsk": "Draw now?",
+  "lotteryDrawInfo": "After the draw nobody can join.",
+  "cardEnded": "Closed",
+  "cardClose": "Close",
+  "cardCloseAsk": "Close it now?",
+  "cardCloseInfo": "After closing, no more answers come in.",
+  "cardAnswers": "See answers",
+  "cardNoAnswers": "No answers yet",
+  "cardAnswersInfo": "Answers are only on this phone. The server and other members can't see them.",
+  "formTitleHint": "e.g. December hike sign-up",
+  "formQuestionN": "Question {n}",
+  "@formQuestionN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "formQuestionHint": "Write a question",
+  "formAnswerType": "Answer type",
+  "formShort": "Short answer",
+  "formChoice": "Choice",
+  "formOptionsHint": "One option per line",
+  "formAddQuestion": "Add question",
+  "formInfo": "Answers are encrypted and come only to me. Other members and the server can't see them.",
+  "formFill": "Fill in",
+  "formSent": "Sent",
+  "formSentN": "{n} sent",
+  "@formSentN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "formQuestionsN": "{n} questions",
+  "@formQuestionsN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "formAnswerHint": "Your answer",
+  "formFillInfo": "Answers go only to the maker. Other members can't see them.",
+  "faqQ": "Question",
+  "faqA": "Answer",
+  "faqInfo": "Members tap a question to open the answer. Nothing is sent, so nobody knows who read what.",
+  "guideTitleHint": "How can we help?",
+  "guideSubHint": "Tap a button below (optional)",
+  "guideButtons": "Buttons",
+  "guideAddButton": "Add button",
+  "guideLabel": "Button name",
+  "guideText": "What it shows",
+  "guideInfo": "Tapping a button opens the next screen right there. Nothing is sent, so nobody knows who read what.",
+  "linksPreview": "Preview",
+  "linksTextHint": "Text above the buttons (optional)",
+  "linksAddButton": "Add button",
+  "linksAddRow": "Add row",
+  "linksIntro": "Add buttons that go to websites under the post.",
+  "linksInfo": "Buttons are encrypted with the post. Nobody can tell who tapped. Links are checked for scams on this phone.",
+  "linksLeft": "Tap a button to edit it. You can add {n} more.",
+  "@linksLeft": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "linksEditing": "Editing row {row}, button {col}",
+  "@linksEditing": {
+    "placeholders": {
+      "row": {
+        "type": "String"
+      },
+      "col": {
+        "type": "String"
+      }
+    }
+  },
+  "linksLabel": "Button name",
+  "linksColor": "This button's colour",
+  "linksColorInfo": "The first circle follows the colour chosen under 'Style all buttons'.",
+  "linksRemove": "Remove button",
+  "linksStyle": "Style all buttons",
+  "linksStyleColor": "Colour",
+  "linksGlass": "Glass",
+  "linksSize": "Size",
+  "sizeSmall": "Small",
+  "sizeMedium": "Medium",
+  "sizeLarge": "Large",
+  "linksShape": "Shape",
+  "shapeRound": "Rounded",
+  "shapePill": "Pill",
+  "shapeSquare": "Square",
+  "linksInk": "Text colour",
+  "inkAuto": "Auto",
+  "inkWhite": "White",
+  "inkBlack": "Black",
+  "linksStyleInfo": "Applies to every button. Each button can also have its own colour.",
+  "linksBadUrl": "Use a web address starting with https://",
+  "richTitleHint": "Title",
+  "richBodyHint": "Write anything...",
+  "richHeading": "Heading",
+  "richList": "List",
+  "richQuote": "Quote",
+  "richLink": "Link",
+  "richLinkUrl": "Link address",
+  "checkinHint": "e.g. There was an earthquake. Is everyone OK?",
+  "checkinInfo": "Members tap 'I'm OK' or 'I need help'. Answers come only to me.",
+  "checkinOk": "I'm OK",
+  "checkinHelp": "I need help",
+  "templatesNew": "New template",
+  "templatesHint": "Write text you use often",
+  "templatesEmpty": "No templates yet",
+  "templatesInfo": "Templates stay on this phone. Tap one to put it in the message box.",
+  "cardRemove": "Remove",
+  "attachPickAudio": "Choose audio files",
+  "attachAudioInfo": "Send music or recordings. People can play them right in the chat.",
+  "remindMe": "Remind me",
+  "remindNote": "This phone will remind you. Nothing is sent to the server.",
+  "remindNoteWeb": "You're reminded while this window is open. Nothing is sent to the server.",
+  "remindIn20": "In 20 minutes",
+  "remindIn1h": "In 1 hour",
+  "remindIn3h": "In 3 hours",
+  "remindTomorrow": "Tomorrow at 9 AM",
+  "remindPick": "Pick date and time",
+  "remindSet": "Reminder set: {time}",
+  "@remindSet": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "remindDue": "A message you asked to be reminded of",
+  "remindChannel": "Message reminders",
+  "remindOn": "Reminder set",
+  "emergencyDelete": "Delete in emergency",
+  "emergencyDeleteOff": "Don't delete in emergency",
+  "emergencyHideRoom": "Hide this chat in emergency",
+  "emergencyHideRoomOff": "Don't hide in emergency",
+  "emergencyMarked": "Opening with the delete password erases this message",
+  "emergencyUnmarked": "Removed from emergency delete",
+  "emergencyHidden": "Opening with the hide password hides this chat",
+  "emergencyUnhidden": "Removed from emergency hide",
+  "emergencyWebInfo": "App lock and emergency delete and hide can only be set in the phone app. A web browser can't keep secrets safe.",
+  "emergencyBadge": "Emergency delete",
+  "selectMsg": "Select",
+  "okButton": "OK",
+  "selectedN": "{count} selected",
+  "@selectedN": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "selectCopy": "Copy",
+  "selectSave": "Save",
+  "searchThisChat": "Search this chat",
+  "searchMsgCount": "{count} messages",
+  "@searchMsgCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "searchAsList": "Show as list",
+  "searchByDate": "Go to date",
+  "searchFound": "Results",
+  "searchNoneOnDate": "No messages from that day on",
+  "savedToast": "Saved to Saved Messages",
+  "savedTagHint": "Tag it with an emoji to find it quickly",
+  "tagMsg": "Tag",
+  "tagRemove": "Remove tag",
+  "tagAll": "All",
+  "shareMsg": "Share",
+  "shareFailed": "Couldn't share",
+  "voiceLockHint": "Slide up to lock",
+  "voicePause": "Pause",
+  "voiceResume": "Resume",
+  "channelPostLoud": "Broadcast",
+  "channelPostSilent": "Silent broadcast",
+  "channelLoudOn": "Subscribers get notified with sound",
+  "channelSilentOn": "Subscribers get notified without sound",
+  "encryption": "Encryption",
+  "encVerified": "Verified",
+  "encNotVerified": "Not verified",
+  "encHeroTitle": "This chat is end-to-end encrypted",
+  "encHeroBody": "Messages and calls open only on your two phones. Not even Burumy's server can read them. Below you can check that the other phone is really theirs.",
+  "encMembers": "Members",
+  "encStart": "Start check",
+  "encStartInfo": "Do it together or on a call. If both phones show the same 7 pictures, it's really them.",
+  "encShowKeys": "Show device keys (advanced)",
+  "encKeysInfo": "Each device's key fingerprint. If it matches what their screen shows, it's the same device.",
+  "encNoDevices": "No device info yet",
+  "verifyTitle": "Security check",
+  "verifyWaiting": "Waiting for the other phone to accept",
+  "verifyIncoming": "{name} wants to check security codes with you",
+  "@verifyIncoming": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "verifyAccept": "Accept",
+  "verifyDecline": "Decline",
+  "verifyCompare": "Do both phones show the same pictures in the same order?",
+  "verifyMatch": "They match",
+  "verifyNoMatch": "They don't match",
+  "verifyWaitOther": "Waiting for them to confirm",
+  "verifyDone": "Verified. You can now trust this person's phone.",
+  "verifyCancelled": "The check was cancelled",
+  "verifyFailed": "Couldn't start the check",
+  "verifyRequestLine": "Security check request",
+  "verifyOpen": "Check",
+  "close": "Close",
+  "contactFirst": "First name",
+  "contactLast": "Last name",
+  "memoAdd": "Add a note",
+  "contactPhotoSet": "Set a photo for {name}",
+  "@contactPhotoSet": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "contactPhotoInfo": "Only you see this photo, instead of the one {name} chose.",
+  "@contactPhotoInfo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "contactPhotoRemove": "Remove my photo",
+  "msgInfo": "Message info",
+  "msgReport": "Report message",
+  "reportNote": "Our team will read this message: its words are sent with the report. No other messages are sent.",
+  "reportSpam": "Spam",
+  "reportScam": "Scam",
+  "reportViolence": "Violence or threats",
+  "reportSexual": "Sexual content",
+  "reportChild": "Child abuse",
+  "reportDrugs": "Illegal drugs",
+  "reportPrivacy": "Personal details",
+  "reportOther": "Other",
+  "reportDone": "Reported. Our team will look at it.",
+  "reportFailed": "Couldn't report. Try again.",
+  "infoSent": "Sent",
+  "infoStatus": "Status",
+  "infoRead": "Read",
+  "infoSentOnly": "Sent",
+  "infoExpires": "Disappears",
+  "threadReply": "Reply in thread",
+  "threadTitle": "Thread",
+  "threadReplies": "{count} replies",
+  "@threadReplies": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "threadPlaceholder": "Reply in thread",
+  "threadEmpty": "No replies yet",
+  "packDynamic": "Dynamic pack order",
+  "packDynamicInfo": "Packs you used lately come first.",
+  "packOrderInfo": "Drag the handle to change the order. Packs you turn off leave the sticker panel; stickers you get still show.",
+  "attachFromGallery": "Choose from gallery",
+  "attachFromFiles": "Choose from files",
+  "recentSentFiles": "Recently sent files",
+  "photoTooBig": "That photo is too big. Pick a smaller one.",
+  "savedChatsCount": "{n} chats",
+  "@savedChatsCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "savedAll": "All Messages",
+  "savedNotes": "My Notes",
+  "savedOpenChat": "Open Chat",
+  "savedSearchHint": "Search messages or tags",
+  "savedSide": "View by chat",
+  "savedSearchList": "Search",
+  "savedNoMore": "No more results",
+  "mediaZoomIn": "Zoom In",
+  "mediaZoomOut": "Zoom Out",
+  "mediaCalendar": "View as Calendar",
+  "mediaPhotos": "Show Photos",
+  "mediaVideos": "Show Videos",
+  "savedLinkTag": "Links",
+  "markAllRead": "Read All",
+  "archiveShort": "Archive",
+  "chatLocked": "Locked end to end",
+  "storyMine": "Your Story",
+  "storyReplyPrefix": "Story reply:",
+  "storyReplied": "Reply sent",
+  "storyReplyHint": "Send message…",
+  "storyPrivateNote": "Friends only, 24 hours · no view records",
+  "storyNow": "now",
+  "storyMinutes": "{n}m",
+  "@storyMinutes": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "storyHours": "{n}h",
+  "@storyHours": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "storyHint": "Take or choose a photo",
+  "storyCaptionHint": "Add text",
+  "storyShare": "Share with friends",
+  "storyShared": "Shared with {n} friends",
+  "@storyShared": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "storyNoFriends": "No friends to share with yet",
+  "storyCamera": "Story camera",
+  "camLive": "Live",
+  "camVideo": "Video",
+  "camPhoto": "Photo",
+  "camLiveStart": "Start live broadcast",
+  "camLiveLater": "Live broadcasts open once our own server is ready",
+  "camGridRemove": "Tap to remove grid",
+  "camUnavailable": "Can't open the camera\nThe button below uses your phone's camera",
+  "camDualHint": "Takes the back camera, then the front, right after",
+  "camGridLeft": "{n} more to take",
+  "@camGridLeft": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "storiesCount": "{n} stories",
+  "@storiesCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "tabGroups": "Groups",
+  "noCommonGroups": "No groups in common",
+  "qrCode": "QR code",
+  "wideEmpty": "Pick a chat",
+  "storyAnswerSent": "Sent to your 1:1 chat",
+  "storyAnswerHint": "Write an answer",
+  "storyGoing": "I'm in",
+  "storyGoingSent": "Told them you're in",
+  "storyPoll": "Poll",
+  "storyQuestion": "Question",
+  "storyPlan": "Plan",
+  "storyPlanTitle": "What's the plan?",
+  "storyAskHint": "Your question",
+  "storyPollInfo": "Each answer comes to you in a 1:1 chat. Nobody else, not even Burumy, sees who picked what.",
+  "storyOption": "Option {n}",
+  "@storyOption": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "storyPlanWhen": "When",
+  "storyPlanPlace": "Where (optional)",
+  "storyPlanInfo": "When a friend taps \"I'm in\", you hear it in your 1:1 chat.",
+  "storyQuestionInfo": "Answers come to you in 1:1 chats, for you only.",
+  "storyAllFriends": "All friends",
+  "storyCloseFriends": "Close friends",
+  "storyPicked": "Pick for this one",
+  "storyPickedCount": "{n} people",
+  "@storyPickedCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "storyAllFriendsSub": "{n} friends in 1:1 chats",
+  "@storyAllFriendsSub": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "storyCloseFriendsSub": "{n} people · kept on this phone only",
+  "@storyCloseFriendsSub": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "storyPickedSub": "Choose who sees just this story",
+  "storyWho": "Who can see it?",
+  "storyWhoInfo": "Only the friends you pick get it, sealed in each chat's encryption.",
+  "storyHowLong": "How long?",
+  "storyHowLongInfo": "After that it disappears from friends' phones and the server.",
+  "storyHoursN": "{n} hours",
+  "@storyHoursN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "storyArchive": "My story archive",
+  "storyArchiveEmpty": "Nothing yet. Stories you share are kept here, on this phone only.",
+  "storyArchiveWeb": "The web keeps no archive. Use the phone app.",
+  "storyArchiveInfo": "On this phone only. Tap to share again, hold to delete.",
+  "storyNew": "New story",
+  "feedTitle": "Friends' feed",
+  "feedEmpty": "No posts yet",
+  "feedInfo": "Only your 1:1 friends see it. No ads, encrypted end to end.",
+  "feedNew": "New post",
+  "feedHint": "What's new?",
+  "feedPost": "Post",
+  "feedAddPhoto": "Photo",
+  "feedRemovePhoto": "Remove photo",
+  "feedLikesN": "{n} likes",
+  "@feedLikesN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "feedOnlyMe": "Only you see this",
+  "feedReplyHint": "Your reply goes only to this friend",
+  "feedReplyPrefix": "💬 Re your post:",
+  "feedPosted": "Posted to {n} friends",
+  "@feedPosted": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "feedDeleted": "Post deleted",
+  "feedLike": "Like",
+  "feedReply": "Reply",
+  "markUnread": "Mark as unread",
+  "addToFolder": "Add to folder",
+  "removeFromFolder": "Remove from {name}",
+  "@removeFromFolder": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "blockShort": "Block",
+  "emergencyDeleteRoom": "Delete this chat in an emergency",
+  "emergencyRoomMarked": "Opening with the delete password erases this chat",
+  "folderAddedTo": "Added to the folder",
+  "noFoldersYet": "No folders yet"
+}

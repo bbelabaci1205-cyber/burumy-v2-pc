@@ -1,0 +1,58 @@
+# SPDX-License-Identifier: LicenseRef-Burumy-Proprietary
+# Windows PC app. Runs ONLY when started by hand (Actions > windows > Run workflow).
+# Pushing code never starts it. Output: installer + zip, kept 1 day.
+name: windows
+on:
+  workflow_dispatch:
+concurrency:
+  group: windows
+  cancel-in-progress: false
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 90
+    env:
+      FLUTTER_VERSION: "3.50.1"
+      ENTRY: "lib/demo_main.dart"
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tools
+        run: |
+          $ProgressPreference = "SilentlyContinue"
+          git config --global core.longpaths true
+          Invoke-WebRequest "https://storage.googleapis.com/flutter_infra_release/releases/stable/windows/flutter_windows_$env:FLUTTER_VERSION-stable.zip" -OutFile C:\flutter.zip
+          tar -xf C:\flutter.zip -C C:\
+          "C:\flutter\bin" | Out-File -Append $env:GITHUB_PATH
+          choco install innosetup nasm -y --no-progress
+          "C:\Program Files\NASM" | Out-File -Append $env:GITHUB_PATH
+      - name: Engine (Rust)
+        run: cargo build --release -p burumy_bridge
+      - name: App
+        working-directory: app
+        run: |
+          flutter config --no-analytics --enable-windows-desktop
+          flutter pub get
+          $n = 100 + [int]$env:GITHUB_RUN_NUMBER
+          flutter build windows --release -t $env:ENTRY --dart-define=BUILD_NUMBER=$n
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Installer
+        run: |
+          $out = "app\build\windows\x64\runner\Release"
+          Copy-Item target\release\burumy_bridge.dll $out
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Compress-Archive -Path "$out\*" -DestinationPath dist\burumy-v2-windows.zip
+          $inno = (Get-ChildItem "${env:ProgramFiles(x86)}\Inno Setup*", "$env:ProgramFiles\Inno Setup*" -ErrorAction SilentlyContinue | Select-Object -First 1).FullName
+          if (-not (Test-Path "$inno\Languages\Korean.isl")) { (Get-Content app\windows\installer.iss) | Where-Object { $_ -notmatch 'Korean.isl' } | Set-Content -Encoding UTF8 app\windows\installer.iss }
+          & "$inno\ISCC.exe" /Qp app\windows\installer.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Get-ChildItem dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: burumy-v2-windows
+          path: dist/
+          retention-days: 1

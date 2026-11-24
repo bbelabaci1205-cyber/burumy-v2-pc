@@ -1,0 +1,9 @@
+<!doctype html><meta charset="utf-8"><title>Burumy web check</title>
+<pre id="out">running…</pre>
+<script type="module">
+import init, { run_proof } from './pkg/burumy_web.js';
+const q = new URLSearchParams(location.search);
+await init();
+try { document.getElementById('out').textContent = await run_proof(q.get('hs'), q.get('token')); }
+catch (e) { document.getElementById('out').textContent = 'FAIL: ' + e; }
+</script>

@@ -1,0 +1,4 @@
+
+# Windows: put the C runtime inside burumy_bridge.dll (no extra installs).
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]

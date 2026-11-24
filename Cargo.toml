@@ -1,0 +1,3 @@
+[workspace]
+resolver = "2"
+members = ["engine", "bridge", "web", "server/call-token", "server/push-gateway"]
