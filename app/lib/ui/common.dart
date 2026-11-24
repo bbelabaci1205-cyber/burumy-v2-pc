@@ -101,15 +101,19 @@ class Avatar extends StatelessWidget {
 
 /// Chat list time: today = hour, yesterday = word, older = date.
 String shortTime(BuildContext c, DateTime t, {DateTime? now}) {
-  final l = L.of(c);
+  // Telegram-style: today = time, the last 6 days = weekday only,
+  // older = numbers only (11.23; another year 25.11.23).
   final lang = Localizations.localeOf(c).languageCode;
   final n = now ?? DateTime.now();
   final day = DateTime(t.year, t.month, t.day);
   final today = DateTime(n.year, n.month, n.day);
-  if (day == today) return DateFormat.jm(lang).format(t);
-  if (day == today.subtract(const Duration(days: 1))) return l.yesterday;
-  if (t.year == n.year) return DateFormat.MMMd(lang).format(t);
-  return DateFormat.yMd(lang).format(t);
+  final ago = today.difference(day).inDays;
+  if (ago <= 0) return DateFormat.jm(lang).format(t);
+  if (ago < 7) return DateFormat.E(lang).format(t);
+  final en = lang == 'en';
+  if (t.year == n.year) return en ? '${t.month}/${t.day}' : '${t.month}.${t.day}';
+  final yy = (t.year % 100).toString().padLeft(2, '0');
+  return en ? '${t.month}/${t.day}/$yy' : '$yy.${t.month}.${t.day}';
 }
 
 /// Preview text for a message of any kind.

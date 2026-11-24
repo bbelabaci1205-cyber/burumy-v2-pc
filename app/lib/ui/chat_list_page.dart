@@ -477,6 +477,7 @@ class ArchiveRow extends StatelessWidget {
             SizedBox(width: Tokens.space[2]),
             Expanded(
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center, // text centred in the 76pt row, like Telegram
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
@@ -599,6 +600,7 @@ class ChatRowTile extends StatelessWidget {
             SizedBox(width: Tokens.space[2]),
             Expanded(
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center, // text centred in the 76pt row, like Telegram
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
