@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: LicenseRef-Burumy-Proprietary
 package app.burumy.burumy
 
+import android.content.ComponentName
+import android.content.pm.PackageManager
 import android.view.WindowManager
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -19,6 +21,23 @@ class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         phone = PhoneChannel(this, flutterEngine.dartExecutor.binaryMessenger)
+        // App icon picker: one launcher alias on, the others off.
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "app.burumy/icon").setMethodCallHandler { call, result ->
+            if (call.method == "set") {
+                val pick = (call.arguments as? String) ?: "green"
+                for (k in listOf("green", "dark", "light", "mint")) {
+                    val state = if (k == pick) PackageManager.COMPONENT_ENABLED_STATE_ENABLED else PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+                    packageManager.setComponentEnabledSetting(
+                        ComponentName(packageName, "app.burumy.burumy.Icon" + k.replaceFirstChar { it.uppercase() }),
+                        state,
+                        PackageManager.DONT_KILL_APP,
+                    )
+                }
+                result.success(true)
+            } else {
+                result.notImplemented()
+            }
+        }
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "app.burumy/screen").setMethodCallHandler { call, result ->
             when (call.method) {
                 "secure" -> {

@@ -339,6 +339,42 @@ async fn main() -> Result<()> {
     })
     .await?;
     println!("  ok: feed (encrypted, not in the chat, private like + take back, delete)");
+    println!("10) profile card: friends-only photo + birthday, public bio");
+    let n = alice
+        .share_profile("image/png", png.clone(), "안녕하세요", "03-14", "contacts", "everyone", "contacts", &[])
+        .await?;
+    anyhow::ensure!(n >= 1, "card went to nobody");
+    let a_str = a_id.to_string();
+    wait_for("bob gets alice's card", &[&bob, &alice], || {
+        let b = bob.clone();
+        let a = a_str.clone();
+        async move { Ok(b.profile_of(&a).await?.private) }
+    })
+    .await?;
+    let card = bob.profile_of(&a_str).await?;
+    anyhow::ensure!(
+        card.photo.as_deref() == Some(&png[..]) && card.birthday == "03-14" && card.bio == "안녕하세요",
+        "bob should see the friends-only photo and birthday"
+    );
+    anyhow::ensure!(alice.my_photo().await.ok().flatten().is_none(), "friends-only photo must not be public");
+    anyhow::ensure!(alice.bio_of(&a_str).await? == "안녕하세요", "public bio");
+    anyhow::ensure!(
+        !bob.timeline(&room, 50).await?.iter().any(|m| m.body.as_deref().is_some_and(|b| b.contains("03-14")) || m.kind == "unknown"),
+        "the card must not show inside the chat"
+    );
+    // Nobody: the next card carries nothing.
+    alice.share_profile("image/png", png.clone(), "안녕하세요", "03-14", "nobody", "nobody", "nobody", &[]).await?;
+    wait_for("bob's card is empty", &[&bob, &alice], || {
+        let b = bob.clone();
+        let a = a_str.clone();
+        async move {
+            let c = b.profile_of(&a).await?;
+            Ok(c.photo.is_none() && c.birthday.is_empty() && c.bio.is_empty())
+        }
+    })
+    .await?;
+    anyhow::ensure!(alice.bio_of(&a_str).await?.is_empty(), "bio taken off the public profile");
+    println!("  ok: profile (photo/birthday only inside the encrypted 1:1 chat, public bio, nobody)");
     println!("ALL OK");
     Ok(())
 }

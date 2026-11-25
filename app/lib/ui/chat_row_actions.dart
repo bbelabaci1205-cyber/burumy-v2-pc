@@ -16,6 +16,7 @@ import '../brand/brand.dart';
 import '../design/tokens.dart';
 import '../l10n/app_localizations.dart';
 import 'chat_folders.dart';
+import 'folders_page.dart';
 import 'common.dart';
 import 'glass.dart';
 import 'wallpaper.dart';
@@ -421,7 +422,7 @@ class ChatPressMenu extends StatelessWidget {
             CupertinoActionSheetAction(
               key: Key('folder-pick-${f.id}'),
               onPressed: () => Navigator.pop(x, f.id),
-              child: Text(f.takes(chat) ? l.removeFromFolder(f.name) : f.name),
+              child: Text(f.takes(chat, app.friendIds) ? l.removeFromFolder(f.name) : f.label),
             ),
           CupertinoActionSheetAction(key: const Key('folder-pick-new'), onPressed: () => Navigator.pop(x, ''), child: Text(l.newFolder)),
         ],
@@ -434,9 +435,9 @@ class ChatPressMenu extends StatelessWidget {
       return;
     }
     final f = folders.firstWhere((x) => x.id == id);
-    if (f.takes(chat)) {
+    if (f.takes(chat, app.friendIds)) {
       f.include.remove(chat.roomId);
-      if (f.takes(chat)) f.exclude.add(chat.roomId);
+      if (f.takes(chat, app.friendIds)) f.exclude.add(chat.roomId);
     } else {
       f.exclude.remove(chat.roomId);
       f.include.add(chat.roomId);

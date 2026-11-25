@@ -165,6 +165,14 @@ pub struct StoryRow {
     pub feed: bool,
 }
 
+/// Someone's photo, about-me and birthday (card from our 1:1 chat, or public).
+pub struct ProfileCardRow {
+    pub photo: Option<Vec<u8>>,
+    pub bio: String,
+    pub birthday: String,
+    pub private: bool,
+}
+
 /// A like on a feed post (only in our 1:1 chat).
 pub struct FeedLikeRow {
     pub post_id: String,
@@ -1431,6 +1439,34 @@ impl BurumyDevice {
 
     pub async fn my_name(&self) -> Result<String> {
         self.engine.my_name().await
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub async fn share_profile(
+        &self,
+        mime: String,
+        photo: Vec<u8>,
+        bio: String,
+        birthday: String,
+        who_photo: String,
+        who_bio: String,
+        who_birthday: String,
+        only: Vec<String>,
+    ) -> Result<u32> {
+        Ok(self
+            .engine
+            .share_profile(&mime, photo, &bio, &birthday, &who_photo, &who_bio, &who_birthday, &only)
+            .await? as u32)
+    }
+
+    pub async fn profile_of(&self, user_id: String) -> Result<ProfileCardRow> {
+        let c = self.engine.profile_of(&user_id).await?;
+        Ok(ProfileCardRow {
+            photo: c.photo,
+            bio: c.bio,
+            birthday: c.birthday,
+            private: c.private,
+        })
     }
 
     pub async fn set_my_bio(&self, text: String) -> Result<()> {

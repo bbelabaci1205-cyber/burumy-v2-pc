@@ -429,7 +429,7 @@ class LKo extends L {
 
   @override
   String get photoServerNote =>
-      '프로필 사진과 이름은 대화 상대가 볼 수 있도록 서버에 저장돼요. 메시지와 달리 종단간 암호화되지 않아요.';
+      '사진을 \'모두\'로 두면 서버에 저장돼요. \'내 연락처\'로 두면 서버에는 올라가지 않고 친구와의 암호화된 1:1 대화로만 전달돼요.';
 
   @override
   String get chatInfo => '정보';
@@ -1145,7 +1145,7 @@ class LKo extends L {
   String get bio => '자기소개';
 
   @override
-  String get bioInfo => '자기소개는 내 아이디를 아는 사람 누구나 볼 수 있어요. 70자까지 쓸 수 있어요.';
+  String get bioInfo => '누가 볼지는 설정 > 개인정보 및 보안에서 정해요. 70자까지 쓸 수 있어요.';
 
   @override
   String get markRead => '읽음';
@@ -3462,4 +3462,466 @@ class LKo extends L {
 
   @override
   String get swipeUnarchive => '보관 해제';
+
+  @override
+  String get chatsHeaderInfo =>
+      '메시지 표시 방법, 답장, 스티커와 이모지, 이 휴대폰 안에서만 처리되는 AI 기능처럼 대화방에서 쓰는 기능을 정해요.';
+
+  @override
+  String get faqHeaderInfo =>
+      '부루미를 쓰면서 자주 궁금해하는 내용을 모았어요. 인터넷에 연결되지 않아도 볼 수 있어요.';
+
+  @override
+  String get devicesHeaderInfo =>
+      '내 계정에 로그인된 기기를 모두 볼 수 있어요. 모르는 기기가 있으면 여기서 바로 로그아웃시킬 수 있어요.';
+
+  @override
+  String get languageHeaderInfo =>
+      '앱에 보이는 말을 골라요. 다른 언어로 온 메시지는 대화방에서 바로 번역할 수 있어요.';
+
+  @override
+  String get stickersHeaderInfo =>
+      '빠른 반응, 큰 이모지, 스티커 팩 순서처럼 스티커와 이모지를 쓰는 방법을 정해요.';
+
+  @override
+  String get birthday => '생일';
+
+  @override
+  String get birthdayAdd => '추가';
+
+  @override
+  String get birthdayInfo => '친구에게는 월과 일만 보여요. 누가 볼지는 설정 > 개인정보 및 보안에서 정해요.';
+
+  @override
+  String get birthdayRemove => '생일 지우기';
+
+  @override
+  String birthdayMonthDay(int m, int d) {
+    return '$m월 $d일';
+  }
+
+  @override
+  String get whoPhoto => '프로필 사진';
+
+  @override
+  String get whoBio => '자기소개';
+
+  @override
+  String get whoBirthday => '생일';
+
+  @override
+  String get whoLastSeen => '마지막 접속 및 온라인';
+
+  @override
+  String get whoForwards => '전달된 메시지';
+
+  @override
+  String get whoAlwaysNobody => '아무도';
+
+  @override
+  String get whoCardInfo => '\'내 연락처\'는 서버에 올라가지 않고, 1:1 대화의 암호화로만 친구에게 전달돼요.';
+
+  @override
+  String get lastSeenInfo =>
+      '부루미는 접속 중인지, 마지막으로 언제 접속했는지 누구에게도 보여 주지 않아요. 처음부터 그렇게 만들어서 바꿀 필요가 없어요.';
+
+  @override
+  String get forwardsInfo =>
+      '누가 내 메시지를 전달해도 내 이름과 원래 대화방은 함께 가지 않아요. \'전달됨\' 표시만 붙어요. 처음부터 그렇게 만들었어요.';
+
+  @override
+  String get editHistory => '내 수정 기록 숨기기';
+
+  @override
+  String get editHistoryAlways => '항상';
+
+  @override
+  String get editHistoryInfo =>
+      '내가 고친 메시지는 다른 사람에게 마지막 내용만 보여요. 부루미는 처음부터 고치기 전 내용을 보여 주지 않아요.';
+
+  @override
+  String get birthdayAlert => '생일 알림';
+
+  @override
+  String get birthdayAlertInfo =>
+      '생일을 공개한 친구의 생일 당일 오전 9시에 알려 드려요. 이 휴대폰 안에서만 알려요.';
+
+  @override
+  String birthdayAlertTitle(String name) {
+    return '오늘은 $name 님의 생일이에요';
+  }
+
+  @override
+  String get birthdayAlertBody => '축하 메시지를 보내 보세요.';
+
+  @override
+  String get showErrors => '오류 내용 보기';
+
+  @override
+  String get showErrorsInfo =>
+      '켜면 문제가 생겼을 때의 오류 내용을 이 휴대폰에 모아 보여 줘요. 문의할 때 복사해서 보내면 도움이 돼요. 메시지 내용은 담기지 않아요.';
+
+  @override
+  String get errorLog => '오류 기록';
+
+  @override
+  String get errorLogEmpty => '아직 오류가 없어요';
+
+  @override
+  String get errorLogCopy => '모두 복사';
+
+  @override
+  String get autoDeleteHeader => '자동 회원 탈퇴';
+
+  @override
+  String get autoDeleteRow => '다음 기간 동안 미접속 시';
+
+  @override
+  String get autoDeleteInfo =>
+      '이 기간 안에 한 번이라도 접속하지 않으면 모든 그룹, 메시지, 연락처와 함께 계정이 삭제돼요.';
+
+  @override
+  String get months1 => '1개월';
+
+  @override
+  String get months3 => '3개월';
+
+  @override
+  String get months6 => '6개월';
+
+  @override
+  String get months12 => '12개월';
+
+  @override
+  String get months18 => '18개월';
+
+  @override
+  String get hideDeleteRow => '숨김·삭제 비밀번호';
+
+  @override
+  String get privMessages => '메시지';
+
+  @override
+  String get privWhoSees => '누가 내 정보를 볼 수 있나요';
+
+  @override
+  String get privWhoReach => '누가 나에게 연락할 수 있나요';
+
+  @override
+  String get privScreen => '화면 보호';
+
+  @override
+  String get privAccount => '계정';
+
+  @override
+  String get undoSendSub => '보낸 뒤 5초 안에는 취소할 수 있어요';
+
+  @override
+  String get sendReadSub => '끄면 상대에게 내 읽음 표시가 가지 않아요';
+
+  @override
+  String get sendTypingSub => '끄면 상대에게 입력 중 표시가 가지 않아요';
+
+  @override
+  String get veilAllSub => '누르고 있는 동안만 메시지가 보여요';
+
+  @override
+  String get panicSub => '두 손가락으로 두 번 톡톡 치면 바로 잠겨요';
+
+  @override
+  String get birthdayAlertSub => '친구 생일 아침 9시에 이 휴대폰이 알려 줘요';
+
+  @override
+  String get showErrorsSub => '문의할 때 보낼 오류 내용을 이 휴대폰에 모아요';
+
+  @override
+  String get autoDeleteSub => '이 기간 동안 한 번도 접속하지 않으면 계정이 지워져요';
+
+  @override
+  String get autoDlPhotosSub => '사진을 미리 받아 둬요';
+
+  @override
+  String get autoDlReset => '자동 다운로드 설정 되돌리기';
+
+  @override
+  String get mediaAndLinks => '미디어와 링크';
+
+  @override
+  String get autoplayGifSub => '끄면 GIF가 첫 장면에 멈춰 있어요';
+
+  @override
+  String get linkPreviewSub => '보낼 때 내 휴대폰이 제목과 사진을 넣어요';
+
+  @override
+  String get callsHeader => '통화';
+
+  @override
+  String get lowDataCalls => '전화에 데이터 적게 쓰기';
+
+  @override
+  String get lowDataCallsSub => '영상 화질을 낮춰 느린 인터넷에서도 잘 이어져요';
+
+  @override
+  String get devicesArtInfo => 'PC나 다른 휴대폰에서도 대화를 이어 볼 수 있어요.';
+
+  @override
+  String get addDevice => '기기 추가';
+
+  @override
+  String get addDeviceTitle => '다른 기기에서 쓰기';
+
+  @override
+  String get addDeviceStep1 => '새 기기에 부루미를 설치해요. PC는 Windows 앱이 있어요.';
+
+  @override
+  String get addDeviceStep2 => '내 아이디와 비밀번호로 로그인해요.';
+
+  @override
+  String get addDeviceStep3 =>
+      '이 휴대폰에 뜨는 확인 요청에서 두 기기의 이모지가 같은지 보면 끝이에요. 그러면 지난 대화도 열려요.';
+
+  @override
+  String get devicesPlatforms => '부루미는 iPhone, Android, Windows에서 쓸 수 있어요.';
+
+  @override
+  String get onlineNow => '지금 사용 중';
+
+  @override
+  String get chatFolders => '대화방 폴더';
+
+  @override
+  String get foldersArtInfo =>
+      '폴더를 만들어 대화방을 나눠 보세요. 목록 위나 왼쪽 메뉴에서 바로 바꿀 수 있어요.';
+
+  @override
+  String get createFolder => '폴더 만들기';
+
+  @override
+  String get allChatsFolder => '모든 대화방';
+
+  @override
+  String get editList => '편집';
+
+  @override
+  String get foldersEditInfo => '편집을 누르면 폴더 순서를 바꾸거나 지울 수 있어요.';
+
+  @override
+  String get recommendedFolders => '추천 폴더';
+
+  @override
+  String get folderUnreadName => '안 읽음';
+
+  @override
+  String get folderUnreadInfo => '안 읽은 메시지가 있는 대화방';
+
+  @override
+  String get folderPersonalName => '개인';
+
+  @override
+  String get folderPersonalInfo => '1:1 대화방만';
+
+  @override
+  String get folderTags => '폴더 태그 표시';
+
+  @override
+  String get folderTagsInfo => '대화 목록에서 각 대화방 아래에 폴더 이름을 색깔 태그로 보여 줘요.';
+
+  @override
+  String folderChatsCount(int n) {
+    return '대화방 $n개';
+  }
+
+  @override
+  String get folderDeleted => '폴더를 지웠어요';
+
+  @override
+  String get folderInclude => '포함할 대화방';
+
+  @override
+  String get folderIncludeInfo => '이 폴더에 보일 대화방이나 대화방 유형을 고르세요.';
+
+  @override
+  String get folderExclude => '제외할 대화방';
+
+  @override
+  String get folderExcludeInfo => '이 폴더에 절대 보이지 않을 대화방이나 유형을 고르세요.';
+
+  @override
+  String get folderAddChats => '대화방 추가';
+
+  @override
+  String get folderColor => '폴더 색상';
+
+  @override
+  String get folderNoTag => '태그 없음';
+
+  @override
+  String get folderColorInfo => '대화 목록에서 이 폴더 태그의 색이에요.';
+
+  @override
+  String get folderNeedChats => '대화방을 하나 이상 넣어 주세요.';
+
+  @override
+  String get folderNeedName => '폴더 이름을 적어 주세요.';
+
+  @override
+  String get chatTypes => '대화방 유형';
+
+  @override
+  String get chatsHeader => '대화방';
+
+  @override
+  String get kindContacts => '연락처';
+
+  @override
+  String get kindNonContacts => '연락처 아닌 사람';
+
+  @override
+  String get kindMuted => '알림 꺼짐';
+
+  @override
+  String get kindRead => '읽음';
+
+  @override
+  String get kindArchived => '보관됨';
+
+  @override
+  String get folderIcon => '폴더 아이콘';
+
+  @override
+  String get folderIconNone => '없음';
+
+  @override
+  String get newFolderTitle => '새 폴더';
+
+  @override
+  String exceptionsCount(int n) {
+    return '$n개 예외';
+  }
+
+  @override
+  String get inAppHeader => '앱 사용 중 알림';
+
+  @override
+  String get inAppVibrate => '앱 사용 중 진동';
+
+  @override
+  String get lockName => '잠금 화면에 이름 보이기';
+
+  @override
+  String get lockNameInfo =>
+      '끄면 휴대폰이 잠겨 있을 때 알림에 보낸 사람 이름과 내용이 가려져요. 아이폰은 iOS 설정 > 알림 > 미리보기 표시도 함께 확인해 주세요.';
+
+  @override
+  String get linkOpenTitle => '링크 열기';
+
+  @override
+  String get linkOpenHeader => '링크를 여는 곳';
+
+  @override
+  String get linkOpenInApp => '부루미 안에서 (개인정보 보호 창)';
+
+  @override
+  String get linkOpenBrowser => '기본 브라우저';
+
+  @override
+  String get linkOpenInAppShort => '부루미';
+
+  @override
+  String get linkOpenBrowserShort => '브라우저';
+
+  @override
+  String get linkOpenInfo => '부루미 안에서 열면 앱을 떠나지 않고, 다른 브라우저의 기록에도 남지 않아요.';
+
+  @override
+  String get linkNeverHeader => '앱 안에서 열지 않기';
+
+  @override
+  String get linkNeverAdd => '웹사이트 추가';
+
+  @override
+  String get linkNeverInfo => '이 웹사이트들은 언제나 기본 브라우저에서 열려요.';
+
+  @override
+  String get tiltMove => '기울이면 움직이기';
+
+  @override
+  String get tiltInfo => '휴대폰을 기울이면 대화 배경이 살짝 움직여요. 배터리를 조금 더 써요.';
+
+  @override
+  String get appIcon => '앱 아이콘';
+
+  @override
+  String get appIconInfo => '홈 화면의 부루미 아이콘 모양을 바꿔요. 바꿀 때 앱이 잠깐 닫힐 수 있어요.';
+
+  @override
+  String get appIconGreen => '기본';
+
+  @override
+  String get appIconDark => '다크';
+
+  @override
+  String get appIconLight => '화이트';
+
+  @override
+  String get appIconMint => '세이지';
+
+  @override
+  String get psGlass => '유리 효과';
+
+  @override
+  String get psGlassSub => '끄면 위·아래 바가 비치지 않는 판으로 보여요.';
+
+  @override
+  String get psPreload => '미디어 미리 받기';
+
+  @override
+  String get psPreloadSub => '사진·영상을 열기 전에 미리 받아 둬요.';
+
+  @override
+  String get psTiltSub => '휴대폰을 기울이면 대화 배경이 움직여요.';
+
+  @override
+  String get chatsMessages => '메시지';
+
+  @override
+  String get chatsList => '대화 목록';
+
+  @override
+  String get chatsMediaReactions => '미디어와 반응';
+
+  @override
+  String get formattingRow => '형식이 지정된 메시지';
+
+  @override
+  String get formattingSub => '굵게 같은 서식을 메시지에 보여 줘요';
+
+  @override
+  String get listMedia => '사진·동영상 미리보기 보이기';
+
+  @override
+  String get listMediaSub => '대화 목록에 마지막 사진을 작게 보여 줘요';
+
+  @override
+  String get scamWarningSub => '이상한 링크에 경고를 붙여요';
+
+  @override
+  String get planPick => '일정 뽑기';
+
+  @override
+  String get planPickSub => '메시지 속 날짜·시간을 누르면 알림을 맞춰요';
+
+  @override
+  String get aiOnPhoneInfo => '모두 이 휴대폰 안에서만 처리돼요. 메시지 내용은 어디로도 보내지 않아요.';
+
+  @override
+  String planFound(String when) {
+    return '일정: $when';
+  }
+
+  @override
+  String get planHourBefore => '1시간 전에 알림';
+
+  @override
+  String get planAtTime => '그 시각에 알림';
 }

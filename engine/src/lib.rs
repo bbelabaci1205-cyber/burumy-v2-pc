@@ -46,6 +46,30 @@ use matrix_sdk_base_crypto_shim::TimelineEventKind;
 /// An invitation waiting on this phone.
 /// Profile field that holds the about-me text.
 const BIO_FIELD: &str = "app.burumy.bio";
+/// Public profile field with my birthday ("MM-DD" or "YYYY-MM-DD"), only
+/// when I let everyone see it.
+const BIRTHDAY_FIELD: &str = "app.burumy.birthday";
+/// My profile card for friends (photo, about me, birthday), sent inside
+/// each 1:1 chat's own encryption: the server can't read it.
+pub const PROFILE_TYPE: &str = "im.securemessenger.profile";
+
+/// Someone's photo, about-me and birthday as I may see them.
+#[derive(Debug, Clone, Default)]
+pub struct ProfileCard {
+    pub photo: Option<Vec<u8>>,
+    pub bio: String,
+    pub birthday: String,
+    /// true: it came from our encrypted 1:1 chat (not the public profile).
+    pub private: bool,
+}
+
+fn birthday_ok(b: &str) -> bool {
+    let p: Vec<&str> = b.split('-').collect();
+    let num = |x: &str, n: usize| x.len() == n && x.chars().all(|c| c.is_ascii_digit());
+    b.is_empty()
+        || (p.len() == 2 && num(p[0], 2) && num(p[1], 2))
+        || (p.len() == 3 && num(p[0], 4) && num(p[1], 2) && num(p[2], 2))
+}
 
 #[derive(Clone, Debug)]
 pub struct Invitation {
@@ -2216,6 +2240,184 @@ impl Engine {
             .await
             .map_err(to_err)?;
         Ok(())
+    }
+
+    /// Shares my photo, about-me and birthday. [who_*]: "everyone" (also on
+    /// the public profile), "contacts" (only inside each 1:1 chat's
+    /// encryption) or "nobody". [only]: just these chats (new friends);
+    /// empty = everything again, public profile included. Returns how many
+    /// friends got the card.
+    #[allow(clippy::too_many_arguments)]
+    pub async fn share_profile(
+        &self,
+        mime: &str,
+        photo: Vec<u8>,
+        bio: &str,
+        birthday: &str,
+        who_photo: &str,
+        who_bio: &str,
+        who_birthday: &str,
+        only: &[String],
+    ) -> Result<usize> {
+        use matrix_sdk::ruma::profile::{ProfileFieldName, ProfileFieldValue};
+        anyhow::ensure!(birthday_ok(birthday), "bad birthday");
+        anyhow::ensure!(bio.chars().count() <= 200, "about me too long");
+        anyhow::ensure!(photo.is_empty() || mime.starts_with("image/"), "photo only");
+        let open = |w: &str| w == "everyone";
+        let friends = |w: &str| w == "everyone" || w == "contacts";
+        if only.is_empty() {
+            if open(who_photo) && !photo.is_empty() {
+                self.set_my_photo(mime, photo.clone()).await?;
+            } else {
+                self.set_my_photo("", vec![]).await?;
+            }
+            self.set_my_bio(if open(who_bio) { bio } else { "" }).await?;
+            let account = self.client.account();
+            if open(who_birthday) && !birthday.is_empty() {
+                let v = ProfileFieldValue::new(BIRTHDAY_FIELD, serde_json::Value::String(birthday.to_owned()))
+                    .map_err(to_err)?;
+                account.set_profile_field(v).await.map_err(to_err)?;
+            } else {
+                // Nothing there yet is fine.
+                let _ = account
+                    .delete_profile_field(ProfileFieldName::from(BIRTHDAY_FIELD))
+                    .await;
+            }
+        }
+        let quiet = self.quiet_state().await.unwrap_or_default();
+        let mut rooms = vec![];
+        for room in self.client.joined_rooms() {
+            if (only.is_empty() || only.iter().any(|r| r.as_str() == room.room_id().as_str()))
+                && room.is_direct().await.unwrap_or(false)
+                && !self.is_quiet(room.room_id(), &quiet).await
+                && room
+                    .latest_encryption_state()
+                    .await
+                    .map(|e| e.is_encrypted())
+                    .unwrap_or(false)
+            {
+                rooms.push(room);
+            }
+        }
+        if rooms.is_empty() {
+            return Ok(0);
+        }
+        let mut card = serde_json::json!({
+            "bio": if friends(who_bio) { bio.trim() } else { "" },
+            "birthday": if friends(who_birthday) { birthday } else { "" },
+        });
+        if friends(who_photo) && !photo.is_empty() {
+            let mut cursor = std::io::Cursor::new(photo);
+            let file = self
+                .client
+                .upload_encrypted_file(&mut cursor)
+                .await
+                .map_err(to_err)?;
+            card["photo"] = serde_json::json!({ "file": file, "mimetype": mime });
+        }
+        let mut sent = 0;
+        for room in rooms {
+            if room.send_raw(PROFILE_TYPE, card.clone()).await.is_ok() {
+                sent += 1;
+            }
+        }
+        Ok(sent)
+    }
+
+    /// Someone's photo, about-me and birthday: the newest card they sent
+    /// me in our 1:1 chat, else what they made public.
+    pub async fn profile_of(&self, user_id: &str) -> Result<ProfileCard> {
+        use matrix_sdk::{
+            media::{MediaFormat, MediaRequestParameters},
+            ruma::events::room::{EncryptedFile, MediaSource},
+        };
+        let uid = OwnedUserId::try_from(user_id).map_err(to_err)?;
+        let mut best: Option<(u64, serde_json::Value)> = None;
+        for room in self.client.joined_rooms() {
+            if !room.is_direct().await.unwrap_or(false)
+                || !room.direct_targets().iter().any(|t| t.as_user_id() == Some(uid.as_ref()))
+            {
+                continue;
+            }
+            let Ok((cache, _drop)) = room.event_cache().await else {
+                continue;
+            };
+            for e in cache.events().await.unwrap_or_default() {
+                let Ok(v) = serde_json::from_str::<serde_json::Value>(e.raw().json().get()) else {
+                    continue;
+                };
+                if v.get("type").and_then(|t| t.as_str()) != Some(PROFILE_TYPE)
+                    || v.get("sender").and_then(|s| s.as_str()) != Some(user_id)
+                {
+                    continue;
+                }
+                let ts = v.get("origin_server_ts").and_then(|t| t.as_u64()).unwrap_or(0);
+                if best.as_ref().is_none_or(|(t, _)| ts >= *t) {
+                    best = Some((ts, v["content"].clone()));
+                }
+            }
+        }
+        if let Some((_, c)) = best {
+            let photo = match c.pointer("/photo/file") {
+                Some(f) => match serde_json::from_value::<EncryptedFile>(f.clone()) {
+                    Ok(file) => self
+                        .client
+                        .media()
+                        .get_media_content(
+                            &MediaRequestParameters {
+                                source: MediaSource::Encrypted(Box::new(file)),
+                                format: MediaFormat::File,
+                            },
+                            true,
+                        )
+                        .await
+                        .ok(),
+                    Err(_) => None,
+                },
+                None => None,
+            };
+            let text = |k: &str| c.get(k).and_then(|x| x.as_str()).unwrap_or_default().to_owned();
+            let birthday = text("birthday");
+            return Ok(ProfileCard {
+                photo,
+                bio: text("bio"),
+                birthday: if birthday_ok(&birthday) { birthday } else { String::new() },
+                private: true,
+            });
+        }
+        // Public profile (everyone may see it).
+        let account = self.client.account();
+        let photo = match account.fetch_user_profile_of(&uid).await {
+            Ok(p) => match p.get_static::<matrix_sdk::ruma::profile::AvatarUrl>().ok().flatten() {
+                Some(url) => self
+                    .client
+                    .media()
+                    .get_media_content(
+                        &MediaRequestParameters {
+                            source: MediaSource::Plain(url),
+                            format: MediaFormat::File,
+                        },
+                        true,
+                    )
+                    .await
+                    .ok(),
+                None => None,
+            },
+            Err(_) => None,
+        };
+        let birthday = match account
+            .fetch_profile_field_of(uid.clone(), BIRTHDAY_FIELD.into())
+            .await
+        {
+            Ok(Some(v)) => v.value().as_str().unwrap_or_default().to_owned(),
+            _ => String::new(),
+        };
+        Ok(ProfileCard {
+            photo,
+            bio: self.bio_of(user_id).await.unwrap_or_default(),
+            birthday: if birthday_ok(&birthday) { birthday } else { String::new() },
+            private: false,
+        })
     }
 
     /// People in a chat with their role ("owner", "admin" or "member").

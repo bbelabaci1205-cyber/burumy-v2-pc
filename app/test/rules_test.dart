@@ -44,7 +44,9 @@ void main() {
           path.contains('/l10n/') ||
           path.contains('/src/rust/') ||
           path.endsWith('brand/brand.dart') ||
-          path.endsWith('demo/sample.dart'))
+          path.endsWith('demo/sample.dart') ||
+          // Date words the plan finder looks for, not screen text.
+          path.endsWith('core/plan_pick.dart'))
         continue;
       final lines = f.readAsLinesSync();
       for (var i = 0; i < lines.length; i++) {

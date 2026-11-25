@@ -40,7 +40,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.13.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -68995353;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 482803949;
 
 // Section: executor
 
@@ -4619,6 +4619,66 @@ fn wire__crate__api__device__BurumyDevice_preview_image_impl(
         },
     )
 }
+fn wire__crate__api__device__BurumyDevice_profile_of_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "BurumyDevice_profile_of",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <RustOpaqueMoi<
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BurumyDevice>,
+            >>::sse_decode(&mut deserializer);
+            let api_user_id = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let mut api_that_guard = None;
+                        let decode_indices_ =
+                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
+                                vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                    &api_that, 0, false,
+                                )],
+                            );
+                        for i in decode_indices_ {
+                            match i {
+                                0 => {
+                                    api_that_guard =
+                                        Some(api_that.lockable_decode_async_ref().await)
+                                }
+                                _ => unreachable!(),
+                            }
+                        }
+                        let api_that_guard = api_that_guard.unwrap();
+                        let output_ok = crate::api::device::BurumyDevice::profile_of(
+                            &*api_that_guard,
+                            api_user_id,
+                        )
+                        .await?;
+                        std::result::Result::Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
 fn wire__crate__api__device__BurumyDevice_quiet_lists_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -8169,6 +8229,80 @@ fn wire__crate__api__device__BurumyDevice_settings_impl(
         },
     )
 }
+fn wire__crate__api__device__BurumyDevice_share_profile_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "BurumyDevice_share_profile",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <RustOpaqueMoi<
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BurumyDevice>,
+            >>::sse_decode(&mut deserializer);
+            let api_mime = <String>::sse_decode(&mut deserializer);
+            let api_photo = <Vec<u8>>::sse_decode(&mut deserializer);
+            let api_bio = <String>::sse_decode(&mut deserializer);
+            let api_birthday = <String>::sse_decode(&mut deserializer);
+            let api_who_photo = <String>::sse_decode(&mut deserializer);
+            let api_who_bio = <String>::sse_decode(&mut deserializer);
+            let api_who_birthday = <String>::sse_decode(&mut deserializer);
+            let api_only = <Vec<String>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let mut api_that_guard = None;
+                        let decode_indices_ =
+                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
+                                vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                                    &api_that, 0, false,
+                                )],
+                            );
+                        for i in decode_indices_ {
+                            match i {
+                                0 => {
+                                    api_that_guard =
+                                        Some(api_that.lockable_decode_async_ref().await)
+                                }
+                                _ => unreachable!(),
+                            }
+                        }
+                        let api_that_guard = api_that_guard.unwrap();
+                        let output_ok = crate::api::device::BurumyDevice::share_profile(
+                            &*api_that_guard,
+                            api_mime,
+                            api_photo,
+                            api_bio,
+                            api_birthday,
+                            api_who_photo,
+                            api_who_bio,
+                            api_who_birthday,
+                            api_only,
+                        )
+                        .await?;
+                        std::result::Result::Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
 fn wire__crate__api__device__BurumyDevice_start_call_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -10325,6 +10459,22 @@ impl SseDecode for crate::api::device::PollRow {
     }
 }
 
+impl SseDecode for crate::api::device::ProfileCardRow {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_photo = <Option<Vec<u8>>>::sse_decode(deserializer);
+        let mut var_bio = <String>::sse_decode(deserializer);
+        let mut var_birthday = <String>::sse_decode(deserializer);
+        let mut var_private = <bool>::sse_decode(deserializer);
+        return crate::api::device::ProfileCardRow {
+            photo: var_photo,
+            bio: var_bio,
+            birthday: var_birthday,
+            private: var_private,
+        };
+    }
+}
+
 impl SseDecode for crate::api::device::ReactionRow {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -10784,359 +10934,371 @@ fn pde_ffi_dispatcher_primary_impl(
             rust_vec_len,
             data_len,
         ),
-        77 => wire__crate__api__device__BurumyDevice_quiet_lists_impl(
+        77 => wire__crate__api__device__BurumyDevice_profile_of_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        78 => wire__crate__api__device__BurumyDevice_react_impl(port, ptr, rust_vec_len, data_len),
-        79 => wire__crate__api__device__BurumyDevice_read_until_impl(
+        78 => wire__crate__api__device__BurumyDevice_quiet_lists_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        80 => {
+        79 => wire__crate__api__device__BurumyDevice_react_impl(port, ptr, rust_vec_len, data_len),
+        80 => wire__crate__api__device__BurumyDevice_read_until_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        81 => {
             wire__crate__api__device__BurumyDevice_recover_impl(port, ptr, rust_vec_len, data_len)
         }
-        81 => wire__crate__api__device__BurumyDevice_recover_all_impl(
+        82 => wire__crate__api__device__BurumyDevice_recover_all_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        82 => {
+        83 => {
             wire__crate__api__device__BurumyDevice_register_impl(port, ptr, rust_vec_len, data_len)
         }
-        83 => wire__crate__api__device__BurumyDevice_release_hidden_impl(
+        84 => wire__crate__api__device__BurumyDevice_release_hidden_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        84 => wire__crate__api__device__BurumyDevice_remove_member_impl(
+        85 => wire__crate__api__device__BurumyDevice_remove_member_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        85 => wire__crate__api__device__BurumyDevice_reply_impl(port, ptr, rust_vec_len, data_len),
-        86 => wire__crate__api__device__BurumyDevice_reply_in_thread_impl(
+        86 => wire__crate__api__device__BurumyDevice_reply_impl(port, ptr, rust_vec_len, data_len),
+        87 => wire__crate__api__device__BurumyDevice_reply_in_thread_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        87 => wire__crate__api__device__BurumyDevice_report_message_impl(
+        88 => wire__crate__api__device__BurumyDevice_report_message_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        88 => wire__crate__api__device__BurumyDevice_request_user_verification_impl(
+        89 => wire__crate__api__device__BurumyDevice_request_user_verification_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        89 => {
+        90 => {
             wire__crate__api__device__BurumyDevice_restore_impl(port, ptr, rust_vec_len, data_len)
         }
-        90 => wire__crate__api__device__BurumyDevice_ringing_calls_impl(
+        91 => wire__crate__api__device__BurumyDevice_ringing_calls_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        91 => wire__crate__api__device__BurumyDevice_room_about_impl(
+        92 => wire__crate__api__device__BurumyDevice_room_about_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        92 => wire__crate__api__device__BurumyDevice_room_config_impl(
+        93 => wire__crate__api__device__BurumyDevice_room_config_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        93 => wire__crate__api__device__BurumyDevice_room_switch_impl(
+        94 => wire__crate__api__device__BurumyDevice_room_switch_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        94 => wire__crate__api__device__BurumyDevice_run_due_leaves_impl(
+        95 => wire__crate__api__device__BurumyDevice_run_due_leaves_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        95 => wire__crate__api__device__BurumyDevice_run_expiry_impl(
+        96 => wire__crate__api__device__BurumyDevice_run_expiry_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        96 => {
+        97 => {
             wire__crate__api__device__BurumyDevice_sas_emoji_impl(port, ptr, rust_vec_len, data_len)
         }
-        97 => wire__crate__api__device__BurumyDevice_saved_room_impl(
+        98 => wire__crate__api__device__BurumyDevice_saved_room_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        98 => wire__crate__api__device__BurumyDevice_search_messages_impl(
+        99 => wire__crate__api__device__BurumyDevice_search_messages_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        99 => wire__crate__api__device__BurumyDevice_search_people_impl(
+        100 => wire__crate__api__device__BurumyDevice_search_people_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        100 => wire__crate__api__device__BurumyDevice_send_bubble_impl(
+        101 => wire__crate__api__device__BurumyDevice_send_bubble_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        101 => wire__crate__api__device__BurumyDevice_send_contact_impl(
+        102 => wire__crate__api__device__BurumyDevice_send_contact_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        102 => {
+        103 => {
             wire__crate__api__device__BurumyDevice_send_file_impl(port, ptr, rust_vec_len, data_len)
         }
-        103 => wire__crate__api__device__BurumyDevice_send_file_captioned_impl(
+        104 => wire__crate__api__device__BurumyDevice_send_file_captioned_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        104 => wire__crate__api__device__BurumyDevice_send_location_impl(
+        105 => wire__crate__api__device__BurumyDevice_send_location_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        105 => wire__crate__api__device__BurumyDevice_send_sticker_impl(
+        106 => wire__crate__api__device__BurumyDevice_send_sticker_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        106 => {
+        107 => {
             wire__crate__api__device__BurumyDevice_send_text_impl(port, ptr, rust_vec_len, data_len)
         }
-        107 => wire__crate__api__device__BurumyDevice_send_text_quietly_impl(
+        108 => wire__crate__api__device__BurumyDevice_send_text_quietly_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        108 => wire__crate__api__device__BurumyDevice_send_view_once_impl(
+        109 => wire__crate__api__device__BurumyDevice_send_view_once_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        109 => wire__crate__api__device__BurumyDevice_send_voice_impl(
+        110 => wire__crate__api__device__BurumyDevice_send_voice_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        112 => {
+        113 => {
             wire__crate__api__device__BurumyDevice_set_admin_impl(port, ptr, rust_vec_len, data_len)
         }
-        113 => wire__crate__api__device__BurumyDevice_set_banned_impl(
+        114 => wire__crate__api__device__BurumyDevice_set_banned_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        114 => wire__crate__api__device__BurumyDevice_set_call_waiting_impl(
+        115 => wire__crate__api__device__BurumyDevice_set_call_waiting_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        115 => wire__crate__api__device__BurumyDevice_set_chat_archived_impl(
+        116 => wire__crate__api__device__BurumyDevice_set_chat_archived_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        116 => wire__crate__api__device__BurumyDevice_set_chat_muted_impl(
+        117 => wire__crate__api__device__BurumyDevice_set_chat_muted_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        117 => wire__crate__api__device__BurumyDevice_set_chat_pinned_impl(
+        118 => wire__crate__api__device__BurumyDevice_set_chat_pinned_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        118 => wire__crate__api__device__BurumyDevice_set_link_previews_enabled_impl(
+        119 => wire__crate__api__device__BurumyDevice_set_link_previews_enabled_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        119 => wire__crate__api__device__BurumyDevice_set_my_bio_impl(
+        120 => wire__crate__api__device__BurumyDevice_set_my_bio_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        120 => wire__crate__api__device__BurumyDevice_set_my_name_impl(
+        121 => wire__crate__api__device__BurumyDevice_set_my_name_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        121 => wire__crate__api__device__BurumyDevice_set_my_photo_impl(
+        122 => wire__crate__api__device__BurumyDevice_set_my_photo_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        122 => wire__crate__api__device__BurumyDevice_set_notice_text_hidden_impl(
+        123 => wire__crate__api__device__BurumyDevice_set_notice_text_hidden_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        123 => {
+        124 => {
             wire__crate__api__device__BurumyDevice_set_push_impl(port, ptr, rust_vec_len, data_len)
         }
-        124 => wire__crate__api__device__BurumyDevice_set_quiet_lists_impl(
+        125 => wire__crate__api__device__BurumyDevice_set_quiet_lists_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        125 => wire__crate__api__device__BurumyDevice_set_room_about_impl(
+        126 => wire__crate__api__device__BurumyDevice_set_room_about_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        126 => wire__crate__api__device__BurumyDevice_set_room_config_impl(
+        127 => wire__crate__api__device__BurumyDevice_set_room_config_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        127 => wire__crate__api__device__BurumyDevice_set_room_name_impl(
+        128 => wire__crate__api__device__BurumyDevice_set_room_name_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        128 => wire__crate__api__device__BurumyDevice_set_room_switch_impl(
+        129 => wire__crate__api__device__BurumyDevice_set_room_switch_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        129 => wire__crate__api__device__BurumyDevice_set_setting_impl(
+        130 => wire__crate__api__device__BurumyDevice_set_setting_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        130 => wire__crate__api__device__BurumyDevice_set_streaks_enabled_impl(
+        131 => wire__crate__api__device__BurumyDevice_set_streaks_enabled_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        131 => {
+        132 => {
             wire__crate__api__device__BurumyDevice_set_timer_impl(port, ptr, rust_vec_len, data_len)
         }
-        132 => wire__crate__api__device__BurumyDevice_set_typing_impl(
+        133 => wire__crate__api__device__BurumyDevice_set_typing_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        134 => {
+        135 => {
             wire__crate__api__device__BurumyDevice_settings_impl(port, ptr, rust_vec_len, data_len)
         }
-        135 => wire__crate__api__device__BurumyDevice_start_call_impl(
+        136 => wire__crate__api__device__BurumyDevice_share_profile_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        136 => wire__crate__api__device__BurumyDevice_start_session_impl(
+        137 => wire__crate__api__device__BurumyDevice_start_call_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        137 => {
-            wire__crate__api__device__BurumyDevice_stories_impl(port, ptr, rust_vec_len, data_len)
-        }
-        138 => wire__crate__api__device__BurumyDevice_streaks_enabled_impl(
+        138 => wire__crate__api__device__BurumyDevice_start_session_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
         139 => {
+            wire__crate__api__device__BurumyDevice_stories_impl(port, ptr, rust_vec_len, data_len)
+        }
+        140 => wire__crate__api__device__BurumyDevice_streaks_enabled_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        141 => {
             wire__crate__api__device__BurumyDevice_sync_once_impl(port, ptr, rust_vec_len, data_len)
         }
-        140 => {
+        142 => {
             wire__crate__api__device__BurumyDevice_sync_wait_impl(port, ptr, rust_vec_len, data_len)
         }
-        141 => wire__crate__api__device__BurumyDevice_take_erase_notices_impl(
+        143 => wire__crate__api__device__BurumyDevice_take_erase_notices_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        142 => wire__crate__api__device__BurumyDevice_this_device_verified_impl(
+        144 => wire__crate__api__device__BurumyDevice_this_device_verified_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        143 => {
+        145 => {
             wire__crate__api__device__BurumyDevice_timeline_impl(port, ptr, rust_vec_len, data_len)
         }
-        144 => wire__crate__api__device__BurumyDevice_timer_impl(port, ptr, rust_vec_len, data_len),
-        147 => wire__crate__api__device__BurumyDevice_verify_state_impl(
+        146 => wire__crate__api__device__BurumyDevice_timer_impl(port, ptr, rust_vec_len, data_len),
+        149 => wire__crate__api__device__BurumyDevice_verify_state_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        148 => wire__crate__api__device__BurumyDevice_visible_invites_impl(
+        150 => wire__crate__api__device__BurumyDevice_visible_invites_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        149 => wire__crate__api__device__BurumyDevice_vote_impl(port, ptr, rust_vec_len, data_len),
-        150 => wire__crate__api__device__init_app_impl(port, ptr, rust_vec_len, data_len),
-        151 => wire__crate__api__lock__lock_change_normal_impl(port, ptr, rust_vec_len, data_len),
-        152 => wire__crate__api__lock__lock_extras_impl(port, ptr, rust_vec_len, data_len),
-        153 => wire__crate__api__lock__lock_new_impl(port, ptr, rust_vec_len, data_len),
-        155 => wire__crate__api__lock__lock_set_extra_impl(port, ptr, rust_vec_len, data_len),
-        156 => wire__crate__api__lock__lock_set_wipe_after_impl(port, ptr, rust_vec_len, data_len),
-        157 => wire__crate__api__lock__lock_unlock_impl(port, ptr, rust_vec_len, data_len),
+        151 => wire__crate__api__device__BurumyDevice_vote_impl(port, ptr, rust_vec_len, data_len),
+        152 => wire__crate__api__device__init_app_impl(port, ptr, rust_vec_len, data_len),
+        153 => wire__crate__api__lock__lock_change_normal_impl(port, ptr, rust_vec_len, data_len),
+        154 => wire__crate__api__lock__lock_extras_impl(port, ptr, rust_vec_len, data_len),
+        155 => wire__crate__api__lock__lock_new_impl(port, ptr, rust_vec_len, data_len),
+        157 => wire__crate__api__lock__lock_set_extra_impl(port, ptr, rust_vec_len, data_len),
+        158 => wire__crate__api__lock__lock_set_wipe_after_impl(port, ptr, rust_vec_len, data_len),
+        159 => wire__crate__api__lock__lock_unlock_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -11154,21 +11316,21 @@ fn pde_ffi_dispatcher_sync_impl(
         }
         49 => wire__crate__api__device__BurumyDevice_is_logged_in_impl(ptr, rust_vec_len, data_len),
         74 => wire__crate__api__device__BurumyDevice_pinned_impl(ptr, rust_vec_len, data_len),
-        110 => {
+        111 => {
             wire__crate__api__device__BurumyDevice_session_json_impl(ptr, rust_vec_len, data_len)
         }
-        111 => {
+        112 => {
             wire__crate__api__device__BurumyDevice_session_role_impl(ptr, rust_vec_len, data_len)
         }
-        133 => {
+        134 => {
             wire__crate__api__device__BurumyDevice_set_tz_offset_impl(ptr, rust_vec_len, data_len)
         }
-        145 => {
+        147 => {
             wire__crate__api__device__BurumyDevice_typing_users_impl(ptr, rust_vec_len, data_len)
         }
-        146 => wire__crate__api__device__BurumyDevice_user_id_impl(ptr, rust_vec_len, data_len),
-        154 => wire__crate__api__lock__lock_password_ok_impl(ptr, rust_vec_len, data_len),
-        158 => wire__crate__api__lock__lock_wipe_after_impl(ptr, rust_vec_len, data_len),
+        148 => wire__crate__api__device__BurumyDevice_user_id_impl(ptr, rust_vec_len, data_len),
+        156 => wire__crate__api__lock__lock_password_ok_impl(ptr, rust_vec_len, data_len),
+        160 => wire__crate__api__lock__lock_wipe_after_impl(ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -11704,6 +11866,29 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::device::PollRow>
     for crate::api::device::PollRow
 {
     fn into_into_dart(self) -> crate::api::device::PollRow {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::device::ProfileCardRow {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.photo.into_into_dart().into_dart(),
+            self.bio.into_into_dart().into_dart(),
+            self.birthday.into_into_dart().into_dart(),
+            self.private.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::device::ProfileCardRow
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::device::ProfileCardRow>
+    for crate::api::device::ProfileCardRow
+{
+    fn into_into_dart(self) -> crate::api::device::ProfileCardRow {
         self
     }
 }
@@ -12499,6 +12684,16 @@ impl SseEncode for crate::api::device::PollRow {
         <Option<String>>::sse_encode(self.correct, serializer);
         <String>::sse_encode(self.explain, serializer);
         <i64>::sse_encode(self.close_at, serializer);
+    }
+}
+
+impl SseEncode for crate::api::device::ProfileCardRow {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Option<Vec<u8>>>::sse_encode(self.photo, serializer);
+        <String>::sse_encode(self.bio, serializer);
+        <String>::sse_encode(self.birthday, serializer);
+        <bool>::sse_encode(self.private, serializer);
     }
 }
 

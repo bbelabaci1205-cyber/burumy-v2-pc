@@ -764,6 +764,23 @@ abstract class Backend {
   Future<String> bioOf(String userId);
   Future<List<int>?> myPhoto();
   Future<void> setMyPhoto(String mime, List<int> bytes);
+
+  /// Shares my photo, about-me and birthday. [who*]: everyone (also on the
+  /// public profile), contacts (only inside each 1:1 chat's encryption) or
+  /// nobody. [only]: just these chats (new friends). How many got it.
+  Future<int> shareProfile({
+    required String mime,
+    required List<int> photo,
+    required String bio,
+    required String birthday,
+    required String whoPhoto,
+    required String whoBio,
+    required String whoBirthday,
+    List<String> only = const [],
+  });
+
+  /// Someone's photo, about-me and birthday as I may see them.
+  Future<ProfileCard> profileOf(String userId);
   Future<List<Member>> members(String roomId);
   Future<void> leave(String roomId);
 
@@ -801,4 +818,15 @@ class PeerDevice {
   final String name;
   final String key;
   final bool verified;
+}
+
+/// Someone's photo, about-me and birthday ("MM-DD"), as I may see them.
+class ProfileCard {
+  const ProfileCard({this.photo, this.bio = '', this.birthday = '', this.private = false});
+  final List<int>? photo;
+  final String bio;
+  final String birthday;
+
+  /// From our encrypted 1:1 chat (not the public profile).
+  final bool private;
 }

@@ -125,6 +125,9 @@ class Push {
             priority: Priority.high,
             playSound: !quiet,
             sound: quiet ? null : RawResourceAndroidNotificationSound('burumy_$sound'),
+            // Settings > Notifications > Names on lock screen: off = the
+            // locked screen only says a message came.
+            visibility: prefs['lock_name'] == '0' ? NotificationVisibility.private : NotificationVisibility.public,
           ),
           iOS: DarwinNotificationDetails(presentSound: !quiet),
         ),

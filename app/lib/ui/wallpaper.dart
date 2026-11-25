@@ -2,6 +2,7 @@
 // Chat backgrounds (Settings > Appearance > Colour theme): plain white like
 // iPhone Messages by default, or a soft gradient with a drawn icon pattern,
 // or my own photo. Everything is drawn here; nothing is downloaded.
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:typed_data';
@@ -9,6 +10,8 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/cupertino.dart';
+import 'package:sensors_plus/sensors_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
 import '../core/app_state.dart';
@@ -94,9 +97,12 @@ class ChatWallpaper extends StatelessWidget {
     return Stack(
       children: [
         Positioned.fill(
-          child: photo != null
-              ? Image.memory(photo, fit: BoxFit.cover, gaplessPlayback: true)
-              : WallpaperArt(theme: ChatTheme.of(id), dark: p.dark, base: p.chatBackground),
+          child: TiltLayer(
+            on: theme == null && s.tiltOn,
+            child: photo != null
+                ? Image.memory(photo, fit: BoxFit.cover, gaplessPlayback: true)
+                : WallpaperArt(theme: ChatTheme.of(id), dark: p.dark, base: p.chatBackground),
+          ),
         ),
         child,
       ],
@@ -258,3 +264,63 @@ class _HiphopPainter extends CustomPainter {
 /// Tokens used by the wallpaper previews.
 const wallpaperPreviewRadius = 16.0;
 double get wallpaperTileWidth => 72 + Tokens.space[0];
+
+/// Settings > Appearance > Move when tilted: the background drifts a few
+/// points against the phone's tilt (a little zoomed so no edge shows).
+/// Phones only; the sensor stops as soon as the chat closes.
+class TiltLayer extends StatefulWidget {
+  const TiltLayer({super.key, required this.on, required this.child});
+  final bool on;
+  final Widget child;
+  @override
+  State<TiltLayer> createState() => _TiltLayerState();
+}
+
+class _TiltLayerState extends State<TiltLayer> {
+  static const reach = 14.0;
+  StreamSubscription<AccelerometerEvent>? sub;
+  Offset at = Offset.zero;
+
+  bool get phone => !kIsWeb && (defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS);
+
+  @override
+  void initState() {
+    super.initState();
+    _listen();
+  }
+
+  @override
+  void didUpdateWidget(TiltLayer old) {
+    super.didUpdateWidget(old);
+    if (old.on != widget.on) _listen();
+  }
+
+  void _listen() {
+    unawaited(sub?.cancel());
+    sub = null;
+    if (!widget.on || !phone) return;
+    sub = accelerometerEventStream(samplingPeriod: SensorInterval.uiInterval).listen((e) {
+      // Gravity split over x / y: about -9.8..9.8 each. Smoothed.
+      final want = Offset((e.x / 9.8).clamp(-1.0, 1.0) * reach, (-(e.y - 6) / 9.8).clamp(-1.0, 1.0) * reach);
+      final next = Offset.lerp(at, want, 0.15)!;
+      if ((next - at).distance > 0.2 && mounted) setState(() => at = next);
+    });
+  }
+
+  @override
+  void dispose() {
+    unawaited(sub?.cancel());
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!widget.on || !phone) return widget.child;
+    return ClipRect(
+      child: Transform.translate(
+        offset: at,
+        child: Transform.scale(scale: 1.1, child: widget.child),
+      ),
+    );
+  }
+}

@@ -52,33 +52,30 @@ class HeaderCard extends StatelessWidget {
   final String title;
   final String body;
 
+  /// v1 look (Eric 2026-11-25): big tile, title and words on the left.
+  static const tile = 60.0;
+
   @override
   Widget build(BuildContext context) {
     final p = paletteOf(context);
     return Container(
+      width: double.infinity,
       margin: EdgeInsets.fromLTRB(Tokens.space[3], Tokens.space[2], Tokens.space[3], 0),
-      padding: EdgeInsets.symmetric(horizontal: Tokens.space[3], vertical: Tokens.space[4]),
-      decoration: BoxDecoration(color: p.card, borderRadius: BorderRadius.circular(Tokens.radius[2] + 10)),
+      padding: EdgeInsets.fromLTRB(Tokens.space[3] + Tokens.space[0], Tokens.space[3], Tokens.space[3] + Tokens.space[0], Tokens.space[4]),
+      decoration: BoxDecoration(color: p.card, borderRadius: BorderRadius.circular(Tokens.radius[3])),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(16)),
-            child: Icon(icon, size: 36, color: const Color(0xFFFFFFFF)),
+            width: tile,
+            height: tile,
+            decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(Tokens.radius[2])),
+            child: Icon(icon, size: 34, color: const Color(0xFFFFFFFF)),
           ),
           SizedBox(height: Tokens.space[2]),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: Tokens.cardTitle.style.copyWith(color: p.label),
-          ),
-          SizedBox(height: Tokens.space[1]),
-          Text(
-            body,
-            textAlign: TextAlign.center,
-            style: Tokens.caption.style.copyWith(color: p.secondaryLabel),
-          ),
+          Text(title, style: Tokens.screenTitle.style.copyWith(color: p.label)),
+          SizedBox(height: Tokens.space[0]),
+          Text(body, style: Tokens.preview.style.copyWith(color: p.secondaryLabel)),
         ],
       ),
     );
@@ -87,10 +84,13 @@ class HeaderCard extends StatelessWidget {
 
 /// A row that opens another page.
 class NavRow extends StatelessWidget {
-  const NavRow({super.key, this.color, this.icon, required this.title, this.value, this.page, this.onTap, this.danger = false});
+  const NavRow({super.key, this.color, this.icon, required this.title, this.subtitle, this.value, this.page, this.onTap, this.danger = false});
   final Color? color;
   final IconData? icon;
   final String title;
+
+  /// Small grey line under the title (Telegram: "11개 예외").
+  final String? subtitle;
   final String? value;
   final WidgetBuilder? page;
   final VoidCallback? onTap;
@@ -101,6 +101,7 @@ class NavRow extends StatelessWidget {
     return CupertinoListTile(
       leading: icon == null ? null : iconTile(color ?? Palette.tileGrey, icon!),
       title: Text(title, style: danger ? const TextStyle(color: Palette.tileRed) : null),
+      subtitle: subtitle == null ? null : Text(subtitle!),
       additionalInfo: value == null ? null : Text(value!),
       trailing: page == null && onTap == null || danger ? null : const CupertinoListTileChevron(),
       onTap: onTap ?? (page == null ? null : () => Navigator.of(context).push(IosPageRoute(builder: page!))),
@@ -168,8 +169,11 @@ class PrefChoice extends StatelessWidget {
 
 /// One choice out of a few, iOS checkmark list.
 class ChoicePage extends StatelessWidget {
-  const ChoicePage({super.key, required this.title, required this.options, required this.value, required this.onPick, this.header, this.footer});
+  const ChoicePage({super.key, required this.title, required this.options, required this.value, required this.onPick, this.header, this.footer, this.card});
   final String title;
+
+  /// Optional explanation card on top (v1 look).
+  final Widget? card;
   final List<(String, String)> options;
   final String Function() value;
   final ValueChanged<String> onPick;
@@ -183,6 +187,7 @@ class ChoicePage extends StatelessWidget {
     return SettingsScaffold(
       title: title,
       children: [
+        ?card,
         group(context, header: header, footer: footer, [
           for (final (v, label) in options)
             CupertinoListTile(

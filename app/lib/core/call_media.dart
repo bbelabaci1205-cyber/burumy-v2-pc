@@ -33,6 +33,8 @@ abstract class CallMedia extends ChangeNotifier {
 }
 
 class LiveKitMedia extends CallMedia {
+  /// Settings > Data > "전화에 데이터 적게 쓰기": smaller, slower video.
+  static bool lowData = false;
   lk.Room? _room;
   bool _wasHere = false;
   bool _front = true;
@@ -42,7 +44,15 @@ class LiveKitMedia extends CallMedia {
     final keys = await lk.BaseKeyProvider.create();
     await keys.setSharedKey(t.mediaKey);
     final room = lk.Room(
-      roomOptions: lk.RoomOptions(adaptiveStream: true, dynacast: true, encryption: lk.E2EEOptions(keyProvider: keys)),
+      roomOptions: lk.RoomOptions(
+        adaptiveStream: true,
+        dynacast: true,
+        encryption: lk.E2EEOptions(keyProvider: keys),
+        defaultCameraCaptureOptions: lowData ? const lk.CameraCaptureOptions(params: lk.VideoParametersPresets.h360_169) : const lk.CameraCaptureOptions(),
+        defaultVideoPublishOptions: lowData
+            ? const lk.VideoPublishOptions(videoEncoding: lk.VideoEncoding(maxBitrate: 250 * 1000, maxFramerate: 15))
+            : const lk.VideoPublishOptions(),
+      ),
     );
     _room = room;
     room.addListener(_changed);

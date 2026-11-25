@@ -7,7 +7,6 @@ import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../core/app_state.dart';
 import '../core/backend.dart';
@@ -15,6 +14,7 @@ import '../core/link_check.dart';
 import '../design/tokens.dart';
 import '../l10n/app_localizations.dart';
 import 'common.dart';
+import 'links.dart';
 import 'glass.dart';
 import 'ios.dart';
 import 'ios_route.dart';
@@ -663,7 +663,7 @@ Future<void> openCardLink(BuildContext context, String url) async {
       cancelButton: CupertinoActionSheetAction(onPressed: () => Navigator.pop(c), child: Text(l.cancel)),
     ),
   );
-  if (ok == true) await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+  if (ok == true && context.mounted) await openWebLink(context, url);
 }
 
 /// The buttons, in rows, styled as the maker chose.

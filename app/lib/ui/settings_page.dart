@@ -18,6 +18,7 @@ import 'settings_kit.dart';
 import 'settings_more.dart';
 import 'settings_notify.dart';
 import 'settings_pages.dart';
+import 'folders_page.dart';
 import 'ios_route.dart';
 import 'wide.dart';
 
@@ -72,7 +73,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<void> load() async {
     final b = AppScope.of(context).backend;
     final n = await b.myName().catchError((_) => '');
-    final ph = await b.myPhoto().catchError((_) => null);
+    final ph = AppScope.of(context).myOwnPhoto ?? await b.myPhoto().catchError((_) => null);
     final bk = await b.hasRecovery().catchError((_) => false);
     if (mounted) {
       setState(() {
@@ -183,6 +184,7 @@ class _SettingsPageState extends State<SettingsPage> {
             row('notify-row', Palette.tileRed, CupertinoIcons.bell_fill, l.settingsNotifications, page: (_) => const NotificationsPage()),
             row('devices-row', p.tileBlack, CupertinoIcons.device_laptop, l.devices, page: (_) => const DevicesPage()),
             row('chats-row', p.tileGreen, CupertinoIcons.chat_bubble_fill, l.settingsChatsPage, page: (_) => const ChatSettingsPage()),
+            row('folders-row', Palette.tileOrange, CupertinoIcons.folder_fill, l.chatFolders, page: (_) => const FoldersPage()),
             row('data-row', Palette.tileTeal, CupertinoIcons.chart_pie_fill, l.dataStorage, page: (_) => const DataPage()),
             row('privacy-row', Palette.tileBlue, CupertinoIcons.checkmark_shield_fill, l.settingsPrivacy, page: (_) => const PrivacyPage()),
           ]),

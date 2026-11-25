@@ -210,6 +210,8 @@ abstract class BurumyDevice implements RustOpaqueInterface {
   /// Decrypted picture of a message's link card.
   Future<Uint8List> previewImage({required String roomId, required String eventId});
 
+  Future<ProfileCardRow> profileOf({required String userId});
+
   /// [hide list, delete list] (user ids and chat ids).
   Future<List<List<String>>> quietLists();
 
@@ -342,6 +344,17 @@ abstract class BurumyDevice implements RustOpaqueInterface {
 
   /// Every on-device setting stored by name.
   Future<Map<String, String>> settings();
+
+  Future<int> shareProfile({
+    required String mime,
+    required List<int> photo,
+    required String bio,
+    required String birthday,
+    required String whoPhoto,
+    required String whoBio,
+    required String whoBirthday,
+    required List<String> only,
+  });
 
   Future<String> startCall({required String roomId, required bool video});
 
@@ -829,7 +842,6 @@ class DeviceInfo {
           verified == other.verified;
 }
 
-/// A like on a feed post (only in our 1:1 chat).
 class FeedLikeRow {
   final String postId;
   final String sender;
@@ -1080,6 +1092,29 @@ class PollRow {
           correct == other.correct &&
           explain == other.explain &&
           closeAt == other.closeAt;
+}
+
+/// A like on a feed post (only in our 1:1 chat).
+class ProfileCardRow {
+  final Uint8List? photo;
+  final String bio;
+  final String birthday;
+  final bool private;
+
+  const ProfileCardRow({this.photo, required this.bio, required this.birthday, required this.private});
+
+  @override
+  int get hashCode => photo.hashCode ^ bio.hashCode ^ birthday.hashCode ^ private.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ProfileCardRow &&
+          runtimeType == other.runtimeType &&
+          photo == other.photo &&
+          bio == other.bio &&
+          birthday == other.birthday &&
+          private == other.private;
 }
 
 /// One emoji under a message.

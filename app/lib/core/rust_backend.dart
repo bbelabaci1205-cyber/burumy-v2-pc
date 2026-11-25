@@ -585,6 +585,23 @@ class RustBackend implements Backend {
   @override
   Future<void> setMyPhoto(String mime, List<int> bytes) => _d.setMyPhoto(mime: mime, data: Uint8List.fromList(bytes));
   @override
+  Future<int> shareProfile({
+    required String mime,
+    required List<int> photo,
+    required String bio,
+    required String birthday,
+    required String whoPhoto,
+    required String whoBio,
+    required String whoBirthday,
+    List<String> only = const [],
+  }) => _d.shareProfile(mime: mime, photo: photo, bio: bio, birthday: birthday, whoPhoto: whoPhoto, whoBio: whoBio, whoBirthday: whoBirthday, only: only);
+  @override
+  Future<ProfileCard> profileOf(String userId) async {
+    final c = await _d.profileOf(userId: userId);
+    return ProfileCard(photo: c.photo, bio: c.bio, birthday: c.birthday, private: c.private);
+  }
+
+  @override
   Future<List<Member>> members(String roomId) async => [for (final m in await _d.members(roomId: roomId)) Member(userId: m.userId, name: m.name, role: m.role)];
   @override
   Future<void> leave(String roomId) => _d.leave(roomId: roomId);

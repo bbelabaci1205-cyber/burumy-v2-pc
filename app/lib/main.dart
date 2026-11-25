@@ -14,6 +14,8 @@ import 'package:path_provider/path_provider.dart';
 import 'core/desktop_update.dart';
 import 'core/reminders.dart';
 import 'core/app_state.dart';
+import 'core/error_log.dart';
+import 'core/call_media.dart' show LiveKitMedia;
 import 'core/phone.dart';
 import 'core/push.dart';
 import 'core/rust_backend.dart';
@@ -115,6 +117,20 @@ Future<void> main() async {
       if (a != null && DateTime.now().difference(a) > const Duration(seconds: 30)) state.checkLock();
     },
   );
+  // "오류 내용 보기": keep error text on this phone (only while switched on).
+  final shown = FlutterError.onError;
+  FlutterError.onError = (d) {
+    ErrorLog.add(d.exception, d.stack);
+    shown?.call(d);
+  };
+  PlatformDispatcher.instance.onError = (e, st) {
+    ErrorLog.add(e, st);
+    return false;
+  };
+  AppState.remindAt = (id, at, name) {
+    final l = lookupL(Locale((state.locale?.languageCode ?? PlatformDispatcher.instance.locale.languageCode) == 'ko' ? 'ko' : 'en'));
+    return Push.remind(id, at, l.birthdayAlertTitle(name), l.birthdayAlertBody, l.remindChannel);
+  };
   runApp(BurumyApp(state: state));
   unawaited(checkDesktopUpdate());
 }
@@ -130,6 +146,8 @@ class BurumyApp extends StatelessWidget {
       child: Builder(
         builder: (context) {
           final s = AppScope.of(context);
+          ErrorLog.keep = s.on('show_errors');
+          LiveKitMedia.lowData = s.on('low_data_calls');
           final system = MediaQuery.maybePlatformBrightnessOf(context) ?? Brightness.light;
           // Settings > Appearance: night mode follows the phone, or is
           // always on / off.
@@ -140,7 +158,7 @@ class BurumyApp extends StatelessWidget {
           };
           final scale = double.tryParse(s.pref('text_size', '')) ?? 1.0;
           final calm = s.calm;
-          Glass.level = calm ? 'solid' : s.pref('glass', 'normal');
+          Glass.level = s.glassOn ? s.pref('glass', 'normal') : 'solid';
           final p = Palette.of(s.family, b);
           return CupertinoApp(
             debugShowCheckedModeBanner: false,

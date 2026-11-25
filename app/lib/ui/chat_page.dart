@@ -8,7 +8,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../core/app_state.dart';
 import '../core/backend.dart';
@@ -17,6 +16,8 @@ import '../core/voice.dart';
 import '../design/tokens.dart';
 import '../l10n/app_localizations.dart';
 import 'common.dart';
+import 'stories.dart' show showStoryToast;
+import 'links.dart';
 import 'wallpaper.dart';
 import 'ios.dart';
 import 'formatting.dart';
@@ -1449,6 +1450,10 @@ class _ChatPageState extends State<ChatPage> {
 
   Future<void> openSavedSideList() async {
     final pick = await openSavedSide(context, msgs: msgs, current: savedSource);
+    if (pick == savedExit) {
+      if (mounted) await Navigator.of(context).maybePop();
+      return;
+    }
     if (pick != null && mounted) {
       setState(() {
         savedSource = pick;
@@ -2544,10 +2549,12 @@ class Bubble extends StatelessWidget {
           if (msg.kind == 'file') Icon(CupertinoIcons.doc, size: Tokens.listIcon, color: fg),
           if (msg.kind == 'text')
             FormattedText(
-              text,
+              // The marks themselves (previewText takes them out).
+              msg.body ?? '',
               style: Tokens.body.style.copyWith(color: fg),
               linkColor: mine ? p.onAccent : p.accent,
               quoteColor: mine ? p.onAccent : p.accent,
+              onPlan: AppScope.of(context).on('plan_pick') ? (at) => planReminder(context, roomId, chatTitle, msg, at) : null,
             )
           else
             Text(text, style: Tokens.body.style.copyWith(color: msg.kind == 'locked' ? fg.withValues(alpha: 0.6) : fg)),
@@ -2999,7 +3006,7 @@ class _LinkCardViewState extends State<LinkCardView> {
     final fg = widget.mine ? p.onAccent : p.label;
     return GestureDetector(
       key: const Key('link-card'),
-      onTap: () => launchUrl(Uri.parse(c.url), mode: LaunchMode.externalApplication),
+      onTap: () => openWebLink(context, c.url),
       child: Container(
         margin: EdgeInsets.only(top: Tokens.space[0], bottom: 2),
         padding: EdgeInsets.fromLTRB(Tokens.space[1], 3, Tokens.space[1], Tokens.space[0]),
@@ -3606,4 +3613,28 @@ class _ThreadPageState extends State<ThreadPage> {
       ),
     );
   }
+}
+
+/// Settings > Chats > Find plans: a tapped date or time in a message offers
+/// a reminder (an hour before, or at the time). Kept on this phone only.
+Future<void> planReminder(BuildContext context, String roomId, String chat, Msg m, DateTime at) async {
+  final l = L.of(context);
+  final fmt = DateFormat.MMMEd(Localizations.localeOf(context).toLanguageTag()).add_jm();
+  final early = at.subtract(const Duration(hours: 1));
+  final pick = await showCupertinoModalPopup<DateTime>(
+    useRootNavigator: !Wide.on,
+    context: context,
+    builder: (c) => IosActionSheet(
+      title: Text(l.planFound(fmt.format(at))),
+      actions: [
+        if (early.isAfter(DateTime.now()))
+          CupertinoActionSheetAction(key: const Key('plan-early'), onPressed: () => Navigator.pop(c, early), child: Text(l.planHourBefore)),
+        CupertinoActionSheetAction(key: const Key('plan-at'), onPressed: () => Navigator.pop(c, at), child: Text(l.planAtTime)),
+      ],
+      cancelButton: CupertinoActionSheetAction(onPressed: () => Navigator.pop(c), child: Text(l.cancel)),
+    ),
+  );
+  if (pick == null || !context.mounted) return;
+  await addReminder(AppScope.read(context), Reminder(roomId: roomId, msgId: m.id, chat: chat, at: pick));
+  if (context.mounted) showStoryToast(context, l.remindSet(fmt.format(pick)));
 }

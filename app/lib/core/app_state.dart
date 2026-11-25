@@ -3,12 +3,14 @@
 // language). Keeps a live update loop while logged in.
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter/widgets.dart';
 
 import '../brand/brand.dart';
 import 'automod.dart';
 import 'backend.dart';
+import 'error_log.dart';
 import 'features.dart';
 import '../l10n/app_localizations.dart';
 import 'rules.dart';
@@ -23,6 +25,9 @@ class AppState extends ChangeNotifier {
   Locale? locale;
 
   List<ChatPreview> chats = const [];
+
+  /// My 1:1 contacts' user ids (folders: 연락처 / 비연락처).
+  Set<String> friendIds = const {};
 
   /// Bubbles waiting for me (who and when only).
   List<BubbleRef> bubbles = const [];
@@ -52,6 +57,9 @@ class AppState extends ChangeNotifier {
   /// notifications for news that arrive while the app is in the background.
   static Future<void> Function(AppState s)? startPush;
   static Future<void> Function(Backend b)? showNotices;
+
+  /// Phone builds: a local alert at [at] (birthdays). Nothing goes out.
+  static Future<void> Function(int id, DateTime at, String title)? remindAt;
 
   /// The app is not on screen (notifications are shown then).
   bool inBackground = false;
@@ -140,12 +148,16 @@ class AppState extends ChangeNotifier {
 
   /// Settings > Data: download photos on their own now?
   bool get autoDownload {
-    if (calm) return false;
+    if (lowBattery || !on('ps_preload', fallback: true)) return false;
     return network == 'cellular' ? on('auto_dl_cell', fallback: true) : on('auto_dl_wifi', fallback: true);
   }
 
   /// GIFs move (off in power saving, or when switched off).
-  bool get gifsMove => !calm && on('autoplay_gif', fallback: true);
+  bool get gifsMove => !lowBattery && on('autoplay_gif', fallback: true);
+
+  /// Glass blur (off: plain solid bars) and the tilting background.
+  bool get glassOn => !lowBattery && on('ps_glass', fallback: true);
+  bool get tiltOn => !lowBattery && on('tilt');
   Timer? _batteryTimer;
 
   /// Settings > Power saving: below this % the moving effects stop
@@ -153,8 +165,10 @@ class AppState extends ChangeNotifier {
   int get powerBelow => int.tryParse(pref('power_below', '15')) ?? 15;
 
   /// Moving effects are off: switched off, or the battery is low.
-  bool get calm {
-    if (!on('ui_effects', fallback: true)) return true;
+  bool get calm => lowBattery || !on('ui_effects', fallback: true);
+
+  /// Power saving is on now (Telegram: every heavy job stops below X%).
+  bool get lowBattery {
     final below = powerBelow;
     if (below >= 100) return true;
     return below > 0 && battery != null && battery! < below;
@@ -415,6 +429,137 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  // ---- My profile card (photo, about me, birthday) -------------------
+  // Kept on this phone too, so a friends-only photo still shows here.
+
+  Uint8List? _mePhoto;
+  String _mePhotoRaw = '';
+
+  /// My own photo as I last set it (also when only friends may see it).
+  Uint8List? get myOwnPhoto {
+    final raw = pref('me_photo', '');
+    if (raw.isEmpty) return null;
+    if (raw != _mePhotoRaw) {
+      _mePhotoRaw = raw;
+      _mePhoto = base64Decode(raw);
+    }
+    return _mePhoto;
+  }
+
+  /// Older installs kept the photo and about-me only on the server.
+  Future<void> _loadMyProfile() async {
+    if (on('me_loaded')) return;
+    try {
+      final ph = await backend.myPhoto();
+      if (ph != null && ph.isNotEmpty && pref('me_photo', '').isEmpty) await setPref('me_photo', base64Encode(ph));
+      final me = backend.userId;
+      if (me != null && pref('me_bio', '').isEmpty) await setPref('me_bio', await backend.bioOf(me));
+    } catch (_) {}
+    await setOn('me_loaded', true);
+  }
+
+  /// Saves my profile here and shares it by my 공개 범위 choices.
+  Future<void> saveMyProfile({List<int>? photo, bool removePhoto = false, String? bio, String? birthday}) async {
+    await _loadMyProfile();
+    if (removePhoto) await setPref('me_photo', '');
+    if (photo != null && photo.isNotEmpty) await setPref('me_photo', base64Encode(photo));
+    if (bio != null) await setPref('me_bio', bio.trim());
+    if (birthday != null) await setPref('me_birthday', birthday);
+    await publishProfile();
+  }
+
+  /// Sends my card: to every 1:1 friend (and the public profile), or with
+  /// [only] just to new friends.
+  Future<void> publishProfile({List<String> only = const []}) async {
+    await _loadMyProfile();
+    await backend.shareProfile(
+      mime: 'image/png',
+      photo: myOwnPhoto ?? const [],
+      bio: pref('me_bio', ''),
+      birthday: pref('me_birthday', ''),
+      whoPhoto: pref('who_photo', 'everyone'),
+      whoBio: pref('who_bio', 'everyone'),
+      whoBirthday: pref('who_birthday', 'contacts'),
+      only: only,
+    );
+    final done = {...pref('profile_sent', '').split(',').where((x) => x.isNotEmpty), ...only};
+    if (only.isEmpty)
+      done.addAll([
+        for (final c in chats)
+          if (c.isDirect) c.roomId,
+      ]);
+    await setPref('profile_sent', done.join(','));
+  }
+
+  /// New 1:1 friends get my card once.
+  Future<void> _cardToNewFriends() async {
+    if (!loggedIn) return;
+    final done = pref('profile_sent', '').split(',').toSet();
+    final fresh = [
+      for (final c in chats)
+        if (c.isDirect && !c.isBot && !done.contains(c.roomId)) c.roomId,
+    ];
+    if (fresh.isEmpty) return;
+    if (pref('me_photo', '').isEmpty && pref('me_bio', '').isEmpty && pref('me_birthday', '').isEmpty && on('me_loaded')) {
+      await setPref('profile_sent', [...done.where((x) => x.isNotEmpty), ...fresh].join(','));
+      return;
+    }
+    await publishProfile(only: fresh);
+  }
+
+  final _cards = <String, ProfileCard>{};
+  final _cardPhotos = <String, Uint8List>{};
+  final _cardAsked = <String, DateTime>{};
+
+  /// Someone's card (photo, about me, birthday); asks for it now and then.
+  ProfileCard? cardOf(String userId, {bool fresh = false}) {
+    final asked = _cardAsked[userId];
+    if (fresh || asked == null || DateTime.now().difference(asked) > const Duration(minutes: 10)) {
+      _cardAsked[userId] = DateTime.now();
+      unawaited(_loadCard(userId));
+    }
+    return _cards[userId];
+  }
+
+  /// Their photo as bytes for Image.memory (kept, so no flicker).
+  Uint8List? cardPhoto(String userId) {
+    cardOf(userId);
+    return _cardPhotos[userId];
+  }
+
+  Future<void> _loadCard(String userId) async {
+    if (userId == backend.userId) return;
+    try {
+      final c = await backend.profileOf(userId);
+      final old = _cards[userId];
+      _cards[userId] = c;
+      final ph = c.photo;
+      if (ph == null || ph.isEmpty) {
+        _cardPhotos.remove(userId);
+      } else {
+        _cardPhotos[userId] = Uint8List.fromList(ph);
+      }
+      await _birthdayAlert(userId, c);
+      final same = old != null && old.bio == c.bio && old.birthday == c.birthday && old.photo?.length == c.photo?.length;
+      if (!same) notifyListeners();
+    } catch (_) {}
+  }
+
+  /// "생일 알림": a local alert at 9 am on a friend's birthday.
+  Future<void> _birthdayAlert(String userId, ProfileCard c) async {
+    if (!on('birthday_alert') || c.birthday.isEmpty) return;
+    final md = c.birthday.split('-');
+    final m = int.tryParse(md[md.length - 2]), d = int.tryParse(md.last);
+    if (m == null || d == null) return;
+    final now = DateTime.now();
+    var at = DateTime(now.year, m, d, 9);
+    if (at.isBefore(now)) at = DateTime(now.year + 1, m, d, 9);
+    final name = chats.where((x) => x.isDirect && x.peer == userId).firstOrNull?.name ?? userId;
+    try {
+      await remindAt?.call(userId.hashCode & 0x3fffffff, at, name);
+    } catch (_) {}
+  }
+
   Future<void> refresh() async {
     try {
       await sendDue();
@@ -422,6 +567,7 @@ class AppState extends ChangeNotifier {
     try {
       final all = await backend.invitations();
       final friends = await _contactIds();
+      friendIds = friends;
       final keep = <Invite>[];
       for (final i in all) {
         final ok = allowedFrom(settings, i.direct ? 'who_messages' : 'who_invites', i.inviter, friends);
@@ -451,6 +597,11 @@ class AppState extends ChangeNotifier {
     try {
       await sendAwayReplies();
     } catch (_) {}
+    try {
+      await _cardToNewFriends();
+    } catch (e, st) {
+      ErrorLog.add(e, st);
+    }
     await runAutoMod();
     try {
       bubbles = await backend.pendingBubbles();
@@ -511,7 +662,8 @@ class AppState extends ChangeNotifier {
           if (!_live || gen != _generation) break;
           await refresh();
           unawaited(backend.runExpiry().then((_) {}, onError: (_) {}));
-        } catch (_) {
+        } catch (e, st) {
+          ErrorLog.add(e, st);
           await Future<void>.delayed(const Duration(seconds: 3));
         }
       }

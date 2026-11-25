@@ -10,34 +10,72 @@ import '../core/backend.dart';
 import '../design/tokens.dart';
 import '../l10n/app_localizations.dart';
 import 'common.dart';
-import 'ios.dart';
+import 'folders_page.dart';
 import 'glass.dart';
-import 'settings_kit.dart';
 import 'ios_route.dart';
 import 'wide.dart';
 
 /// A folder: a name, kinds of chats it takes, and chats added or left out
 /// by hand. Kept in the on-device settings store.
 class ChatFolder {
-  ChatFolder({required this.id, required this.name, Set<String>? kinds, Set<String>? include, Set<String>? exclude})
-    : kinds = kinds ?? {},
-      include = include ?? {},
-      exclude = exclude ?? {};
+  ChatFolder({
+    required this.id,
+    required this.name,
+    Set<String>? kinds,
+    Set<String>? include,
+    Set<String>? exclude,
+    Set<String>? skip,
+    this.emoji = '',
+    this.color = -1,
+  }) : kinds = kinds ?? {},
+       include = include ?? {},
+       exclude = exclude ?? {},
+       skip = skip ?? {};
   final String id;
   String name;
 
-  /// Any of: direct, group, channel, bot, unread.
+  /// Emoji in front of the name (may be empty).
+  String emoji;
+
+  /// Tag colour: index into [folderColors], -1 = no tag.
+  int color;
+
+  /// Kinds it takes: contacts, noncontacts, group, channel, bot (and the
+  /// older direct / unread).
   final Set<String> kinds;
+
+  /// Kinds it leaves out: muted, read, archived.
+  final Set<String> skip;
   final Set<String> include;
   final Set<String> exclude;
 
-  bool takes(ChatPreview c) {
+  bool takes(ChatPreview c, [Set<String> friends = const {}]) {
     if (exclude.contains(c.roomId)) return false;
     if (include.contains(c.roomId)) return true;
-    return kinds.any((k) => filterTakes(k, c));
+    if (skip.contains('muted') && c.muted) return false;
+    if (skip.contains('read') && c.unread == 0) return false;
+    if (skip.contains('archived') && c.archived) return false;
+    return kinds.any(
+      (k) => switch (k) {
+        'contacts' => c.isDirect && !c.isBot && friends.contains(c.peer),
+        'noncontacts' => c.isDirect && !c.isBot && !friends.contains(c.peer),
+        _ => filterTakes(k, c),
+      },
+    );
   }
 
-  Map<String, Object> toJson() => {'id': id, 'name': name, 'kinds': kinds.toList(), 'include': include.toList(), 'exclude': exclude.toList()};
+  String get label => emoji.isEmpty ? name : '$emoji $name';
+
+  Map<String, Object> toJson() => {
+    'id': id,
+    'name': name,
+    'kinds': kinds.toList(),
+    'include': include.toList(),
+    'exclude': exclude.toList(),
+    'skip': skip.toList(),
+    'emoji': emoji,
+    'color': color,
+  };
 
   static ChatFolder fromJson(Map<String, dynamic> j) => ChatFolder(
     id: j['id'] as String,
@@ -45,8 +83,14 @@ class ChatFolder {
     kinds: {...(j['kinds'] as List).cast<String>()},
     include: {...(j['include'] as List).cast<String>()},
     exclude: {...(j['exclude'] as List).cast<String>()},
+    skip: {...((j['skip'] as List?) ?? const []).cast<String>()},
+    emoji: (j['emoji'] as String?) ?? '',
+    color: (j['color'] as int?) ?? -1,
   );
 }
+
+/// Folder tag colours (iOS system colours).
+const folderColors = [Palette.tileBlue, Color(0xFF34C759), Palette.tileOrange, Palette.tileRed, Palette.tilePurple, Palette.tileTeal, Palette.tilePink];
 
 List<ChatFolder> foldersOf(AppState s) {
   try {
@@ -54,6 +98,27 @@ List<ChatFolder> foldersOf(AppState s) {
   } catch (_) {
     return [];
   }
+}
+
+String? _tagRaw;
+List<ChatFolder> _tagged = const [];
+
+/// Folders with a tag colour that take this chat (chat list tags; off by
+/// Settings > Chat folders > Show folder tags).
+List<ChatFolder> tagsOf(AppState s, ChatPreview c) {
+  if (!s.on('folder_tags', fallback: true)) return const [];
+  final raw = s.pref('folders', '[]');
+  if (raw != _tagRaw) {
+    _tagRaw = raw;
+    _tagged = [
+      for (final f in foldersOf(s))
+        if (f.color >= 0 && f.color < folderColors.length) f,
+    ];
+  }
+  return [
+    for (final f in _tagged)
+      if (f.takes(c, s.friendIds)) f,
+  ];
 }
 
 Future<void> saveFolders(AppState s, List<ChatFolder> f) => s.setPref('folders', f.isEmpty ? '' : jsonEncode([for (final x in f) x.toJson()]));
@@ -81,7 +146,7 @@ String filterName(L l, String f) => switch (f) {
 bool takes(AppState s, String filter, ChatPreview c) {
   if (filter.startsWith('folder:')) {
     final f = foldersOf(s).where((x) => 'folder:${x.id}' == filter).firstOrNull;
-    return f == null || f.takes(c);
+    return f == null || f.takes(c, s.friendIds);
   }
   return filterTakes(filter, c);
 }
@@ -89,7 +154,7 @@ bool takes(AppState s, String filter, ChatPreview c) {
 /// Title for the list when a filter is on.
 String filterTitle(AppState s, L l, String filter) {
   if (filter.startsWith('folder:')) {
-    return foldersOf(s).where((x) => 'folder:${x.id}' == filter).firstOrNull?.name ?? l.tabChats;
+    return foldersOf(s).where((x) => 'folder:${x.id}' == filter).firstOrNull?.label ?? l.tabChats;
   }
   return filter == 'all' ? l.tabChats : filterName(l, filter);
 }
@@ -179,7 +244,7 @@ class SideMenu extends StatelessWidget {
             for (final f in folders)
               GestureDetector(
                 onLongPress: () => paneNav(context).push(IosPageRoute(builder: (_) => FolderEditPage(folder: f))),
-                child: row('folder:${f.id}', f.name, CupertinoIcons.folder, unreadIn(f.takes)),
+                child: row('folder:${f.id}', f.label, CupertinoIcons.folder, unreadIn((c) => f.takes(c, s.friendIds))),
               ),
             GestureDetector(
               key: const Key('new-folder'),
@@ -199,99 +264,6 @@ class SideMenu extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-/// Make or change a folder: name, kinds of chats, chats by hand.
-class FolderEditPage extends StatefulWidget {
-  const FolderEditPage({super.key, this.folder});
-  final ChatFolder? folder;
-  @override
-  State<FolderEditPage> createState() => _FolderEditPageState();
-}
-
-class _FolderEditPageState extends State<FolderEditPage> {
-  late final ChatFolder f = widget.folder == null
-      ? ChatFolder(id: DateTime.now().microsecondsSinceEpoch.toRadixString(36), name: '')
-      : ChatFolder.fromJson(widget.folder!.toJson() as Map<String, dynamic>);
-  late final name = TextEditingController(text: f.name);
-
-  Future<void> save() async {
-    final s = AppScope.of(context);
-    f.name = name.text.trim();
-    if (f.name.isEmpty) return;
-    final all = foldersOf(s)..removeWhere((x) => x.id == f.id);
-    await saveFolders(s, [...all, f]);
-    if (mounted) Navigator.pop(context);
-  }
-
-  Future<void> remove() async {
-    final s = AppScope.of(context);
-    await saveFolders(s, foldersOf(s)..removeWhere((x) => x.id == f.id));
-    if (mounted) Navigator.pop(context);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l = L.of(context);
-    final p = paletteOf(context);
-    final s = AppScope.of(context);
-    Widget kind(String k, IconData icon, Color c) => CupertinoListTile(
-      leading: iconTile(c, icon),
-      title: Text(filterName(l, k)),
-      trailing: IosSwitch(
-        key: Key('kind-$k'),
-        value: f.kinds.contains(k),
-        activeTrackColor: p.accent,
-        onChanged: (v) => setState(() => v ? f.kinds.add(k) : f.kinds.remove(k)),
-      ),
-    );
-    return SettingsScaffold(
-      title: widget.folder == null ? l.newFolder : f.name,
-      trailing: [GlassPill(key: const Key('folder-save'), text: l.save, onTap: save)],
-      children: [
-        group(context, [
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: Tokens.space[1]),
-            child: CupertinoTextField(
-              key: const Key('folder-name'),
-              controller: name,
-              placeholder: l.folderName,
-              maxLength: 24,
-              decoration: null,
-              style: Tokens.body.style.copyWith(color: p.label),
-              padding: EdgeInsets.symmetric(horizontal: Tokens.space[1], vertical: Tokens.space[2]),
-            ),
-          ),
-        ]),
-        group(context, header: l.folderKinds, footer: l.folderInfo, [
-          kind('direct', CupertinoIcons.person_fill, Palette.tileBlue),
-          kind('group', CupertinoIcons.person_3_fill, p.tileGreen),
-          kind('channel', CupertinoIcons.speaker_2_fill, Palette.tileOrange),
-          kind('bot', CupertinoIcons.cube_fill, Palette.tilePurple),
-          kind('unread', CupertinoIcons.envelope_badge_fill, Palette.tileRed),
-        ]),
-        group(context, header: l.folderChats, [
-          for (final c in s.chats)
-            CupertinoListTile(
-              key: Key('folder-chat-${c.roomId}'),
-              leading: Avatar(name: c.name, size: 30, squircle: !c.isDirect),
-              title: Text(c.name),
-              trailing: Icon(f.takes(c) ? CupertinoIcons.checkmark_circle_fill : CupertinoIcons.circle, color: f.takes(c) ? p.accent : p.secondaryLabel),
-              onTap: () => setState(() {
-                if (f.takes(c)) {
-                  f.include.remove(c.roomId);
-                  if (f.takes(c)) f.exclude.add(c.roomId);
-                } else {
-                  f.exclude.remove(c.roomId);
-                  if (!f.takes(c)) f.include.add(c.roomId);
-                }
-              }),
-            ),
-        ]),
-        if (widget.folder != null) group(context, [NavRow(key: const Key('folder-delete'), title: l.deleteFolder, danger: true, onTap: remove)]),
-      ],
     );
   }
 }

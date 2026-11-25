@@ -75,7 +75,8 @@ class Avatar extends StatelessWidget {
         child: Icon(CupertinoIcons.bookmark_fill, size: size * 0.46, color: const Color(0xFFFFFFFF)),
       );
     }
-    final mine = userId == null ? null : myPhotoFor(AppScope.of(context), userId);
+    // A photo I chose for them first, else the one they share with me.
+    final mine = userId == null ? null : myPhotoFor(s, userId) ?? s.cardPhoto(userId!);
     if (mine != null) {
       return ClipOval(
         child: Image.memory(mine, width: size, height: size, fit: BoxFit.cover, gaplessPlayback: true),

@@ -4,10 +4,12 @@
 // marks travel inside the encrypted message and are drawn on the phone.
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
-import 'package:url_launcher/url_launcher.dart';
 
+import '../core/app_state.dart';
+import '../core/plan_pick.dart';
 import '../l10n/app_localizations.dart';
 import 'ios.dart';
+import 'links.dart';
 import 'wide.dart';
 
 /// Marks in the order they are looked for.
@@ -40,8 +42,11 @@ void wrapSelection(TextEditingController c, String mark, {String? url}) {
 
 /// Formatted message text; spoilers open with a tap.
 class FormattedText extends StatefulWidget {
-  const FormattedText(this.text, {super.key, required this.style, required this.linkColor, required this.quoteColor});
+  const FormattedText(this.text, {super.key, required this.style, required this.linkColor, required this.quoteColor, this.onPlan});
   final String text;
+
+  /// Settings > Chats > Find plans: dates and times become tappable.
+  final ValueChanged<DateTime>? onPlan;
   final TextStyle style;
   final Color linkColor;
   final Color quoteColor;
@@ -71,10 +76,31 @@ class _FormattedTextState extends State<FormattedText> {
     final out = <InlineSpan>[];
     var at = 0;
     for (final m in _bare.allMatches(s)) {
-      if (m.start > at) out.add(TextSpan(text: s.substring(at, m.start), style: st));
+      if (m.start > at) out.addAll(plans(s.substring(at, m.start), st));
       final url = m.group(0)!;
       out.add(TextSpan(text: url, style: st.merge(linkStyle), recognizer: tap(() => open(url))));
       at = m.end;
+    }
+    if (at < s.length) out.addAll(plans(s.substring(at), st));
+    return out;
+  }
+
+  /// Plain words, with found dates and times dotted-underlined.
+  List<InlineSpan> plans(String s, TextStyle st) {
+    final f = widget.onPlan;
+    if (f == null) return [TextSpan(text: s, style: st)];
+    final out = <InlineSpan>[];
+    var at = 0;
+    for (final h in findPlans(s, DateTime.now())) {
+      if (h.start > at) out.add(TextSpan(text: s.substring(at, h.start), style: st));
+      out.add(
+        TextSpan(
+          text: s.substring(h.start, h.end),
+          style: st.merge(TextStyle(decoration: TextDecoration.underline, decorationStyle: TextDecorationStyle.dotted, decorationColor: widget.linkColor)),
+          recognizer: tap(() => f(h.at)),
+        ),
+      );
+      at = h.end;
     }
     if (at < s.length) out.add(TextSpan(text: s.substring(at), style: st));
     return out;
@@ -82,7 +108,7 @@ class _FormattedTextState extends State<FormattedText> {
 
   TextStyle get linkStyle => TextStyle(color: widget.linkColor, decoration: TextDecoration.underline, decorationColor: widget.linkColor);
 
-  void open(String url) => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+  void open(String url) => openWebLink(context, url);
 
   /// A link under other words ("[here](https://...)") could pretend to go
   /// somewhere else: show the real address first, like Telegram.
@@ -177,6 +203,11 @@ class _FormattedTextState extends State<FormattedText> {
       r.dispose();
     }
     _taps.clear();
+    // Settings > Chats > Formatted messages off: the marks show as typed.
+    final scope = context.dependOnInheritedWidgetOfExactType<AppScope>();
+    if (scope != null && !scope.notifier!.on('formatting', fallback: true)) {
+      return Text.rich(TextSpan(style: widget.style, children: links(widget.text, widget.style)));
+    }
     final spans = <InlineSpan>[];
     final lines = widget.text.split('\n');
     for (var n = 0; n < lines.length; n++) {

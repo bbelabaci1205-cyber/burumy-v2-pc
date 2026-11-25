@@ -976,6 +976,31 @@ class FakeBackend implements Backend {
   Future<List<int>?> myPhoto() async => photo;
   @override
   Future<void> setMyPhoto(String mime, List<int> bytes) async => photo = bytes.isEmpty ? null : bytes;
+
+  /// What I last shared, and each person's card (look-only demo).
+  final cards = <String, ProfileCard>{};
+  Map<String, String> shared = {};
+  @override
+  Future<int> shareProfile({
+    required String mime,
+    required List<int> photo,
+    required String bio,
+    required String birthday,
+    required String whoPhoto,
+    required String whoBio,
+    required String whoBirthday,
+    List<String> only = const [],
+  }) async {
+    shared = {'photo': whoPhoto, 'bio': whoBio, 'birthday': whoBirthday, 'birthdayValue': birthday};
+    if (only.isEmpty) {
+      this.photo = whoPhoto == 'everyone' && photo.isNotEmpty ? photo : null;
+      await setMyBio(whoBio == 'everyone' ? bio : '');
+    }
+    return 1;
+  }
+
+  @override
+  Future<ProfileCard> profileOf(String userId) async => cards[userId] ?? ProfileCard(bio: bios[userId] ?? '');
   @override
   Future<List<Member>> members(String roomId) async => roomMembers[roomId] ?? await _defaultMembers(roomId);
 

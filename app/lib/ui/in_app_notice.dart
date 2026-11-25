@@ -6,6 +6,7 @@
 import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 
 import '../core/app_state.dart';
 import '../core/backend.dart';
@@ -100,6 +101,7 @@ class _InAppNoticesState extends State<InAppNotices> {
     primed = true;
     if (fresh == null) return;
     if (st.on('in_app_sound', fallback: true)) unawaited(Sounds.message(st.pref(soundKey(fresh.$1), 'nuri')));
+    if (st.on('in_app_vibrate', fallback: true)) unawaited(HapticFeedback.mediumImpact());
     if (st.pref('in_app_style', 'banner') != 'banner') return;
     hide?.cancel();
     hide = Timer(const Duration(seconds: 4), () {

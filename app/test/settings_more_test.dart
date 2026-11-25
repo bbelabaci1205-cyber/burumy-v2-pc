@@ -88,6 +88,8 @@ void main() {
   testWidgets('quick replies: saved in settings, picked from the sticker panel into the composer', (t) async {
     final (s, _) = await start(t);
     await openSettingsRow(t, 'chats-row');
+    await t.scrollUntilVisible(find.byKey(const Key('quick-replies-row')), 150, scrollable: find.byType(Scrollable).last);
+    await t.pumpAndSettle();
     await t.tap(find.byKey(const Key('quick-replies-row')));
     await t.pumpAndSettle();
     await t.enterText(find.byKey(const Key('quick-field')), '곧 갈게요');

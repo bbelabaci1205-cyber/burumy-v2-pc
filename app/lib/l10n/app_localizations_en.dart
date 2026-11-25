@@ -438,7 +438,7 @@ class LEn extends L {
 
   @override
   String get photoServerNote =>
-      'Your profile photo and name are stored on our server so people you chat with can see them. Unlike messages, they are not end-to-end encrypted.';
+      'With \'Everyone\' your photo is kept on the server. With \'My contacts\' it never goes to the server and reaches friends only inside your encrypted 1:1 chats.';
 
   @override
   String get chatInfo => 'Info';
@@ -1177,7 +1177,7 @@ class LEn extends L {
 
   @override
   String get bioInfo =>
-      'Anyone with your ID can see your bio. Up to 70 characters.';
+      'Choose who sees it in Settings > Privacy and Security. Up to 70 characters.';
 
   @override
   String get markRead => 'Read';
@@ -3574,4 +3574,483 @@ class LEn extends L {
 
   @override
   String get swipeUnarchive => 'Unarchive';
+
+  @override
+  String get chatsHeaderInfo =>
+      'Choose how messages look, replies, stickers and emoji, and the on-device AI features you use in chats.';
+
+  @override
+  String get faqHeaderInfo =>
+      'Common questions about Burumy. You can read them offline too.';
+
+  @override
+  String get devicesHeaderInfo =>
+      'See every device signed in to your account. Sign out any device you don\'t recognise right here.';
+
+  @override
+  String get languageHeaderInfo =>
+      'Pick the app\'s language. Messages in other languages can be translated right in the chat.';
+
+  @override
+  String get stickersHeaderInfo =>
+      'Set your quick reaction, big emoji and how sticker packs are ordered.';
+
+  @override
+  String get birthday => 'Birthday';
+
+  @override
+  String get birthdayAdd => 'Add';
+
+  @override
+  String get birthdayInfo =>
+      'Friends see only the month and day. Choose who sees it in Settings > Privacy and Security.';
+
+  @override
+  String get birthdayRemove => 'Remove birthday';
+
+  @override
+  String birthdayMonthDay(int m, int d) {
+    return '$m/$d';
+  }
+
+  @override
+  String get whoPhoto => 'Profile photo';
+
+  @override
+  String get whoBio => 'About me';
+
+  @override
+  String get whoBirthday => 'Birthday';
+
+  @override
+  String get whoLastSeen => 'Last seen & online';
+
+  @override
+  String get whoForwards => 'Forwarded messages';
+
+  @override
+  String get whoAlwaysNobody => 'Nobody';
+
+  @override
+  String get whoCardInfo =>
+      '\'My contacts\' never goes to the server; friends get it only inside your encrypted 1:1 chats.';
+
+  @override
+  String get lastSeenInfo =>
+      'Burumy never shows anyone whether you\'re online or when you were last seen. It\'s built that way, so there\'s nothing to change.';
+
+  @override
+  String get forwardsInfo =>
+      'When someone forwards your message, your name and the original chat never go with it, only a \'Forwarded\' mark. It\'s built that way.';
+
+  @override
+  String get editHistory => 'Hide my edit history';
+
+  @override
+  String get editHistoryAlways => 'Always';
+
+  @override
+  String get editHistoryInfo =>
+      'People see only the last version of a message you edited. Burumy never shows earlier versions.';
+
+  @override
+  String get birthdayAlert => 'Birthday alerts';
+
+  @override
+  String get birthdayAlertInfo =>
+      'On a friend\'s birthday (if they share it), you get an alert at 9 am. It\'s made on this phone only.';
+
+  @override
+  String birthdayAlertTitle(String name) {
+    return 'It\'s $name\'s birthday today';
+  }
+
+  @override
+  String get birthdayAlertBody => 'Send them a message.';
+
+  @override
+  String get showErrors => 'Show error details';
+
+  @override
+  String get showErrorsInfo =>
+      'When on, error details are kept on this phone so you can copy them when asking for help. No message content is included.';
+
+  @override
+  String get errorLog => 'Error log';
+
+  @override
+  String get errorLogEmpty => 'No errors yet';
+
+  @override
+  String get errorLogCopy => 'Copy all';
+
+  @override
+  String get autoDeleteHeader => 'Delete my account';
+
+  @override
+  String get autoDeleteRow => 'If away for';
+
+  @override
+  String get autoDeleteInfo =>
+      'If you don\'t come back at least once in this time, your account is deleted with all groups, messages and contacts.';
+
+  @override
+  String get months1 => '1 month';
+
+  @override
+  String get months3 => '3 months';
+
+  @override
+  String get months6 => '6 months';
+
+  @override
+  String get months12 => '12 months';
+
+  @override
+  String get months18 => '18 months';
+
+  @override
+  String get hideDeleteRow => 'Hide & delete passwords';
+
+  @override
+  String get privMessages => 'Messages';
+
+  @override
+  String get privWhoSees => 'Who can see my info';
+
+  @override
+  String get privWhoReach => 'Who can reach me';
+
+  @override
+  String get privScreen => 'Screen protection';
+
+  @override
+  String get privAccount => 'Account';
+
+  @override
+  String get undoSendSub => 'Cancel within 5 seconds of sending';
+
+  @override
+  String get sendReadSub => 'Off: others don\'t see when you\'ve read';
+
+  @override
+  String get sendTypingSub => 'Off: others don\'t see you typing';
+
+  @override
+  String get veilAllSub => 'Messages show only while you hold them';
+
+  @override
+  String get panicSub => 'Double-tap with two fingers to lock at once';
+
+  @override
+  String get birthdayAlertSub =>
+      'This phone reminds you at 9 am on a friend\'s birthday';
+
+  @override
+  String get showErrorsSub => 'Keeps error details on this phone for support';
+
+  @override
+  String get autoDeleteSub =>
+      'Your account is deleted if you don\'t sign in for this long';
+
+  @override
+  String get autoDlPhotosSub => 'Photos load on their own';
+
+  @override
+  String get autoDlReset => 'Reset auto-download';
+
+  @override
+  String get mediaAndLinks => 'Media and links';
+
+  @override
+  String get autoplayGifSub => 'Off: GIFs stay on the first frame';
+
+  @override
+  String get linkPreviewSub =>
+      'Your phone adds the title and picture when sending';
+
+  @override
+  String get callsHeader => 'Calls';
+
+  @override
+  String get lowDataCalls => 'Use less data for calls';
+
+  @override
+  String get lowDataCallsSub =>
+      'Lower video quality so calls hold up on slow networks';
+
+  @override
+  String get devicesArtInfo => 'Keep chatting on a PC or another phone.';
+
+  @override
+  String get addDevice => 'Add a device';
+
+  @override
+  String get addDeviceTitle => 'Use on another device';
+
+  @override
+  String get addDeviceStep1 =>
+      'Install Burumy on the new device. There\'s a Windows app for PCs.';
+
+  @override
+  String get addDeviceStep2 => 'Sign in with your ID and password.';
+
+  @override
+  String get addDeviceStep3 =>
+      'Confirm the request that appears on this phone by checking both devices show the same emoji. Then your past chats open there too.';
+
+  @override
+  String get devicesPlatforms => 'Burumy runs on iPhone, Android and Windows.';
+
+  @override
+  String get onlineNow => 'Active now';
+
+  @override
+  String get chatFolders => 'Chat Folders';
+
+  @override
+  String get foldersArtInfo =>
+      'Make folders for different groups of chats and switch between them from the top of the list or the side menu.';
+
+  @override
+  String get createFolder => 'Create a Folder';
+
+  @override
+  String get allChatsFolder => 'All Chats';
+
+  @override
+  String get editList => 'Edit';
+
+  @override
+  String get foldersEditInfo =>
+      'Tap Edit to change the order of folders or delete them.';
+
+  @override
+  String get recommendedFolders => 'Recommended Folders';
+
+  @override
+  String get folderUnreadName => 'Unread';
+
+  @override
+  String get folderUnreadInfo => 'New messages from all chats';
+
+  @override
+  String get folderPersonalName => 'Personal';
+
+  @override
+  String get folderPersonalInfo => 'Only messages from personal chats';
+
+  @override
+  String get folderTags => 'Show Folder Tags';
+
+  @override
+  String get folderTagsInfo =>
+      'Show folder names as coloured tags under each chat in the list.';
+
+  @override
+  String folderChatsCount(int n) {
+    return '$n chats';
+  }
+
+  @override
+  String get folderDeleted => 'Folder deleted';
+
+  @override
+  String get folderInclude => 'Included Chats';
+
+  @override
+  String get folderIncludeInfo =>
+      'Choose chats or types of chats that will appear in this folder.';
+
+  @override
+  String get folderExclude => 'Excluded Chats';
+
+  @override
+  String get folderExcludeInfo =>
+      'Choose chats or types of chats that will never appear in this folder.';
+
+  @override
+  String get folderAddChats => 'Add Chats';
+
+  @override
+  String get folderColor => 'Folder Color';
+
+  @override
+  String get folderNoTag => 'No tag';
+
+  @override
+  String get folderColorInfo =>
+      'This colour is used for the folder\'s tag in the chat list.';
+
+  @override
+  String get folderNeedChats => 'Add at least one chat.';
+
+  @override
+  String get folderNeedName => 'Enter a folder name.';
+
+  @override
+  String get chatTypes => 'Chat Types';
+
+  @override
+  String get chatsHeader => 'Chats';
+
+  @override
+  String get kindContacts => 'Contacts';
+
+  @override
+  String get kindNonContacts => 'Non-Contacts';
+
+  @override
+  String get kindMuted => 'Muted';
+
+  @override
+  String get kindRead => 'Read';
+
+  @override
+  String get kindArchived => 'Archived';
+
+  @override
+  String get folderIcon => 'Folder Icon';
+
+  @override
+  String get folderIconNone => 'None';
+
+  @override
+  String get newFolderTitle => 'New Folder';
+
+  @override
+  String exceptionsCount(int n) {
+    return '$n exceptions';
+  }
+
+  @override
+  String get inAppHeader => 'In-App Notifications';
+
+  @override
+  String get inAppVibrate => 'In-App Vibrate';
+
+  @override
+  String get lockName => 'Names on Lock Screen';
+
+  @override
+  String get lockNameInfo =>
+      'Off: when the phone is locked, notifications hide who wrote and what. On iPhone also check iOS Settings > Notifications > Show Previews.';
+
+  @override
+  String get linkOpenTitle => 'Open Links';
+
+  @override
+  String get linkOpenHeader => 'Open Links In';
+
+  @override
+  String get linkOpenInApp => 'Inside Burumy (private view)';
+
+  @override
+  String get linkOpenBrowser => 'Default Browser';
+
+  @override
+  String get linkOpenInAppShort => 'Burumy';
+
+  @override
+  String get linkOpenBrowserShort => 'Browser';
+
+  @override
+  String get linkOpenInfo =>
+      'Inside Burumy, links open without leaving the app and stay out of your other browser\'s history.';
+
+  @override
+  String get linkNeverHeader => 'Never Open in App';
+
+  @override
+  String get linkNeverAdd => 'Add Website';
+
+  @override
+  String get linkNeverInfo =>
+      'These websites always open in your default browser.';
+
+  @override
+  String get tiltMove => 'Move When Tilted';
+
+  @override
+  String get tiltInfo =>
+      'Tilt the phone and the chat background moves a little. Uses a bit more battery.';
+
+  @override
+  String get appIcon => 'App Icon';
+
+  @override
+  String get appIconInfo =>
+      'Changes the Burumy icon on your home screen. The app may close for a moment while it changes.';
+
+  @override
+  String get appIconGreen => 'Default';
+
+  @override
+  String get appIconDark => 'Dark';
+
+  @override
+  String get appIconLight => 'White';
+
+  @override
+  String get appIconMint => 'Sage';
+
+  @override
+  String get psGlass => 'Glass Effects';
+
+  @override
+  String get psGlassSub => 'Off: bars become plain, not see-through.';
+
+  @override
+  String get psPreload => 'Preload Media';
+
+  @override
+  String get psPreloadSub => 'Download photos and videos before you open them.';
+
+  @override
+  String get psTiltSub => 'The chat background moves when you tilt the phone.';
+
+  @override
+  String get chatsMessages => 'Messages';
+
+  @override
+  String get chatsList => 'Chat List';
+
+  @override
+  String get chatsMediaReactions => 'Media and Reactions';
+
+  @override
+  String get formattingRow => 'Formatted Messages';
+
+  @override
+  String get formattingSub => 'Show bold and other formatting in messages';
+
+  @override
+  String get listMedia => 'Photo and Video Previews';
+
+  @override
+  String get listMediaSub => 'Show the last photo small in the chat list';
+
+  @override
+  String get scamWarningSub => 'Warn about suspicious links';
+
+  @override
+  String get planPick => 'Find Plans';
+
+  @override
+  String get planPickSub => 'Tap a date or time in a message to set a reminder';
+
+  @override
+  String get aiOnPhoneInfo =>
+      'All of this runs on this phone. Messages are never sent anywhere.';
+
+  @override
+  String planFound(String when) {
+    return 'Plan: $when';
+  }
+
+  @override
+  String get planHourBefore => 'Remind 1 Hour Before';
+
+  @override
+  String get planAtTime => 'Remind at That Time';
 }

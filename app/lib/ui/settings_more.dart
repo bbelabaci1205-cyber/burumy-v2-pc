@@ -265,6 +265,7 @@ class _FaqPageState extends State<FaqPage> {
     return SettingsScaffold(
       title: l.faq,
       children: [
+        HeaderCard(color: Palette.tileTeal, icon: CupertinoIcons.question_circle_fill, title: l.faq, body: l.faqHeaderInfo),
         group(context, [
           for (final (i, (q, a)) in qa.indexed)
             GestureDetector(

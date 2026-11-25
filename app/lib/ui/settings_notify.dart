@@ -32,6 +32,8 @@ const _noticeKeys = [
   'in_app_style',
   'in_app_sound',
   'in_app_preview',
+  'in_app_vibrate',
+  'lock_name',
   'focus_on',
   'focus_from',
   'focus_to',
@@ -59,6 +61,11 @@ class NotificationsPage extends StatelessWidget {
     final s = AppScope.of(context);
     final p = paletteOf(context);
     String state(String kind) => s.on('notify_$kind', fallback: true) ? l.stateOn : l.stateOff;
+    String? excepts(String kind) {
+      final n = s.settings.entries.where((e) => e.key.startsWith('notify_$kind:') && e.value.isNotEmpty).length;
+      return n == 0 ? null : l.exceptionsCount(n);
+    }
+
     return SettingsScaffold(
       title: l.settingsNotifications,
       children: [
@@ -69,6 +76,7 @@ class NotificationsPage extends StatelessWidget {
             color: Palette.tileBlue,
             icon: CupertinoIcons.person_fill,
             title: l.notifyDirect,
+            subtitle: excepts('direct'),
             value: state('direct'),
             page: (_) => NoticeKindPage(kind: 'direct', title: l.notifyDirect),
           ),
@@ -77,6 +85,7 @@ class NotificationsPage extends StatelessWidget {
             color: p.tileGreen,
             icon: CupertinoIcons.person_3_fill,
             title: l.notifyGroup,
+            subtitle: excepts('group'),
             value: state('group'),
             page: (_) => NoticeKindPage(kind: 'group', title: l.notifyGroup),
           ),
@@ -85,19 +94,24 @@ class NotificationsPage extends StatelessWidget {
             color: Palette.tileOrange,
             icon: CupertinoIcons.speaker_2_fill,
             title: l.notifyChannel,
+            subtitle: excepts('channel'),
             value: state('channel'),
             page: (_) => NoticeKindPage(kind: 'channel', title: l.notifyChannel),
           ),
         ]),
-        group(context, [
+        // Telegram: while using the app, right on this page.
+        group(context, header: l.inAppHeader, [
           NavRow(
             key: const Key('in-app-row'),
-            color: Palette.tileRed,
-            icon: CupertinoIcons.app_badge_fill,
             title: l.inAppNotices,
             value: s.pref('in_app_style', 'banner') == 'banner' ? l.inAppBanner : l.inAppSilent,
             page: (_) => const InAppNoticePage(),
           ),
+          PrefSwitch('in_app_sound', key: const Key('in-app-sound'), title: l.inAppSound, fallback: true),
+          PrefSwitch('in_app_vibrate', key: const Key('in-app-vibrate'), title: l.inAppVibrate, fallback: true),
+          PrefSwitch('in_app_preview', key: const Key('in-app-preview'), title: l.inAppPreview, fallback: true),
+        ]),
+        group(context, [
           NavRow(
             key: const Key('focus-row'),
             color: Palette.tileIndigo,
@@ -107,6 +121,7 @@ class NotificationsPage extends StatelessWidget {
             page: (_) => const FocusPage(),
           ),
         ]),
+        group(context, footer: l.lockNameInfo, [PrefSwitch('lock_name', key: const Key('lock-name'), title: l.lockName, fallback: true)]),
         group(context, footer: l.noticeTextHiddenInfo, const [NoticeTextSwitchTile()]),
         group(context, header: l.tabCalls, footer: l.callWaitingInfo, const [CallWaitingTile()]),
         group(context, [
@@ -300,10 +315,6 @@ class InAppNoticePage extends StatelessWidget {
             padding: EdgeInsets.symmetric(vertical: Tokens.space[3]),
             child: Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [phone('silent', l.inAppSilent), phone('banner', l.inAppBanner)]),
           ),
-        ]),
-        group(context, [
-          PrefSwitch('in_app_sound', title: l.inAppSound, fallback: true, color: Palette.tileRed, icon: CupertinoIcons.speaker_2_fill),
-          PrefSwitch('in_app_preview', title: l.inAppPreview, fallback: true, color: Palette.tileBlue, icon: CupertinoIcons.text_bubble_fill),
         ]),
       ],
     );

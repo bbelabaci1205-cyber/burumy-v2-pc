@@ -922,7 +922,7 @@ abstract class L {
   /// No description provided for @photoServerNote.
   ///
   /// In ko, this message translates to:
-  /// **'프로필 사진과 이름은 대화 상대가 볼 수 있도록 서버에 저장돼요. 메시지와 달리 종단간 암호화되지 않아요.'**
+  /// **'사진을 \'모두\'로 두면 서버에 저장돼요. \'내 연락처\'로 두면 서버에는 올라가지 않고 친구와의 암호화된 1:1 대화로만 전달돼요.'**
   String get photoServerNote;
 
   /// No description provided for @chatInfo.
@@ -2290,7 +2290,7 @@ abstract class L {
   /// No description provided for @bioInfo.
   ///
   /// In ko, this message translates to:
-  /// **'자기소개는 내 아이디를 아는 사람 누구나 볼 수 있어요. 70자까지 쓸 수 있어요.'**
+  /// **'누가 볼지는 설정 > 개인정보 및 보안에서 정해요. 70자까지 쓸 수 있어요.'**
   String get bioInfo;
 
   /// No description provided for @markRead.
@@ -6642,6 +6642,882 @@ abstract class L {
   /// In ko, this message translates to:
   /// **'보관 해제'**
   String get swipeUnarchive;
+
+  /// No description provided for @chatsHeaderInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'메시지 표시 방법, 답장, 스티커와 이모지, 이 휴대폰 안에서만 처리되는 AI 기능처럼 대화방에서 쓰는 기능을 정해요.'**
+  String get chatsHeaderInfo;
+
+  /// No description provided for @faqHeaderInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'부루미를 쓰면서 자주 궁금해하는 내용을 모았어요. 인터넷에 연결되지 않아도 볼 수 있어요.'**
+  String get faqHeaderInfo;
+
+  /// No description provided for @devicesHeaderInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'내 계정에 로그인된 기기를 모두 볼 수 있어요. 모르는 기기가 있으면 여기서 바로 로그아웃시킬 수 있어요.'**
+  String get devicesHeaderInfo;
+
+  /// No description provided for @languageHeaderInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'앱에 보이는 말을 골라요. 다른 언어로 온 메시지는 대화방에서 바로 번역할 수 있어요.'**
+  String get languageHeaderInfo;
+
+  /// No description provided for @stickersHeaderInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'빠른 반응, 큰 이모지, 스티커 팩 순서처럼 스티커와 이모지를 쓰는 방법을 정해요.'**
+  String get stickersHeaderInfo;
+
+  /// No description provided for @birthday.
+  ///
+  /// In ko, this message translates to:
+  /// **'생일'**
+  String get birthday;
+
+  /// No description provided for @birthdayAdd.
+  ///
+  /// In ko, this message translates to:
+  /// **'추가'**
+  String get birthdayAdd;
+
+  /// No description provided for @birthdayInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'친구에게는 월과 일만 보여요. 누가 볼지는 설정 > 개인정보 및 보안에서 정해요.'**
+  String get birthdayInfo;
+
+  /// No description provided for @birthdayRemove.
+  ///
+  /// In ko, this message translates to:
+  /// **'생일 지우기'**
+  String get birthdayRemove;
+
+  /// No description provided for @birthdayMonthDay.
+  ///
+  /// In ko, this message translates to:
+  /// **'{m}월 {d}일'**
+  String birthdayMonthDay(int m, int d);
+
+  /// No description provided for @whoPhoto.
+  ///
+  /// In ko, this message translates to:
+  /// **'프로필 사진'**
+  String get whoPhoto;
+
+  /// No description provided for @whoBio.
+  ///
+  /// In ko, this message translates to:
+  /// **'자기소개'**
+  String get whoBio;
+
+  /// No description provided for @whoBirthday.
+  ///
+  /// In ko, this message translates to:
+  /// **'생일'**
+  String get whoBirthday;
+
+  /// No description provided for @whoLastSeen.
+  ///
+  /// In ko, this message translates to:
+  /// **'마지막 접속 및 온라인'**
+  String get whoLastSeen;
+
+  /// No description provided for @whoForwards.
+  ///
+  /// In ko, this message translates to:
+  /// **'전달된 메시지'**
+  String get whoForwards;
+
+  /// No description provided for @whoAlwaysNobody.
+  ///
+  /// In ko, this message translates to:
+  /// **'아무도'**
+  String get whoAlwaysNobody;
+
+  /// No description provided for @whoCardInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'\'내 연락처\'는 서버에 올라가지 않고, 1:1 대화의 암호화로만 친구에게 전달돼요.'**
+  String get whoCardInfo;
+
+  /// No description provided for @lastSeenInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'부루미는 접속 중인지, 마지막으로 언제 접속했는지 누구에게도 보여 주지 않아요. 처음부터 그렇게 만들어서 바꿀 필요가 없어요.'**
+  String get lastSeenInfo;
+
+  /// No description provided for @forwardsInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'누가 내 메시지를 전달해도 내 이름과 원래 대화방은 함께 가지 않아요. \'전달됨\' 표시만 붙어요. 처음부터 그렇게 만들었어요.'**
+  String get forwardsInfo;
+
+  /// No description provided for @editHistory.
+  ///
+  /// In ko, this message translates to:
+  /// **'내 수정 기록 숨기기'**
+  String get editHistory;
+
+  /// No description provided for @editHistoryAlways.
+  ///
+  /// In ko, this message translates to:
+  /// **'항상'**
+  String get editHistoryAlways;
+
+  /// No description provided for @editHistoryInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'내가 고친 메시지는 다른 사람에게 마지막 내용만 보여요. 부루미는 처음부터 고치기 전 내용을 보여 주지 않아요.'**
+  String get editHistoryInfo;
+
+  /// No description provided for @birthdayAlert.
+  ///
+  /// In ko, this message translates to:
+  /// **'생일 알림'**
+  String get birthdayAlert;
+
+  /// No description provided for @birthdayAlertInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'생일을 공개한 친구의 생일 당일 오전 9시에 알려 드려요. 이 휴대폰 안에서만 알려요.'**
+  String get birthdayAlertInfo;
+
+  /// No description provided for @birthdayAlertTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'오늘은 {name} 님의 생일이에요'**
+  String birthdayAlertTitle(String name);
+
+  /// No description provided for @birthdayAlertBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'축하 메시지를 보내 보세요.'**
+  String get birthdayAlertBody;
+
+  /// No description provided for @showErrors.
+  ///
+  /// In ko, this message translates to:
+  /// **'오류 내용 보기'**
+  String get showErrors;
+
+  /// No description provided for @showErrorsInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'켜면 문제가 생겼을 때의 오류 내용을 이 휴대폰에 모아 보여 줘요. 문의할 때 복사해서 보내면 도움이 돼요. 메시지 내용은 담기지 않아요.'**
+  String get showErrorsInfo;
+
+  /// No description provided for @errorLog.
+  ///
+  /// In ko, this message translates to:
+  /// **'오류 기록'**
+  String get errorLog;
+
+  /// No description provided for @errorLogEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'아직 오류가 없어요'**
+  String get errorLogEmpty;
+
+  /// No description provided for @errorLogCopy.
+  ///
+  /// In ko, this message translates to:
+  /// **'모두 복사'**
+  String get errorLogCopy;
+
+  /// No description provided for @autoDeleteHeader.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동 회원 탈퇴'**
+  String get autoDeleteHeader;
+
+  /// No description provided for @autoDeleteRow.
+  ///
+  /// In ko, this message translates to:
+  /// **'다음 기간 동안 미접속 시'**
+  String get autoDeleteRow;
+
+  /// No description provided for @autoDeleteInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 기간 안에 한 번이라도 접속하지 않으면 모든 그룹, 메시지, 연락처와 함께 계정이 삭제돼요.'**
+  String get autoDeleteInfo;
+
+  /// No description provided for @months1.
+  ///
+  /// In ko, this message translates to:
+  /// **'1개월'**
+  String get months1;
+
+  /// No description provided for @months3.
+  ///
+  /// In ko, this message translates to:
+  /// **'3개월'**
+  String get months3;
+
+  /// No description provided for @months6.
+  ///
+  /// In ko, this message translates to:
+  /// **'6개월'**
+  String get months6;
+
+  /// No description provided for @months12.
+  ///
+  /// In ko, this message translates to:
+  /// **'12개월'**
+  String get months12;
+
+  /// No description provided for @months18.
+  ///
+  /// In ko, this message translates to:
+  /// **'18개월'**
+  String get months18;
+
+  /// No description provided for @hideDeleteRow.
+  ///
+  /// In ko, this message translates to:
+  /// **'숨김·삭제 비밀번호'**
+  String get hideDeleteRow;
+
+  /// No description provided for @privMessages.
+  ///
+  /// In ko, this message translates to:
+  /// **'메시지'**
+  String get privMessages;
+
+  /// No description provided for @privWhoSees.
+  ///
+  /// In ko, this message translates to:
+  /// **'누가 내 정보를 볼 수 있나요'**
+  String get privWhoSees;
+
+  /// No description provided for @privWhoReach.
+  ///
+  /// In ko, this message translates to:
+  /// **'누가 나에게 연락할 수 있나요'**
+  String get privWhoReach;
+
+  /// No description provided for @privScreen.
+  ///
+  /// In ko, this message translates to:
+  /// **'화면 보호'**
+  String get privScreen;
+
+  /// No description provided for @privAccount.
+  ///
+  /// In ko, this message translates to:
+  /// **'계정'**
+  String get privAccount;
+
+  /// No description provided for @undoSendSub.
+  ///
+  /// In ko, this message translates to:
+  /// **'보낸 뒤 5초 안에는 취소할 수 있어요'**
+  String get undoSendSub;
+
+  /// No description provided for @sendReadSub.
+  ///
+  /// In ko, this message translates to:
+  /// **'끄면 상대에게 내 읽음 표시가 가지 않아요'**
+  String get sendReadSub;
+
+  /// No description provided for @sendTypingSub.
+  ///
+  /// In ko, this message translates to:
+  /// **'끄면 상대에게 입력 중 표시가 가지 않아요'**
+  String get sendTypingSub;
+
+  /// No description provided for @veilAllSub.
+  ///
+  /// In ko, this message translates to:
+  /// **'누르고 있는 동안만 메시지가 보여요'**
+  String get veilAllSub;
+
+  /// No description provided for @panicSub.
+  ///
+  /// In ko, this message translates to:
+  /// **'두 손가락으로 두 번 톡톡 치면 바로 잠겨요'**
+  String get panicSub;
+
+  /// No description provided for @birthdayAlertSub.
+  ///
+  /// In ko, this message translates to:
+  /// **'친구 생일 아침 9시에 이 휴대폰이 알려 줘요'**
+  String get birthdayAlertSub;
+
+  /// No description provided for @showErrorsSub.
+  ///
+  /// In ko, this message translates to:
+  /// **'문의할 때 보낼 오류 내용을 이 휴대폰에 모아요'**
+  String get showErrorsSub;
+
+  /// No description provided for @autoDeleteSub.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 기간 동안 한 번도 접속하지 않으면 계정이 지워져요'**
+  String get autoDeleteSub;
+
+  /// No description provided for @autoDlPhotosSub.
+  ///
+  /// In ko, this message translates to:
+  /// **'사진을 미리 받아 둬요'**
+  String get autoDlPhotosSub;
+
+  /// No description provided for @autoDlReset.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동 다운로드 설정 되돌리기'**
+  String get autoDlReset;
+
+  /// No description provided for @mediaAndLinks.
+  ///
+  /// In ko, this message translates to:
+  /// **'미디어와 링크'**
+  String get mediaAndLinks;
+
+  /// No description provided for @autoplayGifSub.
+  ///
+  /// In ko, this message translates to:
+  /// **'끄면 GIF가 첫 장면에 멈춰 있어요'**
+  String get autoplayGifSub;
+
+  /// No description provided for @linkPreviewSub.
+  ///
+  /// In ko, this message translates to:
+  /// **'보낼 때 내 휴대폰이 제목과 사진을 넣어요'**
+  String get linkPreviewSub;
+
+  /// No description provided for @callsHeader.
+  ///
+  /// In ko, this message translates to:
+  /// **'통화'**
+  String get callsHeader;
+
+  /// No description provided for @lowDataCalls.
+  ///
+  /// In ko, this message translates to:
+  /// **'전화에 데이터 적게 쓰기'**
+  String get lowDataCalls;
+
+  /// No description provided for @lowDataCallsSub.
+  ///
+  /// In ko, this message translates to:
+  /// **'영상 화질을 낮춰 느린 인터넷에서도 잘 이어져요'**
+  String get lowDataCallsSub;
+
+  /// No description provided for @devicesArtInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'PC나 다른 휴대폰에서도 대화를 이어 볼 수 있어요.'**
+  String get devicesArtInfo;
+
+  /// No description provided for @addDevice.
+  ///
+  /// In ko, this message translates to:
+  /// **'기기 추가'**
+  String get addDevice;
+
+  /// No description provided for @addDeviceTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'다른 기기에서 쓰기'**
+  String get addDeviceTitle;
+
+  /// No description provided for @addDeviceStep1.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 기기에 부루미를 설치해요. PC는 Windows 앱이 있어요.'**
+  String get addDeviceStep1;
+
+  /// No description provided for @addDeviceStep2.
+  ///
+  /// In ko, this message translates to:
+  /// **'내 아이디와 비밀번호로 로그인해요.'**
+  String get addDeviceStep2;
+
+  /// No description provided for @addDeviceStep3.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 휴대폰에 뜨는 확인 요청에서 두 기기의 이모지가 같은지 보면 끝이에요. 그러면 지난 대화도 열려요.'**
+  String get addDeviceStep3;
+
+  /// No description provided for @devicesPlatforms.
+  ///
+  /// In ko, this message translates to:
+  /// **'부루미는 iPhone, Android, Windows에서 쓸 수 있어요.'**
+  String get devicesPlatforms;
+
+  /// No description provided for @onlineNow.
+  ///
+  /// In ko, this message translates to:
+  /// **'지금 사용 중'**
+  String get onlineNow;
+
+  /// No description provided for @chatFolders.
+  ///
+  /// In ko, this message translates to:
+  /// **'대화방 폴더'**
+  String get chatFolders;
+
+  /// No description provided for @foldersArtInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'폴더를 만들어 대화방을 나눠 보세요. 목록 위나 왼쪽 메뉴에서 바로 바꿀 수 있어요.'**
+  String get foldersArtInfo;
+
+  /// No description provided for @createFolder.
+  ///
+  /// In ko, this message translates to:
+  /// **'폴더 만들기'**
+  String get createFolder;
+
+  /// No description provided for @allChatsFolder.
+  ///
+  /// In ko, this message translates to:
+  /// **'모든 대화방'**
+  String get allChatsFolder;
+
+  /// No description provided for @editList.
+  ///
+  /// In ko, this message translates to:
+  /// **'편집'**
+  String get editList;
+
+  /// No description provided for @foldersEditInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'편집을 누르면 폴더 순서를 바꾸거나 지울 수 있어요.'**
+  String get foldersEditInfo;
+
+  /// No description provided for @recommendedFolders.
+  ///
+  /// In ko, this message translates to:
+  /// **'추천 폴더'**
+  String get recommendedFolders;
+
+  /// No description provided for @folderUnreadName.
+  ///
+  /// In ko, this message translates to:
+  /// **'안 읽음'**
+  String get folderUnreadName;
+
+  /// No description provided for @folderUnreadInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'안 읽은 메시지가 있는 대화방'**
+  String get folderUnreadInfo;
+
+  /// No description provided for @folderPersonalName.
+  ///
+  /// In ko, this message translates to:
+  /// **'개인'**
+  String get folderPersonalName;
+
+  /// No description provided for @folderPersonalInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'1:1 대화방만'**
+  String get folderPersonalInfo;
+
+  /// No description provided for @folderTags.
+  ///
+  /// In ko, this message translates to:
+  /// **'폴더 태그 표시'**
+  String get folderTags;
+
+  /// No description provided for @folderTagsInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'대화 목록에서 각 대화방 아래에 폴더 이름을 색깔 태그로 보여 줘요.'**
+  String get folderTagsInfo;
+
+  /// No description provided for @folderChatsCount.
+  ///
+  /// In ko, this message translates to:
+  /// **'대화방 {n}개'**
+  String folderChatsCount(int n);
+
+  /// No description provided for @folderDeleted.
+  ///
+  /// In ko, this message translates to:
+  /// **'폴더를 지웠어요'**
+  String get folderDeleted;
+
+  /// No description provided for @folderInclude.
+  ///
+  /// In ko, this message translates to:
+  /// **'포함할 대화방'**
+  String get folderInclude;
+
+  /// No description provided for @folderIncludeInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 폴더에 보일 대화방이나 대화방 유형을 고르세요.'**
+  String get folderIncludeInfo;
+
+  /// No description provided for @folderExclude.
+  ///
+  /// In ko, this message translates to:
+  /// **'제외할 대화방'**
+  String get folderExclude;
+
+  /// No description provided for @folderExcludeInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 폴더에 절대 보이지 않을 대화방이나 유형을 고르세요.'**
+  String get folderExcludeInfo;
+
+  /// No description provided for @folderAddChats.
+  ///
+  /// In ko, this message translates to:
+  /// **'대화방 추가'**
+  String get folderAddChats;
+
+  /// No description provided for @folderColor.
+  ///
+  /// In ko, this message translates to:
+  /// **'폴더 색상'**
+  String get folderColor;
+
+  /// No description provided for @folderNoTag.
+  ///
+  /// In ko, this message translates to:
+  /// **'태그 없음'**
+  String get folderNoTag;
+
+  /// No description provided for @folderColorInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'대화 목록에서 이 폴더 태그의 색이에요.'**
+  String get folderColorInfo;
+
+  /// No description provided for @folderNeedChats.
+  ///
+  /// In ko, this message translates to:
+  /// **'대화방을 하나 이상 넣어 주세요.'**
+  String get folderNeedChats;
+
+  /// No description provided for @folderNeedName.
+  ///
+  /// In ko, this message translates to:
+  /// **'폴더 이름을 적어 주세요.'**
+  String get folderNeedName;
+
+  /// No description provided for @chatTypes.
+  ///
+  /// In ko, this message translates to:
+  /// **'대화방 유형'**
+  String get chatTypes;
+
+  /// No description provided for @chatsHeader.
+  ///
+  /// In ko, this message translates to:
+  /// **'대화방'**
+  String get chatsHeader;
+
+  /// No description provided for @kindContacts.
+  ///
+  /// In ko, this message translates to:
+  /// **'연락처'**
+  String get kindContacts;
+
+  /// No description provided for @kindNonContacts.
+  ///
+  /// In ko, this message translates to:
+  /// **'연락처 아닌 사람'**
+  String get kindNonContacts;
+
+  /// No description provided for @kindMuted.
+  ///
+  /// In ko, this message translates to:
+  /// **'알림 꺼짐'**
+  String get kindMuted;
+
+  /// No description provided for @kindRead.
+  ///
+  /// In ko, this message translates to:
+  /// **'읽음'**
+  String get kindRead;
+
+  /// No description provided for @kindArchived.
+  ///
+  /// In ko, this message translates to:
+  /// **'보관됨'**
+  String get kindArchived;
+
+  /// No description provided for @folderIcon.
+  ///
+  /// In ko, this message translates to:
+  /// **'폴더 아이콘'**
+  String get folderIcon;
+
+  /// No description provided for @folderIconNone.
+  ///
+  /// In ko, this message translates to:
+  /// **'없음'**
+  String get folderIconNone;
+
+  /// No description provided for @newFolderTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 폴더'**
+  String get newFolderTitle;
+
+  /// No description provided for @exceptionsCount.
+  ///
+  /// In ko, this message translates to:
+  /// **'{n}개 예외'**
+  String exceptionsCount(int n);
+
+  /// No description provided for @inAppHeader.
+  ///
+  /// In ko, this message translates to:
+  /// **'앱 사용 중 알림'**
+  String get inAppHeader;
+
+  /// No description provided for @inAppVibrate.
+  ///
+  /// In ko, this message translates to:
+  /// **'앱 사용 중 진동'**
+  String get inAppVibrate;
+
+  /// No description provided for @lockName.
+  ///
+  /// In ko, this message translates to:
+  /// **'잠금 화면에 이름 보이기'**
+  String get lockName;
+
+  /// No description provided for @lockNameInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'끄면 휴대폰이 잠겨 있을 때 알림에 보낸 사람 이름과 내용이 가려져요. 아이폰은 iOS 설정 > 알림 > 미리보기 표시도 함께 확인해 주세요.'**
+  String get lockNameInfo;
+
+  /// No description provided for @linkOpenTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'링크 열기'**
+  String get linkOpenTitle;
+
+  /// No description provided for @linkOpenHeader.
+  ///
+  /// In ko, this message translates to:
+  /// **'링크를 여는 곳'**
+  String get linkOpenHeader;
+
+  /// No description provided for @linkOpenInApp.
+  ///
+  /// In ko, this message translates to:
+  /// **'부루미 안에서 (개인정보 보호 창)'**
+  String get linkOpenInApp;
+
+  /// No description provided for @linkOpenBrowser.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본 브라우저'**
+  String get linkOpenBrowser;
+
+  /// No description provided for @linkOpenInAppShort.
+  ///
+  /// In ko, this message translates to:
+  /// **'부루미'**
+  String get linkOpenInAppShort;
+
+  /// No description provided for @linkOpenBrowserShort.
+  ///
+  /// In ko, this message translates to:
+  /// **'브라우저'**
+  String get linkOpenBrowserShort;
+
+  /// No description provided for @linkOpenInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'부루미 안에서 열면 앱을 떠나지 않고, 다른 브라우저의 기록에도 남지 않아요.'**
+  String get linkOpenInfo;
+
+  /// No description provided for @linkNeverHeader.
+  ///
+  /// In ko, this message translates to:
+  /// **'앱 안에서 열지 않기'**
+  String get linkNeverHeader;
+
+  /// No description provided for @linkNeverAdd.
+  ///
+  /// In ko, this message translates to:
+  /// **'웹사이트 추가'**
+  String get linkNeverAdd;
+
+  /// No description provided for @linkNeverInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 웹사이트들은 언제나 기본 브라우저에서 열려요.'**
+  String get linkNeverInfo;
+
+  /// No description provided for @tiltMove.
+  ///
+  /// In ko, this message translates to:
+  /// **'기울이면 움직이기'**
+  String get tiltMove;
+
+  /// No description provided for @tiltInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'휴대폰을 기울이면 대화 배경이 살짝 움직여요. 배터리를 조금 더 써요.'**
+  String get tiltInfo;
+
+  /// No description provided for @appIcon.
+  ///
+  /// In ko, this message translates to:
+  /// **'앱 아이콘'**
+  String get appIcon;
+
+  /// No description provided for @appIconInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'홈 화면의 부루미 아이콘 모양을 바꿔요. 바꿀 때 앱이 잠깐 닫힐 수 있어요.'**
+  String get appIconInfo;
+
+  /// No description provided for @appIconGreen.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본'**
+  String get appIconGreen;
+
+  /// No description provided for @appIconDark.
+  ///
+  /// In ko, this message translates to:
+  /// **'다크'**
+  String get appIconDark;
+
+  /// No description provided for @appIconLight.
+  ///
+  /// In ko, this message translates to:
+  /// **'화이트'**
+  String get appIconLight;
+
+  /// No description provided for @appIconMint.
+  ///
+  /// In ko, this message translates to:
+  /// **'세이지'**
+  String get appIconMint;
+
+  /// No description provided for @psGlass.
+  ///
+  /// In ko, this message translates to:
+  /// **'유리 효과'**
+  String get psGlass;
+
+  /// No description provided for @psGlassSub.
+  ///
+  /// In ko, this message translates to:
+  /// **'끄면 위·아래 바가 비치지 않는 판으로 보여요.'**
+  String get psGlassSub;
+
+  /// No description provided for @psPreload.
+  ///
+  /// In ko, this message translates to:
+  /// **'미디어 미리 받기'**
+  String get psPreload;
+
+  /// No description provided for @psPreloadSub.
+  ///
+  /// In ko, this message translates to:
+  /// **'사진·영상을 열기 전에 미리 받아 둬요.'**
+  String get psPreloadSub;
+
+  /// No description provided for @psTiltSub.
+  ///
+  /// In ko, this message translates to:
+  /// **'휴대폰을 기울이면 대화 배경이 움직여요.'**
+  String get psTiltSub;
+
+  /// No description provided for @chatsMessages.
+  ///
+  /// In ko, this message translates to:
+  /// **'메시지'**
+  String get chatsMessages;
+
+  /// No description provided for @chatsList.
+  ///
+  /// In ko, this message translates to:
+  /// **'대화 목록'**
+  String get chatsList;
+
+  /// No description provided for @chatsMediaReactions.
+  ///
+  /// In ko, this message translates to:
+  /// **'미디어와 반응'**
+  String get chatsMediaReactions;
+
+  /// No description provided for @formattingRow.
+  ///
+  /// In ko, this message translates to:
+  /// **'형식이 지정된 메시지'**
+  String get formattingRow;
+
+  /// No description provided for @formattingSub.
+  ///
+  /// In ko, this message translates to:
+  /// **'굵게 같은 서식을 메시지에 보여 줘요'**
+  String get formattingSub;
+
+  /// No description provided for @listMedia.
+  ///
+  /// In ko, this message translates to:
+  /// **'사진·동영상 미리보기 보이기'**
+  String get listMedia;
+
+  /// No description provided for @listMediaSub.
+  ///
+  /// In ko, this message translates to:
+  /// **'대화 목록에 마지막 사진을 작게 보여 줘요'**
+  String get listMediaSub;
+
+  /// No description provided for @scamWarningSub.
+  ///
+  /// In ko, this message translates to:
+  /// **'이상한 링크에 경고를 붙여요'**
+  String get scamWarningSub;
+
+  /// No description provided for @planPick.
+  ///
+  /// In ko, this message translates to:
+  /// **'일정 뽑기'**
+  String get planPick;
+
+  /// No description provided for @planPickSub.
+  ///
+  /// In ko, this message translates to:
+  /// **'메시지 속 날짜·시간을 누르면 알림을 맞춰요'**
+  String get planPickSub;
+
+  /// No description provided for @aiOnPhoneInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'모두 이 휴대폰 안에서만 처리돼요. 메시지 내용은 어디로도 보내지 않아요.'**
+  String get aiOnPhoneInfo;
+
+  /// No description provided for @planFound.
+  ///
+  /// In ko, this message translates to:
+  /// **'일정: {when}'**
+  String planFound(String when);
+
+  /// No description provided for @planHourBefore.
+  ///
+  /// In ko, this message translates to:
+  /// **'1시간 전에 알림'**
+  String get planHourBefore;
+
+  /// No description provided for @planAtTime.
+  ///
+  /// In ko, this message translates to:
+  /// **'그 시각에 알림'**
+  String get planAtTime;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

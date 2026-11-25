@@ -8,6 +8,7 @@ import '../design/tokens.dart';
 import '../l10n/app_localizations.dart';
 import 'bubbles.dart';
 import 'chat_folders.dart';
+import 'folders_page.dart' show FolderTag;
 import 'chat_page.dart';
 import 'wide.dart';
 import 'chat_row_actions.dart';
@@ -16,6 +17,7 @@ import 'glass.dart';
 import 'home.dart';
 import 'new_chat_page.dart';
 import 'stories.dart';
+import 'profile_page.dart' show SharedThumb;
 import 'ios_route.dart';
 
 class ChatListPage extends StatefulWidget {
@@ -51,6 +53,13 @@ class _ChatListPageState extends State<ChatListPage> {
       editing = false;
       picked.clear();
     });
+  }
+
+  /// The left menu covers the whole height, so the tab bar steps aside
+  /// (nothing in the menu hides under it).
+  void setMenu(bool on) {
+    if (!editing) HomeTabs.hideBar.value = on;
+    setState(() => menu = on);
   }
 
   @override
@@ -110,8 +119,10 @@ class _ChatListPageState extends State<ChatListPage> {
       child: LiquidGlass(
         radius: Tokens.capsule,
         child: Container(
+          // Telegram measured: 44 pt tall, 12 pt either side of the word.
           height: Tokens.closeButton,
-          padding: EdgeInsets.symmetric(horizontal: Tokens.space[3]),
+          constraints: const BoxConstraints(minWidth: Tokens.closeButton),
+          padding: EdgeInsets.symmetric(horizontal: Tokens.space[2]),
           alignment: Alignment.center,
           child: Text(
             label,
@@ -122,7 +133,8 @@ class _ChatListPageState extends State<ChatListPage> {
     );
     return Padding(
       key: const Key('list-edit-bar'),
-      padding: EdgeInsets.fromLTRB(Tokens.space[3], 0, Tokens.space[3], MediaQuery.paddingOf(context).bottom + Tokens.space[1]),
+      // Same place as the tab bar it replaces: 21 pt from the sides and bottom.
+      padding: EdgeInsets.fromLTRB(FloatingTabBar.edge, 0, FloatingTabBar.edge, FloatingTabBar.bottomGap(context)),
       child: Row(
         children: [
           button('edit-read', any ? l.markRead : l.markAllRead, () => editAction('read', shown)),
@@ -171,11 +183,7 @@ class _ChatListPageState extends State<ChatListPage> {
             ? [GlassPill(key: const Key('list-edit-done'), text: l.done, onTap: endEdit)]
             : [
                 GlassCircle(key: const Key('chats-menu'), onTap: startEdit, child: GlassCircle.icon(context, CupertinoIcons.ellipsis)),
-                GlassCircle(
-                  key: const Key('side-menu-button'),
-                  onTap: () => setState(() => menu = !menu),
-                  child: GlassCircle.icon(context, CupertinoIcons.sidebar_left),
-                ),
+                GlassCircle(key: const Key('side-menu-button'), onTap: () => setMenu(!menu), child: GlassCircle.icon(context, CupertinoIcons.sidebar_left)),
               ],
         trailing: editing
             ? const []
@@ -209,7 +217,7 @@ class _ChatListPageState extends State<ChatListPage> {
                     ),
                   ),
                 ),
-              if (top && folders.isNotEmpty)
+              if (top && all.isNotEmpty)
                 SliverToBoxAdapter(
                   child: SizedBox(
                     height: 40,
@@ -217,7 +225,11 @@ class _ChatListPageState extends State<ChatListPage> {
                       scrollDirection: Axis.horizontal,
                       padding: EdgeInsets.symmetric(horizontal: Tokens.space[3]),
                       children: [
-                        for (final (id, name) in [('all', l.filterAll), for (final f in folders) ('folder:${f.id}', f.name)])
+                        // Same choices as the left menu (Telegram folder tabs), then mine.
+                        for (final (id, name) in [
+                          for (final k in const ['all', 'unread', 'direct', 'group', 'channel', 'bot']) (k, filterName(l, k)),
+                          for (final f in folders) ('folder:${f.id}', f.label),
+                        ])
                           Padding(
                             padding: EdgeInsets.only(right: Tokens.space[1]),
                             child: GestureDetector(
@@ -327,7 +339,7 @@ class _ChatListPageState extends State<ChatListPage> {
               page,
               if (menu)
                 Positioned.fill(
-                  child: GestureDetector(key: const Key('side-menu-close'), onTap: () => setState(() => menu = false)),
+                  child: GestureDetector(key: const Key('side-menu-close'), onTap: () => setMenu(false)),
                 ),
             ],
           ),
@@ -341,10 +353,10 @@ class _ChatListPageState extends State<ChatListPage> {
           bottom: 0,
           child: SideMenu(
             filter: filter,
-            onPick: (f) => setState(() {
+            onPick: (f) {
               filter = f;
-              menu = false;
-            }),
+              setMenu(false);
+            },
             onSearch: (v) => setState(() => query = v),
           ),
         ),
@@ -579,6 +591,8 @@ class ChatRowTile extends StatelessWidget {
   }
 
   Widget row(BuildContext context, Palette p, AppState s, String name, Msg? last) {
+    final tags = tagsOf(s, chat);
+    final thumb = last != null && !last.viewOnce && (last.kind == 'image' || last.kind == 'video') && s.on('list_media') && s.autoDownload;
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () => openChat(context, chat.roomId, name),
@@ -637,13 +651,57 @@ class ChatRowTile extends StatelessWidget {
                       Expanded(
                         child: SizedBox(
                           height: Tokens.preview.lineHeight * 2,
-                          child: Text(
-                            last == null
-                                ? ''
-                                : (last.bubble ? L.of(context).attachBubble : previewText(context, kind: last.kind, body: last.body, caption: last.caption)),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: Tokens.preview.style.copyWith(color: p.secondaryLabel),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Settings > Chats > Photo and video previews (v1).
+                                  if (thumb)
+                                    Padding(
+                                      padding: EdgeInsets.only(right: Tokens.space[0], top: 1),
+                                      child: SizedBox(
+                                        key: const Key('list-thumb'),
+                                        width: 20,
+                                        height: 20,
+                                        child: SharedThumb(roomId: chat.roomId, msg: last),
+                                      ),
+                                    ),
+                                  Expanded(
+                                    child: Text(
+                                      last == null
+                                          ? ''
+                                          : (last.bubble
+                                                ? L.of(context).attachBubble
+                                                : previewText(context, kind: last.kind, body: last.body, caption: last.caption)),
+                                      maxLines: tags.isEmpty ? 2 : 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: Tokens.preview.style.copyWith(color: p.secondaryLabel),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              // Folder tags (Telegram): one line under the preview.
+                              if (tags.isNotEmpty)
+                                Expanded(
+                                  child: Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Row(
+                                      key: const Key('folder-tags-row'),
+                                      children: [
+                                        for (final f in tags.take(3))
+                                          Flexible(
+                                            child: Padding(
+                                              padding: const EdgeInsets.only(right: 4),
+                                              child: FolderTag(text: f.label, color: folderColors[f.color]),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
                       ),

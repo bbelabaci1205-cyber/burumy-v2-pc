@@ -267,6 +267,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PollRow dco_decode_poll_row(dynamic raw);
 
   @protected
+  ProfileCardRow dco_decode_profile_card_row(dynamic raw);
+
+  @protected
   ReactionRow dco_decode_reaction_row(dynamic raw);
 
   @protected
@@ -546,6 +549,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PollRow sse_decode_poll_row(SseDeserializer deserializer);
 
   @protected
+  ProfileCardRow sse_decode_profile_card_row(SseDeserializer deserializer);
+
+  @protected
   ReactionRow sse_decode_reaction_row(SseDeserializer deserializer);
 
   @protected
@@ -823,6 +829,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_poll_row(PollRow self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_profile_card_row(ProfileCardRow self, SseSerializer serializer);
 
   @protected
   void sse_encode_reaction_row(ReactionRow self, SseSerializer serializer);

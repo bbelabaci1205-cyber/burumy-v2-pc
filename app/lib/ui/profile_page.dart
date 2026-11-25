@@ -7,15 +7,16 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../core/app_state.dart';
+import '../core/error_log.dart';
 import '../core/backend.dart';
 import '../design/tokens.dart';
 import '../l10n/app_localizations.dart';
 import 'call_page.dart';
 import 'chat_page.dart' show timerLabel;
 import 'common.dart';
+import 'links.dart';
 import 'ios.dart';
 import 'glass.dart';
 import 'photo_editor.dart';
@@ -65,7 +66,7 @@ class _MyProfileCardState extends State<MyProfileCard> {
   Future<void> load() async {
     final b = AppScope.of(context).backend;
     final n = await b.myName();
-    final ph = await b.myPhoto().catchError((_) => null);
+    final ph = AppScope.of(context).myOwnPhoto ?? await b.myPhoto().catchError((_) => null);
     if (mounted) {
       setState(() {
         name = n;
@@ -139,15 +140,22 @@ class _ProfilePageState extends State<ProfilePage> {
         if (mounted) setState(() {});
       });
       final me = b.userId;
-      if (me != null) {
+      final keptBio = s.pref('me_bio', '');
+      if (keptBio.isNotEmpty) {
+        bioWas = keptBio;
+        bio.text = keptBio;
+      } else if (me != null) {
         b.bioOf(me).then((t) {
           bioWas = t;
           if (mounted) bio.text = t;
         }, onError: (_) {});
       }
-      b.myPhoto().then((p) {
-        if (mounted) setState(() => photo = p);
-      }, onError: (_) {});
+      photo = s.myOwnPhoto;
+      if (photo == null) {
+        b.myPhoto().then((p) {
+          if (mounted) setState(() => photo = p);
+        }, onError: (_) {});
+      }
     }
   }
 
@@ -160,15 +168,15 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> pickPhoto() async {
-    final b = AppScope.read(context).backend;
+    final s = AppScope.read(context);
     final x = await ImagePicker().pickImage(source: ImageSource.gallery, maxWidth: 1024);
     if (x == null || !mounted) return;
     final picked = await x.readAsBytes();
     if (!mounted) return;
     final bytes = await editProfilePhoto(context, picked);
     if (bytes == null || !mounted) return;
-    await b.setMyPhoto('image/png', bytes);
     if (mounted) setState(() => photo = bytes);
+    await s.saveMyProfile(photo: bytes);
   }
 
   void photoMenu() {
@@ -192,8 +200,9 @@ class _ProfilePageState extends State<ProfilePage> {
               isDestructiveAction: true,
               onPressed: () async {
                 Navigator.pop(c);
-                await AppScope.read(context).backend.setMyPhoto('image/png', const []);
+                final s = AppScope.read(context);
                 if (mounted) setState(() => photo = null);
+                await s.saveMyProfile(removePhoto: true);
               },
               child: Text(l.removePhoto),
             ),
@@ -216,8 +225,10 @@ class _ProfilePageState extends State<ProfilePage> {
     final t = bio.text.trim();
     if (t != bioWas) {
       try {
-        await b.setMyBio(t);
-      } catch (_) {}
+        await s.saveMyProfile(bio: t);
+      } catch (e, st) {
+        ErrorLog.add(e, st);
+      }
     }
     if (mounted) Navigator.pop(context);
   }
@@ -279,6 +290,19 @@ class _ProfilePageState extends State<ProfilePage> {
             children: [field(const Key('profile-bio'), bio, l.bio, max: 70, maxLines: 3)],
           ),
           IosSection(
+            footer: sectionFooter(context, l.birthdayInfo),
+            children: [
+              CupertinoListTile(
+                key: const Key('profile-birthday'),
+                leading: iconTile(Palette.tilePink, CupertinoIcons.gift_fill),
+                title: Text(l.birthday),
+                additionalInfo: Text(birthdayText(l, s.pref('me_birthday', '')) ?? l.birthdayAdd),
+                trailing: const CupertinoListTileChevron(),
+                onTap: () => pickBirthday(context),
+              ),
+            ],
+          ),
+          IosSection(
             footer: sectionFooter(context, l.idInfo),
             children: [
               CupertinoListTile(
@@ -332,6 +356,7 @@ class _ChatInfoPageState extends State<ChatInfoPage> {
   int tab = 0;
   bool copied = false;
   String bio = '';
+  String birthday = '';
   String about = '';
   String role = 'member';
   bool hideMembers = false;
@@ -375,8 +400,16 @@ class _ChatInfoPageState extends State<ChatInfoPage> {
         if (!widget.isGroup && !widget.isChannel && other != null) {
           unawaited(loadVerified());
           unawaited(loadCommon(other));
-          b.bioOf(other).then((t) {
-            if (mounted) setState(() => bio = t);
+          final st = AppScope.of(context);
+          final c = st.cardOf(other, fresh: true);
+          if (c != null) bio = c.bio;
+          b.profileOf(other).then((c) {
+            if (mounted) {
+              setState(() {
+                bio = c.bio;
+                birthday = c.birthday;
+              });
+            }
           }, onError: (_) {});
         }
       });
@@ -863,6 +896,12 @@ class _ChatInfoPageState extends State<ChatInfoPage> {
                       title: Text(l.bio, style: Tokens.caption.style.copyWith(color: p.secondaryLabel)),
                       subtitle: Text(bio, maxLines: 4, style: Tokens.body.style.copyWith(color: p.label)),
                     ),
+                  if (birthdayText(l, birthday) case final b?)
+                    CupertinoListTile(
+                      key: const Key('info-birthday'),
+                      title: Text(l.birthday, style: Tokens.caption.style.copyWith(color: p.secondaryLabel)),
+                      subtitle: Text(b, style: Tokens.body.style.copyWith(color: p.label)),
+                    ),
                   if (memo.isNotEmpty)
                     CupertinoListTile(
                       key: const Key('info-memo'),
@@ -1131,7 +1170,7 @@ class SharedList extends StatelessWidget {
             leading: iconTile(tab == 1 ? Palette.tileBlue : Palette.tileOrange, tab == 1 ? CupertinoIcons.doc_fill : CupertinoIcons.link),
             title: Text(tab == 1 ? (m.body ?? '') : _link.firstMatch(m.body ?? '')!.group(0)!, maxLines: 1, overflow: TextOverflow.ellipsis),
             subtitle: Text(DateFormat.yMMMd(Localizations.localeOf(context).languageCode).format(m.time), style: Tokens.caption.style),
-            onTap: tab == 2 ? () => launchUrl(Uri.parse(_link.firstMatch(m.body ?? '')!.group(0)!)) : null,
+            onTap: tab == 2 ? () => openWebLink(context, _link.firstMatch(m.body ?? '')!.group(0)!) : null,
           ),
       ],
     );
@@ -1651,5 +1690,92 @@ class CommonGroups extends StatelessWidget {
           ),
       ],
     );
+  }
+}
+
+/// "3월 14일" from "MM-DD" (or "YYYY-MM-DD"); null when none.
+String? birthdayText(L l, String b) {
+  final p = b.split('-');
+  if (p.length < 2) return null;
+  final m = int.tryParse(p[p.length - 2]), d = int.tryParse(p.last);
+  if (m == null || d == null) return null;
+  return l.birthdayMonthDay(m, d);
+}
+
+/// Month and day wheels (iOS), saved as "MM-DD": friends never see a year.
+Future<void> pickBirthday(BuildContext context) async {
+  final s = AppScope.read(context);
+  final l = L.of(context);
+  final p = paletteOf(context);
+  final was = s.pref('me_birthday', '').split('-');
+  var m = was.length >= 2 ? int.tryParse(was[was.length - 2]) ?? 1 : 1;
+  var d = was.length >= 2 ? int.tryParse(was.last) ?? 1 : 1;
+  String two(int x) => x.toString().padLeft(2, '0');
+  final had = s.pref('me_birthday', '').isNotEmpty;
+  final picked = await showCupertinoModalPopup<String>(
+    context: context,
+    useRootNavigator: !Wide.on,
+    builder: (c) => Container(
+      color: p.card,
+      padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(c).bottom),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              if (had)
+                CupertinoButton(
+                  key: const Key('birthday-remove'),
+                  onPressed: () => Navigator.pop(c, ''),
+                  child: Text(l.birthdayRemove, style: Tokens.body.style.copyWith(color: Palette.tileRed)),
+                ),
+              const Spacer(),
+              CupertinoButton(
+                key: const Key('birthday-done'),
+                onPressed: () => Navigator.pop(c, '${two(m)}-${two(d)}'),
+                child: Text(l.done, style: Tokens.body.style.copyWith(color: p.accent)),
+              ),
+            ],
+          ),
+          SizedBox(
+            height: 216,
+            child: Row(
+              children: [
+                Expanded(
+                  child: CupertinoPicker(
+                    key: const Key('birthday-month'),
+                    itemExtent: 32,
+                    scrollController: FixedExtentScrollController(initialItem: m - 1),
+                    onSelectedItemChanged: (i) => m = i + 1,
+                    children: [for (var i = 1; i <= 12; i++) Center(child: Text(l.birthdayMonthDay(i, 1).split(' ').first.replaceAll('/1', '')))],
+                  ),
+                ),
+                Expanded(
+                  child: CupertinoPicker(
+                    key: const Key('birthday-day'),
+                    itemExtent: 32,
+                    scrollController: FixedExtentScrollController(initialItem: d - 1),
+                    onSelectedItemChanged: (i) => d = i + 1,
+                    children: [for (var i = 1; i <= 31; i++) Center(child: Text('$i'))],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+  if (picked == null) return;
+  // 2월 30일 같은 날은 그 달의 마지막 날로.
+  var value = picked;
+  if (picked.isNotEmpty) {
+    final last = DateTime(2024, m + 1, 0).day;
+    value = '${two(m)}-${two(d > last ? last : d)}';
+  }
+  try {
+    await s.saveMyProfile(birthday: value);
+  } catch (e, st) {
+    ErrorLog.add(e, st);
   }
 }

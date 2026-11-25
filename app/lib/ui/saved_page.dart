@@ -52,6 +52,10 @@ Future<String?> openSavedSide(BuildContext context, {required List<Msg> msgs, re
   ),
 );
 
+/// Back on the side list leaves 저장한 메시지 altogether (Telegram):
+/// to Settings or the chat list, wherever it was opened from.
+const savedExit = '\u0000exit';
+
 /// Name of a chat a message was saved from.
 String savedSourceName(AppState s, String roomId) {
   final c = s.chats.where((x) => x.roomId == roomId).firstOrNull;
@@ -123,7 +127,20 @@ class _SavedChatsPageState extends State<SavedChatsPage> {
       backgroundColor: p.list,
       navigationBar: GlassTopBar.nav(
         middle: Text(l.savedMessages),
-        trailing: AccentCircle(key: const Key('saved-side-close'), icon: CupertinoIcons.bookmark_fill, onTap: () => Navigator.pop(context)),
+        // Telegram: the bookmark opens 미디어·파일·링크; back closes the list.
+        leading: GlassCircle(
+          key: const Key('back'),
+          onTap: () => Navigator.of(context).pop(savedExit),
+          child: GlassCircle.icon(context, CupertinoIcons.chevron_back),
+        ),
+        trailing: AccentCircle(
+          key: const Key('saved-side-info'),
+          icon: CupertinoIcons.bookmark_fill,
+          onTap: () {
+            final id = AppScope.read(context).savedRoomId;
+            if (id != null) Navigator.of(context).push(IosPageRoute(builder: (_) => SavedInfoPage(roomId: id)));
+          },
+        ),
         backgroundColor: p.list,
       ),
       child: SafeArea(

@@ -11,15 +11,20 @@ import 'package:flutter/services.dart';
 import '../brand/brand.dart';
 import '../core/app_state.dart';
 import '../core/backend.dart';
+import '../core/error_log.dart';
 import '../core/storage_usage.dart';
 import '../design/tokens.dart';
 import '../l10n/app_localizations.dart';
 import 'app_lock_page.dart';
 import 'common.dart';
+import 'app_icon.dart';
+import 'links.dart';
 import 'ios.dart';
 import 'glass.dart';
 import 'chat_row_actions.dart';
 import 'settings_kit.dart';
+import 'message_sheets.dart' show AccentButton, GlassSheet;
+import 'settings_art.dart';
 import 'sticker_panel.dart';
 import 'wallpaper.dart';
 import '../stickers/catalog.dart';
@@ -194,6 +199,9 @@ class AppearancePage extends StatelessWidget {
             ),
           ),
         ]),
+        group(context, footer: l.tiltInfo, [
+          PrefSwitch('tilt', key: const Key('tilt-switch'), title: l.tiltMove, color: Palette.tileOrange, icon: CupertinoIcons.move),
+        ]),
         group(context, [
           CupertinoListTile(
             leading: iconTile(Palette.tileIndigo, CupertinoIcons.moon_fill),
@@ -245,6 +253,8 @@ class AppearancePage extends StatelessWidget {
           ),
           NavRow(color: Palette.tilePink, icon: CupertinoIcons.smiley_fill, title: l.stickersEmoji, page: (_) => const StickersEmojiPage()),
         ]),
+        // Android only for now (iPhone needs the app in the App Store first).
+        if (AppIconPicker.supported) group(context, header: l.appIcon, footer: l.appIconInfo, const [AppIconPicker()]),
       ],
     );
   }
@@ -407,6 +417,7 @@ class StickersEmojiPage extends StatelessWidget {
     return SettingsScaffold(
       title: l.stickersEmoji,
       children: [
+        HeaderCard(color: Palette.tilePink, icon: CupertinoIcons.smiley_fill, title: l.stickersEmoji, body: l.stickersHeaderInfo),
         group(context, footer: l.doubleTapInfo, [
           PrefChoice(
             'quick_reaction',
@@ -575,8 +586,17 @@ class PowerSavingPage extends StatelessWidget {
               ),
             ),
         ]),
+        // Telegram: the heavy jobs one by one; all stop when the battery is low.
         group(context, header: l.powerJobs, footer: l.powerJobsInfo, [
           PrefSwitch('ui_effects', title: l.uiEffects, subtitle: l.uiEffectsInfo, fallback: true, color: Palette.tilePurple, icon: CupertinoIcons.sparkles),
+          PrefSwitch(
+            'ps_glass',
+            title: l.psGlass,
+            subtitle: l.psGlassSub,
+            fallback: true,
+            color: Palette.tileCyan,
+            icon: CupertinoIcons.square_stack_3d_up_fill,
+          ),
           PrefSwitch(
             'autoplay_gif',
             title: l.autoplayGif,
@@ -585,6 +605,15 @@ class PowerSavingPage extends StatelessWidget {
             color: Palette.tileOrange,
             icon: CupertinoIcons.play_rectangle_fill,
           ),
+          PrefSwitch(
+            'ps_preload',
+            title: l.psPreload,
+            subtitle: l.psPreloadSub,
+            fallback: true,
+            color: Palette.tileBlue,
+            icon: CupertinoIcons.arrow_down_circle_fill,
+          ),
+          PrefSwitch('tilt', title: l.tiltMove, subtitle: l.psTiltSub, color: Palette.tileRed, icon: CupertinoIcons.move),
         ]),
       ],
     );
@@ -602,6 +631,7 @@ class LanguagePage extends StatelessWidget {
     final s = AppScope.of(context);
     return ChoicePage(
       title: l.settingsLanguage,
+      card: HeaderCard(color: Palette.tileBlue, icon: CupertinoIcons.globe, title: l.settingsLanguage, body: l.languageHeaderInfo),
       options: [('system', l.languageAuto), ('ko', l.languageKo), ('en', l.languageEn)],
       value: () => s.locale?.languageCode ?? 'system',
       onPick: (v) => s.setLocale(v == 'system' ? null : Locale(v)),
@@ -617,18 +647,60 @@ class ChatSettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
+    final p = paletteOf(context);
     return SettingsScaffold(
       title: l.settingsChatsPage,
       children: [
-        group(context, [
-          PrefSwitch('enter_send', title: l.enterSends, color: Palette.tileBlue, icon: CupertinoIcons.return_icon),
-          PrefSwitch('swipe_reply', title: l.swipeReply, fallback: true, color: Palette.tileIndigo, icon: CupertinoIcons.arrowshape_turn_up_left_fill),
-          PrefSwitch('double_tap_react', title: l.doubleTapReact, fallback: true, color: Palette.tileRed, icon: CupertinoIcons.heart_fill),
+        HeaderCard(color: p.tileGreen, icon: CupertinoIcons.chat_bubble_fill, title: l.settingsChatsPage, body: l.chatsHeaderInfo),
+        // v1 order: messages, chat list, AI, media and reactions.
+        group(context, header: l.chatsMessages, [
+          PrefSwitch(
+            'formatting',
+            key: const Key('formatting-switch'),
+            title: l.formattingRow,
+            subtitle: l.formattingSub,
+            fallback: true,
+            color: Palette.tileBlue,
+            icon: CupertinoIcons.textformat,
+          ),
+          PrefSwitch('enter_send', title: l.enterSends, color: p.tileGreen, icon: CupertinoIcons.return_icon),
+          PrefSwitch('swipe_reply', title: l.swipeReply, fallback: true, color: Palette.tileOrange, icon: CupertinoIcons.arrowshape_turn_up_left_fill),
         ]),
-        group(context, [
+        group(context, header: l.chatsList, footer: l.listTopInfo, [
+          PrefSwitch('list_top', title: l.listTop, color: Palette.tileTeal, icon: CupertinoIcons.search),
+          PrefSwitch(
+            'list_media',
+            key: const Key('list-media-switch'),
+            title: l.listMedia,
+            subtitle: l.listMediaSub,
+            color: Palette.tileOrange,
+            icon: CupertinoIcons.photo_fill,
+          ),
+        ]),
+        group(context, footer: l.streakInfo, const [StreakSwitchTile()]),
+        group(context, header: l.aiFeatures, footer: l.aiOnPhoneInfo, [
+          PrefSwitch(
+            'scam_warning',
+            title: l.scamWarning,
+            subtitle: l.scamWarningSub,
+            fallback: true,
+            color: Palette.tileRed,
+            icon: CupertinoIcons.exclamationmark_shield_fill,
+          ),
+          PrefSwitch(
+            'plan_pick',
+            key: const Key('plan-pick-switch'),
+            title: l.planPick,
+            subtitle: l.planPickSub,
+            color: Palette.tileOrange,
+            icon: CupertinoIcons.calendar,
+          ),
+        ]),
+        group(context, header: l.chatsMediaReactions, [
+          PrefSwitch('double_tap_react', title: l.doubleTapReact, fallback: true, color: Palette.tileRed, icon: CupertinoIcons.heart_fill),
           NavRow(
             key: const Key('quick-replies-row'),
-            color: Palette.tileBlue,
+            color: Palette.tileYellow,
             icon: CupertinoIcons.text_bubble_fill,
             title: l.quickReplies,
             value: '${quickReplies(AppScope.of(context)).length}',
@@ -636,18 +708,13 @@ class ChatSettingsPage extends StatelessWidget {
           ),
           NavRow(
             key: const Key('away-row'),
-            color: Palette.tileOrange,
+            color: Palette.tileIndigo,
             icon: CupertinoIcons.moon_zzz_fill,
             title: l.awayReply,
             value: AppScope.of(context).on('away_on') ? l.stateOn : l.stateOff,
             page: (_) => const AwayReplyPage(),
           ),
         ]),
-        group(context, header: l.aiFeatures, footer: l.scamWarningInfo, [
-          PrefSwitch('scam_warning', title: l.scamWarning, fallback: true, color: Palette.tileRed, icon: CupertinoIcons.exclamationmark_shield_fill),
-        ]),
-        group(context, footer: l.streakInfo, const [StreakSwitchTile()]),
-        group(context, footer: l.listTopInfo, [PrefSwitch('list_top', title: l.listTop, color: Palette.tileTeal, icon: CupertinoIcons.search)]),
         group(context, [
           NavRow(
             key: const Key('hidden-chats-row'),
@@ -892,13 +959,47 @@ class _DataPageState extends State<DataPage> {
             CupertinoListTile(title: Text(l.storageUsage), additionalInfo: const Text('—')),
         ]),
         group(context, header: l.autoDownload, footer: l.autoDownloadInfo, [
-          PrefSwitch('auto_dl_cell', title: l.autoDlCell, fallback: true, color: p.tileGreen, icon: CupertinoIcons.antenna_radiowaves_left_right),
-          PrefSwitch('auto_dl_wifi', title: l.autoDlWifi, fallback: true, color: Palette.tileBlue, icon: CupertinoIcons.wifi),
+          PrefSwitch(
+            'auto_dl_cell',
+            title: l.autoDlCell,
+            subtitle: l.autoDlPhotosSub,
+            fallback: true,
+            color: p.tileGreen,
+            icon: CupertinoIcons.antenna_radiowaves_left_right,
+          ),
+          PrefSwitch('auto_dl_wifi', title: l.autoDlWifi, subtitle: l.autoDlPhotosSub, fallback: true, color: Palette.tileBlue, icon: CupertinoIcons.wifi),
+          Builder(
+            builder: (context) {
+              final s = AppScope.of(context);
+              final changed = !s.on('auto_dl_cell', fallback: true) || !s.on('auto_dl_wifi', fallback: true);
+              return CupertinoListTile(
+                key: const Key('auto-dl-reset'),
+                leading: Icon(CupertinoIcons.arrow_counterclockwise, color: p.secondaryLabel),
+                title: Text(l.autoDlReset, style: TextStyle(color: changed ? p.accent : p.secondaryLabel)),
+                onTap: changed
+                    ? () async {
+                        await s.setOn('auto_dl_cell', true);
+                        await s.setOn('auto_dl_wifi', true);
+                      }
+                    : null,
+              );
+            },
+          ),
         ]),
-        group(context, footer: l.autoplayGifInfo, [
-          PrefSwitch('autoplay_gif', title: l.autoplayGif, fallback: true, color: Palette.tileOrange, icon: CupertinoIcons.play_rectangle_fill),
+        group(context, header: l.mediaAndLinks, footer: l.linkPreviewInfo, [
+          PrefSwitch(
+            'autoplay_gif',
+            title: l.autoplayGif,
+            subtitle: l.autoplayGifSub,
+            fallback: true,
+            color: Palette.tileOrange,
+            icon: CupertinoIcons.play_rectangle_fill,
+          ),
+          const LinkPreviewSwitchTile(),
         ]),
-        group(context, footer: l.linkPreviewInfo, const [LinkPreviewSwitchTile()]),
+        group(context, header: l.callsHeader, [
+          PrefSwitch('low_data_calls', title: l.lowDataCalls, subtitle: l.lowDataCallsSub, color: p.tileGreen, icon: CupertinoIcons.phone_fill),
+        ]),
       ],
     );
   }
@@ -945,11 +1046,21 @@ class _PrivacyPageState extends State<PrivacyPage> {
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
+    final s = AppScope.of(context);
     final who = [('everyone', l.whoEveryone), ('contacts', l.whoContacts)];
+    final card = [...who, ('nobody', l.whoNobody)];
+    // Built in from the start (v1 rows): one fixed choice and why.
+    Widget fixedRow(String key, String title, String info) => NavRow(
+      key: Key('fixed-$key'),
+      title: title,
+      value: l.whoAlwaysNobody,
+      page: (_) => ChoicePage(title: title, footer: info, options: [('nobody', l.whoAlwaysNobody)], value: () => 'nobody', onPick: (_) {}),
+    );
     return SettingsScaffold(
       title: l.settingsPrivacy,
       children: [
         HeaderCard(color: Palette.tileBlue, icon: CupertinoIcons.lock_shield_fill, title: l.settingsPrivacy, body: l.privacyInfo),
+        // 1. Security: locks, keys and devices together.
         group(context, header: l.settingsSecurity, [
           NavRow(
             key: const Key('blocked-row'),
@@ -968,6 +1079,13 @@ class _PrivacyPageState extends State<PrivacyPage> {
             onTap: () => open(const AppLockPage()),
           ),
           NavRow(
+            key: const Key('hide-delete-row'),
+            color: Palette.tileBlue,
+            icon: CupertinoIcons.eye_slash_fill,
+            title: l.hideDeleteRow,
+            onTap: () => open(const AppLockPage()),
+          ),
+          NavRow(
             key: const Key('verify-row'),
             color: paletteOf(context).tileGreen,
             icon: CupertinoIcons.checkmark_shield_fill,
@@ -983,18 +1101,60 @@ class _PrivacyPageState extends State<PrivacyPage> {
             title: l.changePassword,
             onTap: () => open(const ChangePasswordPage()),
           ),
+          NavRow(color: paletteOf(context).tileBlack, icon: CupertinoIcons.device_laptop, title: l.devices, onTap: () => open(const DevicesPage())),
+          NavRow(color: Palette.tileIndigo, icon: CupertinoIcons.lock_shield, title: l.encryptionKeys, onTap: () => open(const KeysPage())),
         ]),
-        group(context, footer: l.defaultTimerInfo, [
+        // 2. Messages I send.
+        group(context, header: l.privMessages, footer: l.defaultTimerInfo, [
           PrefChoice(
             'default_timer',
             title: l.defaultTimer,
             fallback: '0',
-            color: Palette.tileIndigo,
-            icon: CupertinoIcons.timer,
             options: [('0', l.timerOff), ('86400', l.timer1d), ('604800', l.timer1w), ('2592000', l.timer1m)],
           ),
+          PrefSwitch('undo_send', title: l.undoSend, subtitle: l.undoSendSub),
+          PrefSwitch('send_read', title: l.sendRead, subtitle: l.sendReadSub, fallback: true),
+          PrefSwitch('send_typing', title: l.sendTyping, subtitle: l.sendTypingSub, fallback: true),
+          NavRow(
+            key: const Key('edit-history-row'),
+            title: l.editHistory,
+            value: l.editHistoryAlways,
+            page: (_) => ChoicePage(title: l.editHistory, footer: l.editHistoryInfo, options: [('on', l.editHistoryAlways)], value: () => 'on', onPick: (_) {}),
+          ),
         ]),
-        group(context, header: l.privacyWho, footer: l.whoInfo, [
+        // 3. Who sees my info.
+        group(context, header: l.privWhoSees, footer: l.whoCardInfo, [
+          fixedRow('last-seen', l.whoLastSeen, l.lastSeenInfo),
+          for (final (k, title, fallback) in [
+            ('who_photo', l.whoPhoto, 'everyone'),
+            ('who_bio', l.whoBio, 'everyone'),
+            ('who_birthday', l.whoBirthday, 'contacts'),
+          ])
+            NavRow(
+              key: Key('choice-$k'),
+              title: title,
+              value: card.where((o) => o.$1 == s.pref(k, fallback)).firstOrNull?.$2,
+              page: (_) => ChoicePage(
+                title: title,
+                footer: l.whoCardInfo,
+                options: card,
+                value: () => AppScope.of(context).pref(k, fallback),
+                onPick: (v) async {
+                  final st = AppScope.read(context);
+                  await st.setPref(k, v);
+                  try {
+                    await st.publishProfile();
+                  } catch (e, t) {
+                    ErrorLog.add(e, t);
+                  }
+                },
+              ),
+            ),
+          fixedRow('forwards', l.whoForwards, l.forwardsInfo),
+        ]),
+        group(context, [PrefSwitch('birthday_alert', title: l.birthdayAlert, subtitle: l.birthdayAlertSub)]),
+        // 4. Who can reach me.
+        group(context, header: l.privWhoReach, footer: l.whoInfo, [
           for (final (k, title, opts) in [
             ('who_calls', l.whoCalls, [...who, ('nobody', l.whoNobody)]),
             ('who_messages', l.whoMessages, who),
@@ -1003,20 +1163,33 @@ class _PrivacyPageState extends State<PrivacyPage> {
             NavRow(
               key: Key('choice-$k'),
               title: title,
-              value: opts.where((o) => o.$1 == AppScope.of(context).pref(k, 'everyone')).firstOrNull?.$2 ?? opts.first.$2,
+              value: opts.where((o) => o.$1 == s.pref(k, 'everyone')).firstOrNull?.$2 ?? opts.first.$2,
               page: (_) => WhoPage(prefKey: k, title: title, options: opts),
             ),
         ]),
-        group(context, footer: l.undoSendInfo, [PrefSwitch('undo_send', title: l.undoSend)]),
-        group(context, footer: l.veilAllInfo, [PrefSwitch('veil_all', title: l.veilAll)]),
-        group(context, footer: l.panicInfo, [PrefSwitch('panic', title: l.panic)]),
-        group(context, footer: l.readTypingInfo, [
-          PrefSwitch('send_read', title: l.sendRead, fallback: true),
-          PrefSwitch('send_typing', title: l.sendTyping, fallback: true),
+        // 5. When someone looks at my screen.
+        group(context, header: l.privScreen, [
+          PrefSwitch('veil_all', title: l.veilAll, subtitle: l.veilAllSub),
+          PrefSwitch('panic', title: l.panic, subtitle: l.panicSub),
         ]),
-        group(context, [
-          NavRow(color: paletteOf(context).tileBlack, icon: CupertinoIcons.device_laptop, title: l.devices, onTap: () => open(const DevicesPage())),
-          NavRow(color: paletteOf(context).tileGreen, icon: CupertinoIcons.lock_shield, title: l.encryptionKeys, onTap: () => open(const KeysPage())),
+        // 6. My account.
+        group(context, header: l.privAccount, [
+          PrefChoice(
+            'auto_delete_months',
+            title: l.autoDeleteRow,
+            fallback: '12',
+            footer: l.autoDeleteInfo,
+            options: [('1', l.months1), ('3', l.months3), ('6', l.months6), ('12', l.months12), ('18', l.months18)],
+          ),
+          NavRow(
+            key: const Key('link-open-row'),
+            title: l.linkOpenTitle,
+            value: s.pref('link_open', 'in_app') == 'in_app' ? l.linkOpenInAppShort : l.linkOpenBrowserShort,
+            page: (_) => const WebBrowserPage(),
+          ),
+          PrefSwitch('show_errors', title: l.showErrors, subtitle: l.showErrorsSub),
+          if (s.on('show_errors'))
+            NavRow(key: const Key('error-log-row'), title: l.errorLog, value: '${ErrorLog.items.length}', page: (_) => const ErrorLogPage()),
         ]),
       ],
     );
@@ -1322,22 +1495,32 @@ class _DevicesPageState extends State<DevicesPage> {
     final others = all.where((d) => !d.thisDevice).toList();
     Widget row(DeviceRow d) => CupertinoListTile(
       key: Key('device-${d.id}'),
-      leading: iconTile(d.verified ? p.tileGreen : Palette.tileGrey, CupertinoIcons.device_phone_portrait),
-      title: Text(d.name.isEmpty ? d.id : d.name),
+      leadingSize: Tokens.listIcon + Tokens.space[3],
+      leading: iconTile(d.thisDevice ? Palette.tileBlue : (d.verified ? p.tileGreen : Palette.tileGrey), deviceIcon(d.name)),
+      title: Text(d.name.isEmpty ? d.id : d.name, style: const TextStyle(fontWeight: FontWeight.w500)),
       subtitle: Text(
-        [d.verified ? l.deviceVerified : l.deviceNotVerified, if (d.lastSeen != null && !d.thisDevice) shortTime(context, d.lastSeen!)].join(' · '),
+        [
+          d.verified ? l.deviceVerified : l.deviceNotVerified,
+          if (d.thisDevice) l.onlineNow else if (d.lastSeen != null) shortTime(context, d.lastSeen!),
+        ].join(' · '),
         style: Tokens.caption.style,
       ),
     );
     return SettingsScaffold(
       title: l.devices,
       children: [
-        if (mine.isNotEmpty) group(context, header: l.thisDevice, [for (final d in mine) row(d)]),
+        // Telegram-style top: picture, one line, one big button.
+        ArtHeader(art: const LaptopArt(), text: l.devicesArtInfo),
+        Padding(
+          padding: EdgeInsets.fromLTRB(Tokens.space[3], 0, Tokens.space[3], Tokens.space[2]),
+          child: AccentButton(key: const Key('add-device'), text: l.addDevice, onTap: () => showAddDevice(context)),
+        ),
+        if (mine.isNotEmpty) group(context, header: l.thisDevice, footer: l.devicesPlatforms, [for (final d in mine) row(d)]),
         if (others.isNotEmpty) ...[
-          group(context, [
+          group(context, header: l.otherDevices, [for (final d in others) row(d)]),
+          group(context, footer: l.devicesHeaderInfo, [
             CupertinoListTile(
               key: const Key('logout-others'),
-              leading: iconTile(Palette.tileRed, CupertinoIcons.hand_raised_fill),
               title: Text(l.logOutOthers, style: const TextStyle(color: Palette.tileRed)),
               onTap: () async {
                 final ids = [for (final d in others) d.id];
@@ -1350,11 +1533,63 @@ class _DevicesPageState extends State<DevicesPage> {
               },
             ),
           ]),
-          group(context, header: l.otherDevices, [for (final d in others) row(d)]),
         ],
       ],
     );
   }
+}
+
+/// Phone, computer or tablet, from the device's name.
+IconData deviceIcon(String name) {
+  final n = name.toLowerCase();
+  if (n.contains('windows') || n.contains('pc') || n.contains('mac') || n.contains('linux') || n.contains('desktop')) return CupertinoIcons.device_laptop;
+  if (n.contains('web') || n.contains('browser')) return CupertinoIcons.globe;
+  return CupertinoIcons.device_phone_portrait;
+}
+
+/// "기기 추가": how to sign in on another device (three steps).
+Future<void> showAddDevice(BuildContext context) {
+  final l = L.of(context);
+  final p = paletteOf(context);
+  Widget step(int n, String text) => Padding(
+    padding: EdgeInsets.only(bottom: Tokens.space[3]),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 26,
+          height: 26,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(color: p.accent, shape: BoxShape.circle),
+          child: Text(
+            '$n',
+            style: Tokens.preview.style.copyWith(color: p.onAccent, fontWeight: FontWeight.w600),
+          ),
+        ),
+        SizedBox(width: Tokens.space[2]),
+        Expanded(
+          child: Text(text, style: Tokens.body.style.copyWith(color: p.label)),
+        ),
+      ],
+    ),
+  );
+  return showCupertinoModalPopup<void>(
+    context: context,
+    useRootNavigator: !Wide.on,
+    builder: (c) => GlassSheet(
+      key: const Key('add-device-sheet'),
+      title: l.addDeviceTitle,
+      children: [
+        const LaptopArt(),
+        SizedBox(height: Tokens.space[4]),
+        step(1, l.addDeviceStep1),
+        step(2, l.addDeviceStep2),
+        step(3, l.addDeviceStep3),
+        SizedBox(height: Tokens.space[2]),
+        AccentButton(text: l.done, onTap: () => Navigator.pop(c)),
+      ],
+    ),
+  );
 }
 
 /// Asks for my account password once, then runs [run] with it.
@@ -1535,4 +1770,54 @@ class _KeysPageState extends State<KeysPage> {
   }
 
   static String _spaced(String v) => [for (var i = 0; i < v.length; i += 4) v.substring(i, (i + 4).clamp(0, v.length))].join(' ');
+}
+
+/// "오류 내용 보기": the errors kept on this phone, newest first, to copy.
+class ErrorLogPage extends StatefulWidget {
+  const ErrorLogPage({super.key});
+  @override
+  State<ErrorLogPage> createState() => _ErrorLogPageState();
+}
+
+class _ErrorLogPageState extends State<ErrorLogPage> {
+  bool copied = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    final p = paletteOf(context);
+    final all = ErrorLog.items;
+    return SettingsScaffold(
+      title: l.errorLog,
+      children: [
+        group(context, [
+          if (all.isEmpty)
+            CupertinoListTile(
+              title: Text(l.errorLogEmpty, style: TextStyle(color: p.secondaryLabel)),
+            ),
+          for (final (t, text) in all)
+            CupertinoListTile(
+              title: Text(
+                text,
+                maxLines: 6,
+                overflow: TextOverflow.ellipsis,
+                style: Tokens.caption.style.copyWith(color: p.label),
+              ),
+              subtitle: Text(shortTime(context, t)),
+            ),
+        ]),
+        if (all.isNotEmpty)
+          group(context, [
+            CupertinoListTile(
+              key: const Key('error-copy'),
+              title: Text(copied ? l.copied : l.errorLogCopy, style: TextStyle(color: p.accent)),
+              onTap: () async {
+                await Clipboard.setData(ClipboardData(text: [for (final (t, x) in all) '${t.toIso8601String()} $x'].join('\n\n')));
+                if (mounted) setState(() => copied = true);
+              },
+            ),
+          ]),
+      ],
+    );
+  }
 }
