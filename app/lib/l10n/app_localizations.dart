@@ -6606,6 +6606,42 @@ abstract class L {
   /// In ko, this message translates to:
   /// **'아직 폴더가 없어요'**
   String get noFoldersYet;
+
+  /// No description provided for @swipePin.
+  ///
+  /// In ko, this message translates to:
+  /// **'고정'**
+  String get swipePin;
+
+  /// No description provided for @swipeUnpin.
+  ///
+  /// In ko, this message translates to:
+  /// **'고정 해제'**
+  String get swipeUnpin;
+
+  /// No description provided for @swipeMute.
+  ///
+  /// In ko, this message translates to:
+  /// **'알림 끔'**
+  String get swipeMute;
+
+  /// No description provided for @swipeUnmute.
+  ///
+  /// In ko, this message translates to:
+  /// **'알림 켬'**
+  String get swipeUnmute;
+
+  /// No description provided for @swipeArchive.
+  ///
+  /// In ko, this message translates to:
+  /// **'보관'**
+  String get swipeArchive;
+
+  /// No description provided for @swipeUnarchive.
+  ///
+  /// In ko, this message translates to:
+  /// **'보관 해제'**
+  String get swipeUnarchive;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

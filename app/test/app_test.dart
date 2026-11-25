@@ -640,6 +640,14 @@ void main() {
     await t.tap(find.byKey(const Key('swipe-pin')));
     await t.pumpAndSettle();
     expect(state.chats.firstWhere((c) => c.roomId == bob).pinned, isTrue);
+    // While a row is open, tapping it only closes it (does not open the chat).
+    await t.drag(find.text('bob'), const Offset(100, 0));
+    await t.pumpAndSettle();
+    expect(find.byKey(const Key('swipe-pin')), findsOneWidget);
+    await t.tap(find.text('bob'));
+    await t.pumpAndSettle();
+    expect(find.byKey(const Key('swipe-pin')), findsNothing);
+    expect(find.byType(ChatPage), findsNothing);
 
     // Delete: gone at once, 5 s to undo.
     await t.drag(find.text('우리 팀'), const Offset(-300, 0));

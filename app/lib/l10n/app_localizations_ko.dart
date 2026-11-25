@@ -3444,4 +3444,22 @@ class LKo extends L {
 
   @override
   String get noFoldersYet => '아직 폴더가 없어요';
+
+  @override
+  String get swipePin => '고정';
+
+  @override
+  String get swipeUnpin => '고정 해제';
+
+  @override
+  String get swipeMute => '알림 끔';
+
+  @override
+  String get swipeUnmute => '알림 켬';
+
+  @override
+  String get swipeArchive => '보관';
+
+  @override
+  String get swipeUnarchive => '보관 해제';
 }

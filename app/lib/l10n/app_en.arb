@@ -1563,5 +1563,11 @@
   "emergencyDeleteRoom": "Delete this chat in an emergency",
   "emergencyRoomMarked": "Opening with the delete password erases this chat",
   "folderAddedTo": "Added to the folder",
-  "noFoldersYet": "No folders yet"
+  "noFoldersYet": "No folders yet",
+  "swipePin": "Pin",
+  "swipeUnpin": "Unpin",
+  "swipeMute": "Mute",
+  "swipeUnmute": "Unmute",
+  "swipeArchive": "Archive",
+  "swipeUnarchive": "Unarchive"
 }

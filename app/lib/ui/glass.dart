@@ -401,15 +401,24 @@ class FloatingTabBar extends StatelessWidget {
   /// iOS 27 tab bar: 63 pt capsule, selected tab on a soft grey pill.
   static const height = 63.0;
 
+  /// iOS 27 / Telegram: the capsule sits 21 pt from the side edges and,
+  /// on phones with a home bar, 21 pt from the bottom edge (over the home
+  /// indicator's safe area, not above it). No home bar: a small gap.
+  static const edge = 21.0;
+  static double bottomGap(BuildContext context) {
+    final safe = MediaQuery.paddingOf(context).bottom;
+    return safe > 0 ? edge : Tokens.space[2];
+  }
+
   /// Room the pages keep free at the bottom for the bar.
-  static double room(BuildContext context) => height + Tokens.space[2] + MediaQuery.paddingOf(context).bottom;
+  static double room(BuildContext context) => height + bottomGap(context);
 
   @override
   Widget build(BuildContext context) {
     final p = paletteOf(context);
     final pill = p.dark ? const Color(0x33FFFFFF) : const Color(0x14000000);
     return Padding(
-      padding: EdgeInsets.fromLTRB(21, 0, 21, Tokens.space[2] + MediaQuery.paddingOf(context).bottom),
+      padding: EdgeInsets.fromLTRB(edge, 0, edge, bottomGap(context)),
       child: SizedBox(
         height: height,
         child: LiquidGlass(

@@ -1591,5 +1591,11 @@
   "emergencyDeleteRoom": "이 대화방 비상 시 삭제",
   "emergencyRoomMarked": "삭제 비밀번호로 열면 이 대화방이 지워져요",
   "folderAddedTo": "폴더에 넣었어요",
-  "noFoldersYet": "아직 폴더가 없어요"
+  "noFoldersYet": "아직 폴더가 없어요",
+  "swipePin": "고정",
+  "swipeUnpin": "고정 해제",
+  "swipeMute": "알림 끔",
+  "swipeUnmute": "알림 켬",
+  "swipeArchive": "보관",
+  "swipeUnarchive": "보관 해제"
 }

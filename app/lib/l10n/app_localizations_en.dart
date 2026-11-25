@@ -3556,4 +3556,22 @@ class LEn extends L {
 
   @override
   String get noFoldersYet => 'No folders yet';
+
+  @override
+  String get swipePin => 'Pin';
+
+  @override
+  String get swipeUnpin => 'Unpin';
+
+  @override
+  String get swipeMute => 'Mute';
+
+  @override
+  String get swipeUnmute => 'Unmute';
+
+  @override
+  String get swipeArchive => 'Archive';
+
+  @override
+  String get swipeUnarchive => 'Unarchive';
 }

@@ -112,20 +112,27 @@ class SwipeRow extends StatefulWidget {
 }
 
 class _SwipeRowState extends State<SwipeRow> with SingleTickerProviderStateMixin {
-  /// Telegram iOS (measured at 393 pt): 50 pt circles, 60 pt apart.
-  static const button = 60.0, dot = 50.0, full = 48.0;
+  /// Telegram iOS: 50 pt circles with a short word under them. Each button
+  /// gets an equal share of the opened space and sits in its middle, so the
+  /// set stays balanced however far the row is pulled (Eric 2026-11-25).
+  static const button = 72.0, dot = 50.0, full = 48.0;
   late final anim = AnimationController.unbounded(vsync: this);
   double get dx => anim.value;
 
   List<(String, String, IconData, Color)> left(L l, Palette p) => [
     if (widget.chat.unread > 0) ('read', l.markRead, CupertinoIcons.chat_bubble_fill, Palette.tileBlue),
-    ('pin', widget.chat.pinned ? l.chatUnpin : l.chatPin, widget.chat.pinned ? CupertinoIcons.pin_slash_fill : CupertinoIcons.pin_fill, p.tileGreen),
+    ('pin', widget.chat.pinned ? l.swipeUnpin : l.swipePin, widget.chat.pinned ? CupertinoIcons.pin_slash_fill : CupertinoIcons.pin_fill, p.tileGreen),
   ];
 
   List<(String, String, IconData, Color)> right(L l) => [
-    ('mute', widget.chat.muted ? l.chatUnmute : l.chatMute, widget.chat.muted ? CupertinoIcons.bell_fill : CupertinoIcons.bell_slash_fill, Palette.tileOrange),
+    (
+      'mute',
+      widget.chat.muted ? l.swipeUnmute : l.swipeMute,
+      widget.chat.muted ? CupertinoIcons.bell_fill : CupertinoIcons.bell_slash_fill,
+      Palette.tileOrange,
+    ),
     ('delete', l.delete, CupertinoIcons.trash_fill, Palette.tileRed),
-    ('archive', widget.chat.archived ? l.chatUnarchive : l.chatArchive, CupertinoIcons.archivebox_fill, Palette.tileGrey),
+    ('archive', widget.chat.archived ? l.swipeUnarchive : l.swipeArchive, CupertinoIcons.archivebox_fill, Palette.tileGrey),
   ];
 
   void settle(double to) => anim.animateTo(to, duration: const Duration(milliseconds: 220), curve: Curves.easeOutCubic);
@@ -166,12 +173,10 @@ class _SwipeRowState extends State<SwipeRow> with SingleTickerProviderStateMixin
               child: Icon(it.$3, color: const Color(0xFFFFFFFF), size: 24),
             ),
             SizedBox(height: Tokens.space[0]),
-            Text(
-              it.$2,
-              maxLines: 1,
-              overflow: TextOverflow.fade,
-              softWrap: false,
-              style: Tokens.caption.style.copyWith(color: p.secondaryLabel),
+            // Never cut: a long word shrinks a little to fit its button.
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(it.$2, maxLines: 1, softWrap: false, style: Tokens.caption.style.copyWith(color: p.secondaryLabel)),
             ),
           ],
         ),
@@ -199,7 +204,17 @@ class _SwipeRowState extends State<SwipeRow> with SingleTickerProviderStateMixin
           ),
         );
       }
-      return Row(mainAxisAlignment: start ? MainAxisAlignment.start : MainAxisAlignment.end, children: [for (final it in items) circle(it)]);
+      final slot = dx.abs() / items.length;
+      return Row(
+        mainAxisAlignment: start ? MainAxisAlignment.start : MainAxisAlignment.end,
+        children: [
+          for (final it in items)
+            SizedBox(
+              width: slot,
+              child: OverflowBox(minWidth: button, maxWidth: button, child: circle(it)),
+            ),
+        ],
+      );
     }
 
     final r = Radius.circular(Tokens.radius[3]);
@@ -227,17 +242,23 @@ class _SwipeRowState extends State<SwipeRow> with SingleTickerProviderStateMixin
                 // The moving edge of the row is rounded while it is open.
                 child: ClipRRect(
                   borderRadius: dx == 0 ? BorderRadius.zero : (dx > 0 ? BorderRadius.horizontal(left: r) : BorderRadius.horizontal(right: r)),
-                  child: ColoredBox(color: p.list, child: child),
+                  // Built here (not once outside) so it follows the live
+                  // offset: while open, a tap closes the row instead of
+                  // opening the chat.
+                  child: ColoredBox(
+                    color: p.list,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.translucent,
+                      onTap: dx == 0 ? null : () => settle(0),
+                      child: AbsorbPointer(absorbing: dx != 0, child: child),
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
         ),
-        child: GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          onTap: dx == 0 ? null : () => settle(0),
-          child: AbsorbPointer(absorbing: dx != 0, child: widget.child),
-        ),
+        child: widget.child,
       ),
     );
   }
