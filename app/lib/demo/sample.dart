@@ -2,10 +2,19 @@
 // Example chats (Korean or English) for screenshots and the look-only demo.
 import '../core/backend.dart';
 import 'demo_backend.dart';
+import '../design/tokens.dart';
+import '../ui/common.dart' show Avatar;
 
 /// Example chats for screenshots and the demo.
 FakeBackend demoSample(bool ko, List<int> photo) {
   final b = FakeBackend();
+  // Groups and channels in blue tones, people keep their own colours.
+  Avatar.tint
+    ..clear()
+    ..addAll({
+      for (final n in ko ? ['디자인 팀', '부루미 소식'] : ['Design Team', 'Burumy News']) n: Palette.tileBlue,
+      for (final n in ko ? ['가족'] : ['Family']) n: Palette.tileIndigo,
+    });
   final names = ko ? ['김민지', '디자인 팀', '박서준', '가족'] : ['Mina Kim', 'Design Team', 'Leo Park', 'Family'];
   final texts = ko
       ? ['내일 3시에 볼까요?', '시안 올렸어요. 확인 부탁해요!', '사진', '저녁 뭐 먹을까?']

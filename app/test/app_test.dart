@@ -629,13 +629,13 @@ void main() {
     await t.pumpAndSettle();
 
     // Swipe left: mute, delete, archive.
-    await t.drag(find.text('우리 팀'), const Offset(-300, 0));
+    await t.drag(find.text('우리 팀'), const Offset(-200, 0));
     await t.pumpAndSettle();
     await t.tap(find.byKey(const Key('swipe-mute')));
     await t.pumpAndSettle();
     expect(fake.mutedChats, contains(g));
     // Swipe right: pin.
-    await t.drag(find.text('bob'), const Offset(200, 0));
+    await t.drag(find.text('bob'), const Offset(100, 0));
     await t.pumpAndSettle();
     await t.tap(find.byKey(const Key('swipe-pin')));
     await t.pumpAndSettle();
@@ -650,7 +650,7 @@ void main() {
     expect(find.byType(ChatPage), findsNothing);
 
     // Delete: gone at once, 5 s to undo.
-    await t.drag(find.text('우리 팀'), const Offset(-300, 0));
+    await t.drag(find.text('우리 팀'), const Offset(-200, 0));
     await t.pumpAndSettle();
     await t.tap(find.byKey(const Key('swipe-delete')));
     await t.pump();
@@ -660,7 +660,7 @@ void main() {
     await t.pump(const Duration(seconds: 6));
     expect(fake.rooms.containsKey(g), isTrue);
     expect(find.text('우리 팀'), findsOneWidget);
-    await t.drag(find.text('우리 팀'), const Offset(-300, 0));
+    await t.drag(find.text('우리 팀'), const Offset(-200, 0));
     await t.pumpAndSettle();
     await t.tap(find.byKey(const Key('swipe-delete')));
     await t.pump(const Duration(seconds: 6));
@@ -689,6 +689,37 @@ void main() {
     await t.pumpAndSettle();
     expect(state.on('list_hidden:$bob'), isFalse);
     state.stopLive();
+  });
+
+  testWidgets('chat list: long swipe runs the edge action (Telegram)', (t) async {
+    final fake = FakeBackend();
+    final state = AppState(fake, locale: const Locale('ko'));
+    await fake.login(id: 'me', password: 'x');
+    final bob = await fake.createDirectChat('bob');
+    final g = await fake.createGroup('우리 팀', ['@mina:test']);
+    await state.refresh();
+    await t.pumpWidget(BurumyApp(state: state));
+    await t.pumpAndSettle();
+    // Far left: one long grey bar, letting go archives.
+    final g1 = await t.startGesture(t.getCenter(find.text('우리 팀')));
+    for (var i = 0; i < 10; i++) {
+      await g1.moveBy(const Offset(-30, 0));
+      await t.pump();
+    }
+    expect(find.byKey(const Key('swipe-full')), findsOneWidget);
+    await g1.up();
+    await t.pumpAndSettle();
+    expect(fake.archivedChats, contains(g));
+    // Far right: long bar, letting go pins.
+    final g2 = await t.startGesture(t.getCenter(find.text('bob')));
+    for (var i = 0; i < 10; i++) {
+      await g2.moveBy(const Offset(30, 0));
+      await t.pump();
+    }
+    expect(find.byKey(const Key('swipe-full')), findsOneWidget);
+    await g2.up();
+    await t.pumpAndSettle();
+    expect(state.chats.firstWhere((c) => c.roomId == bob).pinned, isTrue);
   });
 
   testWidgets('side menu: filters, search, new folder, folder chips (ko)', (t) async {
@@ -752,6 +783,11 @@ void main() {
     await t.tap(find.byKey(const Key('chip-all')));
     await t.pumpAndSettle();
     expect(find.text('@bob:test'), findsOneWidget);
+    // Switched off again: search and chips leave the list.
+    await state.setOn('list_top', false);
+    await t.pumpAndSettle();
+    expect(find.byKey(const Key('chat-search')), findsNothing);
+    expect(find.byKey(const Key('chip-all')), findsNothing);
     state.stopLive();
   });
 

@@ -2,6 +2,8 @@
 // Things you do to one chat in the list: Telegram iOS swipe buttons, the
 // iOS long-press preview with its menu, delete with 5 s undo, and hiding a
 // chat from the list.
+import 'dart:math' as math;
+
 import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
@@ -112,10 +114,11 @@ class SwipeRow extends StatefulWidget {
 }
 
 class _SwipeRowState extends State<SwipeRow> with SingleTickerProviderStateMixin {
-  /// Telegram iOS: 50 pt circles with a short word under them. Each button
-  /// gets an equal share of the opened space and sits in its middle, so the
-  /// set stays balanced however far the row is pulled (Eric 2026-11-25).
-  static const button = 72.0, dot = 50.0, full = 48.0;
+  /// Telegram iOS (measured from Eric's 2026-11-25 shots at 393 pt): 50 pt
+  /// circles 60 pt apart, the outer circle centre 35 pt from the edge, so
+  /// 10 pt from the screen edge and 10 pt from the slid row. Pulled further,
+  /// each button keeps an equal share and sits in its middle (balanced).
+  static const button = 60.0, pad = 5.0, dot = 50.0, full = 48.0;
   late final anim = AnimationController.unbounded(vsync: this);
   double get dx => anim.value;
 
@@ -149,10 +152,12 @@ class _SwipeRowState extends State<SwipeRow> with SingleTickerProviderStateMixin
     final p = paletteOf(context);
     final ls = left(l, p);
     final rs = right(l);
-    final maxL = ls.length * button, maxR = rs.length * button;
+    final maxL = ls.length * button + pad * 2, maxR = rs.length * button + pad * 2;
     // Pulled past the buttons: one long capsule, and letting go runs the
     // outer action (Telegram: archive on the right, the first on the left).
-    final fullL = dx > maxL + full, fullR = -dx > maxR + full;
+    // Read live (build() does not rerun while the row moves).
+    bool fullL() => dx > maxL + full;
+    bool fullR() => -dx > maxR + full;
     Widget circle((String, String, IconData, Color) it) => GestureDetector(
       key: Key('swipe-${it.$1}'),
       behavior: HitTestBehavior.opaque,
@@ -183,36 +188,44 @@ class _SwipeRowState extends State<SwipeRow> with SingleTickerProviderStateMixin
       ),
     );
     Widget buttons(List<(String, String, IconData, Color)> items, {required bool start}) {
-      final long = start ? fullL : fullR;
+      final long = start ? fullL() : fullR();
       final edge = start ? items.first : items.last;
-      final width = dx.abs() - Tokens.space[1];
       if (long) {
-        return Align(
-          alignment: start ? Alignment.centerLeft : Alignment.centerRight,
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: Tokens.space[0]),
-            child: AnimatedContainer(
-              key: const Key('swipe-full'),
-              duration: const Duration(milliseconds: 120),
-              width: width,
-              height: dot,
-              decoration: BoxDecoration(color: edge.$4, borderRadius: BorderRadius.circular(dot / 2)),
-              alignment: start ? Alignment.centerRight : Alignment.centerLeft,
-              padding: EdgeInsets.symmetric(horizontal: Tokens.space[3]),
-              child: Icon(edge.$3, color: const Color(0xFFFFFFFF), size: 26),
-            ),
+        // Telegram: one capsule as tall as the circles and at their height
+        // (an empty word line under it keeps them level), 10 pt from the
+        // screen edge and from the row, icon on the row side.
+        return Padding(
+          padding: EdgeInsets.symmetric(horizontal: pad * 2),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AnimatedContainer(
+                key: const Key('swipe-full'),
+                duration: const Duration(milliseconds: 120),
+                height: dot,
+                decoration: BoxDecoration(color: edge.$4, borderRadius: BorderRadius.circular(dot / 2)),
+                alignment: start ? Alignment.centerRight : Alignment.centerLeft,
+                padding: EdgeInsets.symmetric(horizontal: Tokens.space[3]),
+                child: Icon(edge.$3, color: const Color(0xFFFFFFFF), size: 26),
+              ),
+              SizedBox(height: Tokens.space[0]),
+              Text(' ', style: Tokens.caption.style),
+            ],
           ),
         );
       }
-      final slot = dx.abs() / items.length;
+      final ep = math.min(pad, dx.abs() / 2);
+      final slot = (dx.abs() - ep * 2) / items.length;
       return Row(
         mainAxisAlignment: start ? MainAxisAlignment.start : MainAxisAlignment.end,
         children: [
+          SizedBox(width: ep),
           for (final it in items)
             SizedBox(
               width: slot,
               child: OverflowBox(minWidth: button, maxWidth: button, child: circle(it)),
             ),
+          SizedBox(width: ep),
         ],
       );
     }
@@ -222,8 +235,8 @@ class _SwipeRowState extends State<SwipeRow> with SingleTickerProviderStateMixin
       onHorizontalDragUpdate: (d) => anim.value = (dx + d.delta.dx).clamp(-maxR - full * 3, maxL + full * 3),
       onHorizontalDragEnd: (d) {
         final v = d.primaryVelocity ?? 0;
-        if (fullL || fullR) {
-          final it = fullL ? ls.first : rs.last;
+        if (fullL() || fullR()) {
+          final it = fullL() ? ls.first : rs.last;
           settle(0);
           runChatAction(context, widget.chat, it.$1);
           return;
@@ -236,7 +249,17 @@ class _SwipeRowState extends State<SwipeRow> with SingleTickerProviderStateMixin
         builder: (_, child) => ClipRect(
           child: Stack(
             children: [
-              if (dx != 0) Positioned.fill(child: buttons(dx > 0 ? ls : rs, start: dx > 0)),
+              if (dx != 0)
+                Positioned.fill(
+                  // Only the opened strip, so things line up with the row edge.
+                  child: Align(
+                    alignment: dx > 0 ? Alignment.centerLeft : Alignment.centerRight,
+                    child: SizedBox(
+                      width: dx.abs(),
+                      child: buttons(dx > 0 ? ls : rs, start: dx > 0),
+                    ),
+                  ),
+                ),
               Transform.translate(
                 offset: Offset(dx, 0),
                 // The moving edge of the row is rounded while it is open.
@@ -245,8 +268,9 @@ class _SwipeRowState extends State<SwipeRow> with SingleTickerProviderStateMixin
                   // Built here (not once outside) so it follows the live
                   // offset: while open, a tap closes the row instead of
                   // opening the chat.
+                  // Telegram: the pulled row turns light grey.
                   child: ColoredBox(
-                    color: p.list,
+                    color: dx == 0 ? p.list : Color.alphaBlend(p.incoming, p.list),
                     child: GestureDetector(
                       behavior: HitTestBehavior.translucent,
                       onTap: dx == 0 ? null : () => settle(0),

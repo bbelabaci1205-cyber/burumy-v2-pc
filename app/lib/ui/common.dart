@@ -32,7 +32,11 @@ class Avatar extends StatelessWidget {
   final String? userId;
 
   /// Same colour for the same name everywhere (avatar, group sender name).
-  static Color colorFor(String name) => _colors[name.codeUnits.fold<int>(0, (a, b) => a + b) % _colors.length];
+  static Color colorFor(String name) => tint[name] ?? _colors[name.codeUnits.fold<int>(0, (a, b) => a + b) % _colors.length];
+
+  /// Look-only demo: fixed colours for its example names (Eric 2026-11-25:
+  /// groups and channels in calm blues so the list is not too colourful).
+  static final tint = <String, Color>{};
 
   static const _colors = [Palette.tileRed, Palette.tileOrange, Palette.tileBlue, Palette.tileIndigo, Palette.tilePurple, Palette.tilePink, Palette.tileTeal];
 

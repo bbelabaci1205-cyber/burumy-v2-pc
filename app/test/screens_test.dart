@@ -166,7 +166,13 @@ void main() {
           Navigator.of(t.element(find.byKey(const Key('composer')))).pop();
           await t.pumpAndSettle();
 
-          await t.tap(find.text(ko ? '부루미 소식' : 'Burumy News'));
+          final news = find.text(ko ? '부루미 소식' : 'Burumy News');
+          if (news.evaluate().isEmpty) {
+            final list = find.byWidgetPredicate((w) => w is Scrollable && w.axisDirection == AxisDirection.down).first;
+            await t.scrollUntilVisible(news, 200, scrollable: list);
+            await t.pumpAndSettle();
+          }
+          await t.tap(news);
           await t.pumpAndSettle();
           await expectLater(find.byType(CupertinoApp), matchesGoldenFile('shots/${tag}_8_channel.png'));
           Navigator.of(t.element(find.byKey(const Key('read-only')))).pop();
