@@ -188,7 +188,7 @@ class BubbleStrip extends StatelessWidget {
     final chats = AppScope.of(context).chats;
     return Padding(
       key: const Key('bubble-strip'),
-      padding: EdgeInsets.fromLTRB(Tokens.space[2], 0, Tokens.space[2], Tokens.space[1]),
+      padding: EdgeInsets.fromLTRB(Tokens.space[2], 0, Tokens.space[2], Tokens.space[0]),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
