@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: LicenseRef-Burumy-Proprietary
 // Chat list (iOS large title, rows scroll under a clear bar).
-import 'package:flutter/gestures.dart' show PointerScrollEvent, PointerSignalEvent;
 import 'package:flutter/cupertino.dart';
 
 import '../core/app_state.dart';
@@ -35,31 +34,176 @@ class _ChatListPageState extends State<ChatListPage> {
   String filter = 'all';
   bool menu = false;
 
-  /// The 스토리 / 비눗방울 card is down (shown).
-  bool cardOpen = true;
-  double scrolled = 0;
+  /// 스토리 → 비눗방울 → 보관함 sit on top of the list as three tiers
+  /// (Eric 2026-11-26). Scrolling up tucks them away one at a time, as far
+  /// as the finger goes: the stories fly into the bar left of the title
+  /// (Telegram), the bubbles to its right, the archive row just slides up.
+  /// Let go inside a tier and it snaps open or shut at the halfway mark,
+  /// so a small nudge no longer hides anything. Pulling down brings them
+  /// back in the other order.
+  final scroll = ScrollController();
+  final listY = ValueNotifier<double>(0);
+  final listKey = GlobalKey();
+  final tierKeys = [GlobalKey(), GlobalKey(), GlobalKey()];
 
-  void setCard(bool on) {
-    if (on != cardOpen) setState(() => cardOpen = on);
-  }
+  /// Per tier: the list offset where it starts going under the bar, and its
+  /// height (0 when the tier is not shown).
+  List<(double, double)> tiers = const [];
 
-  /// Pull down past the top brings the card; scrolling up near the top
-  /// tucks it away. A mouse wheel does the same at the top (PC).
+  /// The current scroll started with a finger (a mouse wheel is not snapped).
+  bool dragged = false;
+
   bool onScroll(ScrollNotification n) {
     if (n.depth != 0 || n.metrics.axis != Axis.vertical) return false;
-    scrolled = n.metrics.pixels;
-    if (n is ScrollUpdateNotification && n.dragDetails != null) {
-      if (n.metrics.pixels < -Tokens.space[5]) setCard(true);
-      if ((n.scrollDelta ?? 0) > 0 && n.metrics.pixels > 2 && n.metrics.pixels < Tokens.space[5] * 2) setCard(false);
+    listY.value = n.metrics.pixels;
+    if (n is ScrollStartNotification) dragged = n.dragDetails != null;
+    if (n is ScrollEndNotification && dragged) {
+      dragged = false;
+      Future.microtask(snap);
     }
-    if (n is OverscrollNotification && n.dragDetails != null && n.overscroll < -Tokens.space[2]) setCard(true);
     return false;
   }
 
-  void onWheel(PointerSignalEvent e) {
-    if (e is! PointerScrollEvent || scrolled > 1) return;
-    setCard(e.scrollDelta.dy < 0);
+  /// How far tier [i] is tucked away at list offset [at]: 0 open, 1 gone.
+  double tucked(int i, double at) {
+    if (i >= tiers.length) return 0;
+    final (start, height) = tiers[i];
+    if (height <= 0) return 0;
+    return ((at - start) / height).clamp(0.0, 1.0).toDouble();
   }
+
+  /// Reads where the tiers are (after each build; scrolling moves them all
+  /// together, so these offsets stay put).
+  void measure() {
+    if (!mounted || !scroll.hasClients) return;
+    final list = listKey.currentContext?.findRenderObject();
+    if (list is! RenderBox || !list.attached || !list.hasSize) return;
+    final bar = list.localToGlobal(Offset.zero).dy + MediaQuery.paddingOf(context).top + GlassTopBar.height;
+    (double, double) tier(GlobalKey k) {
+      final box = k.currentContext?.findRenderObject();
+      if (box is! RenderBox || !box.attached || !box.hasSize) return (0.0, 0.0);
+      return (scroll.offset + box.localToGlobal(Offset.zero).dy - bar, box.size.height);
+    }
+
+    tiers = [for (final k in tierKeys) tier(k)];
+  }
+
+  /// Let go halfway into a tier: it finishes opening or closing.
+  void snap() {
+    if (!mounted || !scroll.hasClients) return;
+    final at = scroll.offset;
+    for (final (start, height) in tiers) {
+      if (height <= 0) continue;
+      // The first tier opens all the way to the top of the list.
+      final open = start <= Tokens.space[2] ? 0.0 : start;
+      final shut = start + height;
+      if (at <= open + 1 || at >= shut - 1) continue;
+      final to = at - open < (shut - open) / 2 ? open : shut;
+      scroll.animateTo(to, duration: const Duration(milliseconds: 260), curve: Curves.easeOutCubic);
+      return;
+    }
+  }
+
+  /// Back to the top with every tier open (tapping the faces in the bar).
+  void openTiers() {
+    if (scroll.hasClients) scroll.animateTo(0, duration: const Duration(milliseconds: 320), curve: Curves.easeOutCubic);
+  }
+
+  /// The bar title, with the tucked-away tiers next to it: story faces on
+  /// the left, bubbles on the right. Both sides keep the same room so the
+  /// title stays in the middle.
+  Widget barTitle(BuildContext context, String text, bool stories, bool bubbles) {
+    final p = paletteOf(context);
+    final l = L.of(context);
+    final app = AppScope.of(context);
+    final label = Text(
+      text,
+      key: const Key('bar-title'),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: Tokens.body.style.copyWith(color: p.label, fontWeight: FontWeight.w600),
+    );
+    if (!stories && !bubbles) return label;
+    const mini = 22.0, step = 12.0, slot = mini + 2 * step;
+    final faces = <Widget>[];
+    if (stories) {
+      final groups = storyGroups(app, app.stories);
+      final seen = seenStories(app);
+      final others = [
+        for (final g in groups)
+          if (!g.first.mine) g,
+      ];
+      for (final g in (others.isNotEmpty ? others : groups).take(3)) {
+        faces.add(
+          Container(
+            width: mini,
+            height: mini,
+            padding: const EdgeInsets.all(1.5),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: p.list,
+              border: Border.all(color: g.any((x) => !seen.contains(x.id)) ? p.accent : p.separator, width: 1.5),
+            ),
+            child: Avatar(name: storyName(app, l, g.first), size: mini - 6, userId: g.first.sender),
+          ),
+        );
+      }
+    }
+    final drops = <Widget>[
+      if (bubbles)
+        for (var i = 0; i < app.bubbles.length && i < 3; i++)
+          SoapBubble(color: p.accent, size: mini, letter: bubbleName(app.chats, app.bubbles[i]).characters.first, phase: i * 0.37),
+    ];
+    // Overlapping faces; the first one sits next to the title.
+    Widget pile(List<Widget> items, bool leftOfTitle) => SizedBox(
+      width: slot,
+      height: mini,
+      child: Stack(
+        children: [
+          for (var i = items.length - 1; i >= 0; i--)
+            Positioned(left: leftOfTitle ? null : i * step, right: leftOfTitle ? i * step : null, top: 0, child: items[i]),
+        ],
+      ),
+    );
+    // Rises from under the bar into place as its tier slides away.
+    Widget fly(String key, int tier, double at, List<Widget> items, bool leftOfTitle) {
+      final t = tucked(tier, at);
+      if (t <= 0 || items.isEmpty) return const SizedBox(width: slot, height: mini);
+      return GestureDetector(
+        key: Key(key),
+        behavior: HitTestBehavior.opaque,
+        onTap: openTiers,
+        child: Opacity(
+          opacity: t,
+          child: Transform.translate(
+            offset: Offset((leftOfTitle ? -24 : 24) * (1 - t), 36 * (1 - t)),
+            child: Transform.scale(scale: 1.8 - 0.8 * t, child: pile(items, leftOfTitle)),
+          ),
+        ),
+      );
+    }
+
+    return ValueListenableBuilder<double>(
+      valueListenable: listY,
+      builder: (context, at, _) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          fly('stories-mini', 0, at, faces, true),
+          SizedBox(width: Tokens.space[0]),
+          Flexible(child: label),
+          SizedBox(width: Tokens.space[0]),
+          fly('bubbles-mini', 1, at, drops, false),
+        ],
+      ),
+    );
+  }
+
+  /// A tier fades as it slides under the bar (its faces reappear up there).
+  Widget tierFade(int i, Widget child) => ValueListenableBuilder<double>(
+    valueListenable: listY,
+    builder: (_, at, c) => Opacity(opacity: 1 - tucked(i, at), child: c),
+    child: child,
+  );
 
   /// v1 edit mode (⋯): circles to pick chats, handles to order pinned ones,
   /// and 모두 읽음 / 보관 / 삭제 at the bottom instead of the tab bar.
@@ -92,6 +236,8 @@ class _ChatListPageState extends State<ChatListPage> {
   @override
   void dispose() {
     HomeTabs.hideBar.value = false;
+    scroll.dispose();
+    listY.dispose();
     super.dispose();
   }
 
@@ -196,10 +342,11 @@ class _ChatListPageState extends State<ChatListPage> {
         showInfoBanner(context, title, l.archiveMovedBody);
       },
       child: strip,
-      color: p.dark ? p.card : p.background,
+      color: p.list,
     );
-    final showStories = all.isNotEmpty && !app.on(storiesInMenuPref);
-    final showBubbles = app.bubbles.isNotEmpty && !app.on(bubblesInMenuPref);
+    final showStories = q.isEmpty && !editing && all.isNotEmpty && !app.on(storiesInMenuPref);
+    final showBubbles = q.isEmpty && !editing && app.bubbles.isNotEmpty && !app.on(bubblesInMenuPref);
+    WidgetsBinding.instance.addPostFrameCallback((_) => measure());
     // Searching looks through every chat, archived ones too.
     final chats = q.isEmpty
         ? [
@@ -221,6 +368,7 @@ class _ChatListPageState extends State<ChatListPage> {
       backgroundColor: p.list,
       navigationBar: GlassTopBar(
         title: filterTitle(app, l, filter),
+        middle: barTitle(context, filterTitle(app, l, filter), showStories, showBubbles),
         leading: editing
             ? [GlassPill(key: const Key('list-edit-done'), text: l.done, onTap: endEdit)]
             : [
@@ -244,11 +392,12 @@ class _ChatListPageState extends State<ChatListPage> {
       ),
       child: Stack(
         children: [
-          Listener(
-            onPointerSignal: onWheel,
+          KeyedSubtree(
+            key: listKey,
             child: NotificationListener<ScrollNotification>(
               onNotification: onScroll,
               child: CustomScrollView(
+                controller: scroll,
                 slivers: [
                   SliverToBoxAdapter(child: SizedBox(height: MediaQuery.paddingOf(context).top + GlassTopBar.height + Tokens.space[1])),
                   if (all.isNotEmpty && top)
@@ -327,41 +476,29 @@ class _ChatListPageState extends State<ChatListPage> {
                     SliverToBoxAdapter(
                       child: InviteRow(key: Key('invite-${inv.roomId}'), invite: inv),
                     ),
-                  // 스토리 + 비눗방울 in one card that drops down from the top
-                  // (Eric 2026-11-26): pull the list down to bring it, scroll up
-                  // to tuck it away.
-                  if (q.isEmpty && !editing && (showStories || showBubbles))
+                  // Tier 1 스토리, tier 2 비눗방울, tier 3 보관함: each slides up
+                  // under the bar on its own (see [tiers]).
+                  if (showStories)
                     SliverToBoxAdapter(
-                      child: AnimatedSize(
-                        duration: const Duration(milliseconds: 320),
-                        curve: Curves.easeOutCubic,
-                        alignment: Alignment.bottomCenter,
-                        child: !cardOpen
-                            ? const SizedBox(width: double.infinity)
-                            : Container(
-                                key: const Key('stories-card'),
-                                margin: EdgeInsets.fromLTRB(Tokens.space[2], Tokens.space[1], Tokens.space[2], Tokens.space[2]),
-                                padding: EdgeInsets.symmetric(vertical: Tokens.space[1]),
-                                decoration: BoxDecoration(color: p.dark ? p.card : p.background, borderRadius: BorderRadius.circular(Tokens.radius[3])),
-                                clipBehavior: Clip.antiAlias,
-                                child: Column(
-                                  children: [
-                                    if (showStories)
-                                      toMenu(
-                                        'stories',
-                                        storiesInMenuPref,
-                                        l.storiesMovedTitle,
-                                        StoriesBar(stories: app.stories, onChanged: () => app.refresh()),
-                                      ),
-                                    if (showBubbles) toMenu('bubbles', bubblesInMenuPref, l.bubblesMovedTitle, BubbleStrip(bubbles: app.bubbles)),
-                                  ],
-                                ),
-                              ),
+                      child: KeyedSubtree(
+                        key: tierKeys[0],
+                        child: tierFade(
+                          0,
+                          toMenu('stories', storiesInMenuPref, l.storiesMovedTitle, StoriesBar(stories: app.stories, onChanged: () => app.refresh())),
+                        ),
+                      ),
+                    ),
+                  if (showBubbles)
+                    SliverToBoxAdapter(
+                      child: KeyedSubtree(
+                        key: tierKeys[1],
+                        child: tierFade(1, toMenu('bubbles', bubblesInMenuPref, l.bubblesMovedTitle, BubbleStrip(bubbles: app.bubbles))),
                       ),
                     ),
                   if (q.isEmpty && !editing && archived.isNotEmpty && !app.on(archiveInMenuPref))
                     SliverToBoxAdapter(
                       child: Column(
+                        key: tierKeys[2],
                         children: [
                           SwipeRow(
                             key: const Key('archive-swipe'),
@@ -574,6 +711,8 @@ class ArchiveRow extends StatelessWidget {
   const ArchiveRow({super.key, required this.chats});
   final List<ChatPreview> chats;
 
+  static const height = 62.0, icon = 48.0;
+
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
@@ -584,28 +723,36 @@ class ArchiveRow extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onTap: () => paneNav(context).push(IosPageRoute(builder: (_) => const ArchivePage())),
       child: Container(
-        height: Tokens.chatRow,
+        // Lower than a chat row, one line of names: the gap down to the
+        // first chat (저장한 메시지) was too wide (Eric 2026-11-26).
+        height: ArchiveRow.height,
         padding: EdgeInsets.symmetric(horizontal: Tokens.space[3]),
         child: Row(
           children: [
-            Container(
+            // Same width as a chat photo, so the names line up with the chats.
+            SizedBox(
               width: Tokens.chatAvatar,
-              height: Tokens.chatAvatar,
-              // Telegram: the pinned archive wears the theme colour (green / blue).
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color.lerp(p.tileGreen, const Color(0xFFFFFFFF), 0.18)!, p.tileGreen],
+              child: Center(
+                child: Container(
+                  width: ArchiveRow.icon,
+                  height: ArchiveRow.icon,
+                  // Telegram: the pinned archive wears the theme colour (green / blue).
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Color.lerp(p.tileGreen, const Color(0xFFFFFFFF), 0.18)!, p.tileGreen],
+                    ),
+                  ),
+                  child: const Icon(CupertinoIcons.archivebox_fill, color: Color(0xFFFFFFFF), size: 24),
                 ),
               ),
-              child: const Icon(CupertinoIcons.archivebox_fill, color: Color(0xFFFFFFFF), size: 28),
             ),
             SizedBox(width: Tokens.space[2]),
             Expanded(
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center, // text centred in the 76pt row, like Telegram
+                mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
@@ -613,14 +760,11 @@ class ArchiveRow extends StatelessWidget {
                     style: Tokens.body.style.copyWith(color: p.label, fontWeight: FontWeight.w500),
                   ),
                   SizedBox(height: Tokens.nameToSub),
-                  SizedBox(
-                    height: Tokens.preview.lineHeight * 2,
-                    child: Text(
-                      chats.map((c) => c.name).join(', '),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: Tokens.preview.style.copyWith(color: p.secondaryLabel),
-                    ),
+                  Text(
+                    chats.map((c) => c.name).join(', '),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Tokens.preview.style.copyWith(color: p.secondaryLabel),
                   ),
                 ],
               ),

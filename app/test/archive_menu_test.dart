@@ -96,7 +96,7 @@ void main() {
     await t.pump(const Duration(seconds: 4));
   });
 
-  testWidgets('stories card tucks up on scroll and drops down on pull', (t) async {
+  testWidgets('stories, bubbles, archive tuck away one at a time; a nudge snaps back', (t) async {
     t.view.physicalSize = const Size(393 * 3, 852 * 3);
     t.view.devicePixelRatio = 3;
     addTearDown(t.view.reset);
@@ -109,21 +109,35 @@ void main() {
     await t.pumpAndSettle();
     await t.tap(find.text('대화').last);
     await t.pumpAndSettle();
-    expect(find.byKey(const Key('stories-card')), findsOneWidget);
+    expect(find.byKey(const Key('stories-bar')), findsOneWidget);
+    expect(find.byKey(const Key('bubble-strip')), findsOneWidget);
     expect(find.text('내 스토리'), findsNothing);
     expect(find.text('비눗방울 2개'), findsNothing);
+    expect(find.byKey(const Key('stories-mini')), findsNothing);
     final list = find.byType(CustomScrollView).first;
-    final g = await t.startGesture(t.getCenter(list) + const Offset(0, 200));
-    for (var i = 0; i < 6; i++) {
-      await g.moveBy(const Offset(0, -6));
-      await t.pump(const Duration(milliseconds: 16));
+    Future<void> push(int steps) async {
+      final g = await t.startGesture(t.getCenter(list) + const Offset(0, 200));
+      for (var i = 0; i < steps; i++) {
+        await g.moveBy(const Offset(0, -6));
+        await t.pump(const Duration(milliseconds: 16));
+      }
+      await g.up();
+      await t.pumpAndSettle();
     }
-    await g.up();
-    await t.pumpAndSettle();
-    expect(find.byKey(const Key('stories-card')), findsNothing);
+
+    // A small nudge is not enough any more: the stories snap back open.
+    await push(6);
+    expect(find.byKey(const Key('stories-mini')), findsNothing);
+    // Past halfway the stories fold into the bar, left of the title; the
+    // bubbles stay where they are (one tier at a time).
+    await push(16);
+    expect(find.byKey(const Key('stories-mini')), findsOneWidget);
+    expect(t.getCenter(find.byKey(const Key('stories-mini'))).dx, lessThan(t.getCenter(find.byKey(const Key('bar-title'))).dx));
+    expect(find.byKey(const Key('bubbles-mini')), findsNothing);
+    // Pull down: everything opens again.
     await t.drag(list, const Offset(0, 300));
     await t.pumpAndSettle();
-    expect(find.byKey(const Key('stories-card')), findsOneWidget);
+    expect(find.byKey(const Key('stories-mini')), findsNothing);
   });
 
   testWidgets('my last message: one tick sent, two ticks read', (t) async {

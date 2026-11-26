@@ -143,7 +143,8 @@ class StoriesBar extends StatelessWidget {
     );
     return SizedBox(
       key: const Key('stories-bar'),
-      height: ring + Tokens.space[2],
+      // Tight rows: the tiers sat too far apart (Eric 2026-11-26).
+      height: ring + Tokens.space[1],
       child: ListView(
         scrollDirection: Axis.horizontal,
         // No bounce: past the end the whole strip slides (to the side menu).
