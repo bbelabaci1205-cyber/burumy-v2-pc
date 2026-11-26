@@ -56,8 +56,9 @@ void main() {
     }
   });
 
-  test('type scale never uses bold (700+)', () {
-    for (final t in Tokens.all) {
+  test('type scale never uses bold (700+) except the settings header title', () {
+    // Eric 2026-11-25: 700 only where iOS 27 uses it (settings header card).
+    for (final t in Tokens.all.where((t) => t != Tokens.headerTitle)) {
       expect(t.weight.value, lessThan(700));
     }
   });

@@ -5,11 +5,16 @@ import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 
+import '../brand/brand.dart';
 import '../core/app_state.dart';
 import '../core/backend.dart';
 import '../design/tokens.dart';
 import '../l10n/app_localizations.dart';
 import 'common.dart';
+import 'chat_list_page.dart' show ArchivePage;
+import 'bubbles.dart' show BubbleStrip;
+import 'chat_row_actions.dart' show archiveInMenuPref, bubblesInMenuPref, showInfoBanner, storiesInMenuPref;
+import 'stories.dart' show StoriesBar;
 import 'folders_page.dart';
 import 'glass.dart';
 import 'ios_route.dart';
@@ -237,6 +242,66 @@ class SideMenu extends StatelessWidget {
             row('group', l.filterGroups, CupertinoIcons.person_3, unreadIn((c) => filterTakes('group', c))),
             row('channel', l.filterChannels, CupertinoIcons.speaker_2, unreadIn((c) => filterTakes('channel', c))),
             row('bot', l.filterBots, CupertinoIcons.cube, unreadIn((c) => filterTakes('bot', c))),
+            if (s.on(archiveInMenuPref) && s.chats.any((c) => c.archived))
+              GestureDetector(
+                key: const Key('menu-archive'),
+                behavior: HitTestBehavior.opaque,
+                onTap: () => paneNav(context).push(IosPageRoute(builder: (_) => const ArchivePage())),
+                child: Container(
+                  margin: EdgeInsets.symmetric(horizontal: Tokens.space[1]),
+                  padding: EdgeInsets.fromLTRB(Tokens.space[2], Tokens.space[1] + 2, 0, Tokens.space[1] + 2),
+                  child: Row(
+                    children: [
+                      Icon(CupertinoIcons.archivebox, size: Tokens.listIcon, color: p.label),
+                      SizedBox(width: Tokens.space[2]),
+                      Expanded(
+                        child: Text(l.archive, style: Tokens.body.style.copyWith(color: p.label)),
+                      ),
+                      // Back into the chat list (Telegram's pin arrow).
+                      CupertinoButton(
+                        key: const Key('menu-archive-pin'),
+                        padding: EdgeInsets.symmetric(horizontal: Tokens.space[2]),
+                        minimumSize: const Size(Tokens.closeButton, Tokens.closeButton),
+                        onPressed: () {
+                          s.setOn(archiveInMenuPref, false);
+                          showInfoBanner(context, l.archivePinnedTitle, l.archivePinnedBody);
+                        },
+                        child: Icon(CupertinoIcons.pin, size: Tokens.listIconSmall, color: p.accent),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            // 스토리 / 비눗방울 moved here from the chat list; the pin puts them back.
+            for (final (id, pref, label, pinned, strip) in [
+              if (s.on(storiesInMenuPref) && s.chats.isNotEmpty)
+                ('stories', storiesInMenuPref, l.menuStories, l.storiesPinnedTitle, StoriesBar(stories: s.stories, onChanged: () => s.refresh())),
+              if (s.on(bubblesInMenuPref) && s.bubbles.isNotEmpty)
+                ('bubbles', bubblesInMenuPref, l.bubblesWaiting(s.bubbles.length), l.bubblesPinnedTitle, BubbleStrip(bubbles: s.bubbles, caption: false)),
+            ]) ...[
+              Padding(
+                key: Key('menu-$id'),
+                padding: EdgeInsets.fromLTRB(Tokens.space[3], Tokens.space[2], 0, 0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(label, style: Tokens.caption.style.copyWith(color: p.secondaryLabel)),
+                    ),
+                    CupertinoButton(
+                      key: Key('menu-$id-pin'),
+                      padding: EdgeInsets.symmetric(horizontal: Tokens.space[3]),
+                      minimumSize: const Size(Tokens.closeButton, Tokens.closeButton),
+                      onPressed: () {
+                        s.setOn(pref, false);
+                        showInfoBanner(context, pinned, l.archivePinnedBody);
+                      },
+                      child: Icon(CupertinoIcons.pin, size: Tokens.listIconSmall, color: p.accent),
+                    ),
+                  ],
+                ),
+              ),
+              strip,
+            ],
             Padding(
               padding: EdgeInsets.fromLTRB(Tokens.space[3], Tokens.space[3], Tokens.space[3], Tokens.space[1]),
               child: Text(l.myFolders, style: Tokens.caption.style.copyWith(color: p.secondaryLabel)),
@@ -259,6 +324,46 @@ class SideMenu extends StatelessWidget {
                     Text(l.newFolder, style: Tokens.body.style.copyWith(color: p.accent)),
                   ],
                 ),
+              ),
+            ),
+            // Theme colour right in the side menu (Eric 2026-11-25): tap a dot.
+            Padding(
+              padding: EdgeInsets.fromLTRB(Tokens.space[3], Tokens.space[3], Tokens.space[3], Tokens.space[1]),
+              child: Text(l.myColor, style: Tokens.caption.style.copyWith(color: p.secondaryLabel)),
+            ),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: Tokens.space[2]),
+              child: Row(
+                children: [
+                  for (final (fam, label) in [(BrandFamily.green, l.themeGreen), (BrandFamily.blue, l.themeBlue)])
+                    GestureDetector(
+                      key: Key('menu-theme-${fam.name}'),
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => s.setFamily(fam),
+                      child: Padding(
+                        padding: EdgeInsets.all(Tokens.space[1]),
+                        child: Column(
+                          children: [
+                            Container(
+                              width: Tokens.closeButton,
+                              height: Tokens.closeButton,
+                              padding: const EdgeInsets.all(3),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(color: s.family == fam ? Brand.accent(fam, p.brightness) : const Color(0x00000000), width: 2),
+                              ),
+                              child: Container(
+                                decoration: BoxDecoration(color: Brand.accent(fam, p.brightness), shape: BoxShape.circle),
+                                child: s.family == fam ? const Icon(CupertinoIcons.checkmark_alt, size: Tokens.listIconSmall, color: Color(0xFFFFFFFF)) : null,
+                              ),
+                            ),
+                            SizedBox(height: Tokens.space[0]),
+                            Text(label, style: Tokens.caption.style.copyWith(color: s.family == fam ? p.label : p.secondaryLabel)),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
           ],

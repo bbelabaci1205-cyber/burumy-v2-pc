@@ -20,33 +20,66 @@ import 'chat_page.dart' show ChatPageMime, voiceTime;
 import 'common.dart';
 import 'glass.dart';
 import 'ios_route.dart';
+import 'stories.dart' show StoriesBar;
 
-/// Our own soap-bubble drawing: a clear ball tinted with the friend's
-/// colour, a soft rim and a small shine. Nothing inside is ever drawn.
-class SoapBubble extends StatelessWidget {
-  const SoapBubble({super.key, required this.color, this.size = 56, this.letter});
+/// Our own water drop (Eric 2026-11-26): clear liquid glass tinted with
+/// the app colour, a bright rim, a shine and a soft wobble like iPhone
+/// liquid glass. Nothing inside is ever drawn. Still when 절전 is on, when
+/// the phone asks for less motion, and in tests.
+class SoapBubble extends StatefulWidget {
+  const SoapBubble({super.key, required this.color, this.size = 56, this.letter, this.phase = 0});
   final Color color;
   final double size;
   final String? letter;
 
+  /// Where in the wobble this one starts, so bubbles side by side differ.
+  final double phase;
+
+  /// Tests run with the wobble frozen (it never settles).
+  static bool get still => !testMotion && WidgetsBinding.instance.runtimeType.toString().contains('Test');
+
+  /// A screenshot test can switch the wobble on.
+  static bool testMotion = false;
+
+  @override
+  State<SoapBubble> createState() => _SoapBubbleState();
+}
+
+class _SoapBubbleState extends State<SoapBubble> with SingleTickerProviderStateMixin {
+  late final wobble = AnimationController(vsync: this, duration: const Duration(milliseconds: 3600));
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final app = context.dependOnInheritedWidgetOfExactType<AppScope>()?.notifier;
+    final calm = (app?.calm ?? false) || (MediaQuery.maybeDisableAnimationsOf(context) ?? false) || SoapBubble.still;
+    if (calm) {
+      wobble.stop();
+    } else if (!wobble.isAnimating) {
+      wobble.repeat();
+    }
+  }
+
+  @override
+  void dispose() {
+    wobble.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final size = widget.size;
     return SizedBox(
       width: size,
       height: size,
       child: CustomPaint(
-        painter: _BubblePainter(color),
-        child: letter == null
+        painter: _BubblePainter(widget.color, wobble, widget.phase),
+        child: widget.letter == null
             ? null
             : Center(
                 child: Text(
-                  letter!,
-                  style: TextStyle(
-                    fontSize: size * 0.34,
-                    color: const Color(0xFFFFFFFF),
-                    fontWeight: FontWeight.w500,
-                    shadows: [Shadow(color: color.withValues(alpha: 0.8), blurRadius: 4)],
-                  ),
+                  widget.letter!,
+                  style: TextStyle(fontSize: size * 0.34, color: widget.color, fontWeight: FontWeight.w500),
                 ),
               ),
       ),
@@ -55,43 +88,83 @@ class SoapBubble extends StatelessWidget {
 }
 
 class _BubblePainter extends CustomPainter {
-  _BubblePainter(this.color);
+  _BubblePainter(this.color, this.t, this.phase) : super(repaint: t);
   final Color color;
+  final Animation<double> t;
+  final double phase;
+
+  static const white = Color(0xFFFFFFFF);
 
   @override
   void paint(Canvas canvas, Size size) {
+    final a = (t.value + phase) * 2 * math.pi;
     final c = size.center(Offset.zero);
-    final r = size.shortestSide / 2;
+    final r = size.shortestSide / 2 * 0.94;
+    // The wobbling outline: a circle with two slow waves running round it.
+    final path = Path();
+    const n = 64;
+    for (var i = 0; i <= n; i++) {
+      final th = i / n * 2 * math.pi;
+      final rr = r * (1 + 0.035 * math.sin(3 * th + a) + 0.025 * math.sin(2 * th - a * 2));
+      final pt = c + Offset(math.cos(th) * rr, math.sin(th) * rr);
+      i == 0 ? path.moveTo(pt.dx, pt.dy) : path.lineTo(pt.dx, pt.dy);
+    }
+    path.close();
     final rect = Rect.fromCircle(center: c, radius: r);
-    // Body: clear in the middle, coloured toward the rim.
-    canvas.drawCircle(
-      c,
-      r,
+    // Soft coloured glow under the drop.
+    canvas.drawPath(
+      path.shift(Offset(0, r * 0.08)),
+      Paint()
+        ..color = color.withValues(alpha: 0.18)
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, r * 0.18),
+    );
+    // Body: almost clear in the middle, the app colour gathering at the rim.
+    canvas.drawPath(
+      path,
       Paint()
         ..shader = RadialGradient(
-          colors: [color.withValues(alpha: 0.18), color.withValues(alpha: 0.42), color.withValues(alpha: 0.85)],
-          stops: const [0.0, 0.72, 1.0],
+          center: const Alignment(-0.25, -0.3),
+          radius: 1.05,
+          colors: [white.withValues(alpha: 0.10), color.withValues(alpha: 0.12), color.withValues(alpha: 0.30), color.withValues(alpha: 0.62)],
+          stops: const [0.0, 0.45, 0.8, 1.0],
         ).createShader(rect),
     );
-    // A thin rainbow-ish rim (soap film).
-    canvas.drawCircle(
-      c,
-      r - 1,
+    canvas.save();
+    canvas.clipPath(path);
+    // Light coming through the bottom (glass caustic).
+    canvas.drawOval(
+      Rect.fromCenter(center: c + Offset(r * 0.1, r * 0.62), width: r * 1.2, height: r * 0.5),
+      Paint()
+        ..color = white.withValues(alpha: 0.35)
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, r * 0.15),
+    );
+    canvas.restore();
+    // Rim: bright at the top left, the colour at the bottom right.
+    canvas.drawPath(
+      path,
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = math.max(1.5, r * 0.06)
-        ..shader = SweepGradient(colors: [color, const Color(0xFF7FD4FF), const Color(0xFFFFB3E6), const Color(0xFFFFF1A8), color]).createShader(rect),
+        ..strokeWidth = math.max(1.2, r * 0.055)
+        ..shader = LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [white.withValues(alpha: 0.95), white.withValues(alpha: 0.15), color.withValues(alpha: 0.75)],
+          stops: const [0.0, 0.5, 1.0],
+        ).createShader(rect),
     );
-    // Shine.
+    // Shine, drifting a little with the wobble.
+    final drift = Offset(math.sin(a) * r * 0.03, math.cos(a) * r * 0.03);
     canvas.drawOval(
-      Rect.fromCenter(center: c + Offset(-r * 0.35, -r * 0.42), width: r * 0.55, height: r * 0.32),
-      Paint()..color = const Color(0xFFFFFFFF).withValues(alpha: 0.75),
+      Rect.fromCenter(center: c + Offset(-r * 0.36, -r * 0.44) + drift, width: r * 0.58, height: r * 0.3),
+      Paint()
+        ..color = white.withValues(alpha: 0.85)
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, r * 0.03),
     );
-    canvas.drawCircle(c + Offset(r * 0.42, r * 0.38), r * 0.07, Paint()..color = const Color(0xFFFFFFFF).withValues(alpha: 0.5));
+    canvas.drawCircle(c + Offset(r * 0.44, r * 0.4) - drift, r * 0.06, Paint()..color = white.withValues(alpha: 0.6));
   }
 
   @override
-  bool shouldRepaint(_BubblePainter old) => old.color != color;
+  bool shouldRepaint(_BubblePainter old) => old.color != color || old.phase != phase;
 }
 
 String bubbleName(List<ChatPreview> chats, BubbleRef b) => chats.where((c) => c.roomId == b.roomId).firstOrNull?.name ?? displayId(b.from);
@@ -99,8 +172,14 @@ String bubbleName(List<ChatPreview> chats, BubbleRef b) => chats.where((c) => c.
 /// Waiting bubbles on top of the chat list (the same ones the home-screen
 /// widget shows).
 class BubbleStrip extends StatelessWidget {
-  const BubbleStrip({super.key, required this.bubbles});
+  const BubbleStrip({super.key, required this.bubbles, this.caption = false});
   final List<BubbleRef> bubbles;
+
+  /// Drop size: as big as a story ring.
+  static const drop = 64.0;
+
+  /// '비눗방울 N개' above (off: Eric 2026-11-26 "글을 빼죠").
+  final bool caption;
 
   @override
   Widget build(BuildContext context) {
@@ -109,28 +188,34 @@ class BubbleStrip extends StatelessWidget {
     final chats = AppScope.of(context).chats;
     return Padding(
       key: const Key('bubble-strip'),
-      padding: EdgeInsets.fromLTRB(Tokens.space[3], Tokens.space[1], Tokens.space[3], Tokens.space[2]),
+      padding: EdgeInsets.fromLTRB(Tokens.space[2], 0, Tokens.space[2], Tokens.space[1]),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l.bubblesWaiting(bubbles.length), style: Tokens.caption.style.copyWith(color: p.secondaryLabel)),
-          SizedBox(height: Tokens.space[1]),
+          if (caption) ...[
+            Text(l.bubblesWaiting(bubbles.length), style: Tokens.caption.style.copyWith(color: p.secondaryLabel)),
+            SizedBox(height: Tokens.space[1]),
+          ],
           SizedBox(
-            height: 78,
+            height: BubbleStrip.drop + Tokens.space[1],
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
+              // No bounce: past the end the whole strip slides (to the side menu).
+              physics: const ClampingScrollPhysics(),
               itemCount: bubbles.length,
-              separatorBuilder: (_, _) => SizedBox(width: Tokens.space[2]),
+              separatorBuilder: (_, _) => SizedBox(width: Tokens.space[0]),
               itemBuilder: (c, i) {
                 final b = bubbles[i];
                 final name = bubbleName(chats, b);
                 return GestureDetector(
                   key: Key('bubble-${b.id}'),
                   onTap: () => popBubble(context, b.roomId, b.id, name),
-                  child: Padding(
-                    // A little up and down, like they float.
-                    padding: EdgeInsets.only(top: i.isEven ? 0 : 10, bottom: i.isEven ? 10 : 0),
-                    child: SoapBubble(color: Avatar.colorFor(name), size: 64 - (i % 3) * 6.0, letter: name.characters.first),
+                  child: Center(
+                    child: SizedBox(
+                      // Same slot as a story ring, so both rows line up.
+                      width: StoriesBar.ring + Tokens.space[0],
+                      child: SoapBubble(color: p.accent, size: BubbleStrip.drop - (i % 3) * 4.0, letter: name.characters.first, phase: i * 0.37),
+                    ),
                   ),
                 );
               },

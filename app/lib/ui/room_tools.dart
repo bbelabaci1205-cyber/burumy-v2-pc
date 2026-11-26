@@ -152,7 +152,7 @@ class _ManageToolsPageState extends State<ManageToolsPage> {
               value: discussionName(s, cfg) ?? l.discussionNone,
               onTap: () => open(DiscussionPage(roomId: id, now: cfg['discussion'] as String? ?? '')),
             ),
-          CupertinoListTile(
+          IosTile(
             leading: iconTile(Palette.tileGrey, CupertinoIcons.number),
             title: Text(l.hideCounts),
             trailing: IosSwitch(
@@ -289,7 +289,7 @@ class _RoomTextPageState extends State<RoomTextPage> {
         ]),
         if (rules)
           group(context, footer: l.rulesAgreeInfo, [
-            CupertinoListTile(
+            IosTile(
               title: Text(l.rulesAgree),
               trailing: IosSwitch(key: const Key('rules-agree'), value: agree, activeTrackColor: p.accent, onChanged: (v) => setState(() => agree = v)),
             ),
@@ -365,7 +365,7 @@ class _ReactionsPageState extends State<ReactionsPage> {
       children: [
         group(context, footer: l.reactionsInfo, [
           for (final (v, label) in [('all', l.reactionsAll), ('some', l.reactionsSome), ('none', l.reactionsNone)])
-            CupertinoListTile(
+            IosTile(
               key: Key('pick-$v'),
               title: Text(label),
               trailing: v == mode ? Icon(CupertinoIcons.check_mark, color: p.accent, size: 20) : null,
@@ -406,7 +406,7 @@ class _ReactionsPageState extends State<ReactionsPage> {
           ]),
         if (mode != 'none')
           group(context, footer: l.reactionsMaxInfo, [
-            CupertinoListTile(
+            IosTile(
               title: Text(l.reactionsMax),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -496,7 +496,7 @@ class _AutoModPageState extends State<AutoModPage> {
           ]),
           group(context, header: l.bannedWords, footer: l.bannedWordsInfo, [
             for (var i = 0; i < words.length; i++)
-              CupertinoListTile(
+              IosTile(
                 key: Key('word-$i'),
                 title: Text(words[i]),
                 trailing: GestureDetector(
@@ -574,16 +574,16 @@ class _RoomStatsPageState extends State<RoomStatsPage> {
       title: l.roomStats,
       children: [
         group(context, [
-          CupertinoListTile(
+          IosTile(
             title: Text(l.statsMembers),
             additionalInfo: Text('${st.members}', key: const Key('stats-members')),
           ),
-          CupertinoListTile(
+          IosTile(
             title: Text(l.statsMessages30),
             additionalInfo: Text('${st.messages30}', key: const Key('stats-messages')),
           ),
-          CupertinoListTile(title: Text(l.statsPerDay), additionalInfo: Text(st.perDay.toStringAsFixed(1))),
-          CupertinoListTile(
+          IosTile(title: Text(l.statsPerDay), additionalInfo: Text(st.perDay.toStringAsFixed(1))),
+          IosTile(
             title: Text(l.statsActive),
             additionalInfo: Text('${st.active30}', key: const Key('stats-active')),
           ),
@@ -685,12 +685,12 @@ class ModLogPage extends StatelessWidget {
       children: [
         group(context, footer: l.modLogInfo, [
           if (log.isEmpty)
-            CupertinoListTile(
+            IosTile(
               title: Text(l.modLogEmpty, style: TextStyle(color: p.secondaryLabel)),
             )
           else
             for (final e in log)
-              CupertinoListTile(
+              IosTile(
                 title: Text(line(e), maxLines: 2),
                 subtitle: Text(timeAgo(context, e.time), style: Tokens.caption.style),
               ),
@@ -800,7 +800,7 @@ class _MovingBoardPageState extends State<MovingBoardPage> {
             ),
           ),
         group(context, footer: l.movingInfo, [
-          CupertinoListTile(
+          IosTile(
             title: Text(l.oldMembers),
             trailing: SizedBox(
               width: 120,
@@ -877,11 +877,11 @@ class _BannedPageState extends State<BannedPage> {
       children: [
         group(context, [
           if (list != null && x.isEmpty)
-            CupertinoListTile(
+            IosTile(
               title: Text(l.bannedEmpty, style: TextStyle(color: p.secondaryLabel)),
             ),
           for (final id in x)
-            CupertinoListTile(
+            IosTile(
               key: Key('banned-$id'),
               leading: Avatar(name: displayId(id), size: 30),
               title: Text(displayId(id)),
@@ -952,9 +952,9 @@ class _LevelPageState extends State<LevelPage> {
               : l.levelNext('${(next.$1 - members).clamp(0, next.$1)}', '${(next.$2 - active).clamp(0, next.$2)}', (next.$3 - days).clamp(0, next.$3)),
         ),
         group(context, footer: l.levelInfo, [
-          CupertinoListTile(title: Text(l.statsMembers), additionalInfo: Text('$members')),
-          CupertinoListTile(title: Text(l.statsActive), additionalInfo: Text('$active')),
-          CupertinoListTile(
+          IosTile(title: Text(l.statsMembers), additionalInfo: Text('$members')),
+          IosTile(title: Text(l.statsActive), additionalInfo: Text('$active')),
+          IosTile(
             title: Text(
               l.levelN(lv),
               key: const Key('level-now'),

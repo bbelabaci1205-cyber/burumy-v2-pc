@@ -80,14 +80,14 @@ class _MyProfileCardState extends State<MyProfileCard> {
     final s = AppScope.of(context);
     return IosSection(
       children: [
-        CupertinoListTile(
+        IosTile(
           key: const Key('my-profile'),
           padding: EdgeInsets.symmetric(horizontal: Tokens.space[3], vertical: Tokens.space[2]),
           leadingSize: 60,
           leading: PhotoAvatar(name: name ?? '', bytes: photo, size: 60),
           title: Text(name ?? '', style: Tokens.cardTitle.style),
           subtitle: Text(displayId(s.backend.userId ?? ''), style: Tokens.caption.style),
-          trailing: const CupertinoListTileChevron(),
+          trailing: const IosChevron(),
           onTap: () async {
             await Navigator.of(context).push(IosPageRoute(builder: (_) => const ProfilePage()));
             await load();
@@ -292,12 +292,12 @@ class _ProfilePageState extends State<ProfilePage> {
           IosSection(
             footer: sectionFooter(context, l.birthdayInfo),
             children: [
-              CupertinoListTile(
+              IosTile(
                 key: const Key('profile-birthday'),
                 leading: iconTile(Palette.tilePink, CupertinoIcons.gift_fill),
                 title: Text(l.birthday),
                 additionalInfo: Text(birthdayText(l, s.pref('me_birthday', '')) ?? l.birthdayAdd),
-                trailing: const CupertinoListTileChevron(),
+                trailing: const IosChevron(),
                 onTap: () => pickBirthday(context),
               ),
             ],
@@ -305,7 +305,7 @@ class _ProfilePageState extends State<ProfilePage> {
           IosSection(
             footer: sectionFooter(context, l.idInfo),
             children: [
-              CupertinoListTile(
+              IosTile(
                 key: const Key('profile-id'),
                 leading: iconTile(Palette.tileGrey, CupertinoIcons.at),
                 title: Text(l.myId),
@@ -320,7 +320,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           IosSection(
             children: [
-              CupertinoListTile(
+              IosTile(
                 key: const Key('profile-logout'),
                 title: Center(
                   child: Text(l.logOut, style: Tokens.body.style.copyWith(color: Palette.tileRed)),
@@ -825,7 +825,7 @@ class _ChatInfoPageState extends State<ChatInfoPage> {
                 footer: hideMembers && !widget.isChannel ? sectionFooter(context, l.hideMembersOnInfo) : null,
                 children: [
                   if (isAdmin || (!widget.isChannel && !hideMembers))
-                    CupertinoListTile(
+                    IosTile(
                       key: const Key('info-add-member'),
                       leadingSize: Tokens.memberAvatar,
                       padding: EdgeInsets.symmetric(horizontal: Tokens.space[3]),
@@ -835,7 +835,7 @@ class _ChatInfoPageState extends State<ChatInfoPage> {
                     ),
                   for (final m in members)
                     // Telegram sizes: 40 photo, 60-tall row, role as a soft pill.
-                    CupertinoListTile(
+                    IosTile(
                       key: Key('member-${m.userId}'),
                       leadingSize: Tokens.memberAvatar,
                       padding: EdgeInsets.symmetric(horizontal: Tokens.space[3], vertical: Tokens.space[1]),
@@ -857,13 +857,13 @@ class _ChatInfoPageState extends State<ChatInfoPage> {
               IosSection(
                 hasLeading: false,
                 footer: sectionFooter(context, l.subscribersHiddenInfo),
-                children: [CupertinoListTile(title: Text(l.subscribersCount(members.length)))],
+                children: [IosTile(title: Text(l.subscribersCount(members.length)))],
               ),
             if (!widget.isGroup && !widget.isChannel && other != null)
               IosSection(
                 hasLeading: false,
                 children: [
-                  CupertinoListTile(
+                  IosTile(
                     key: const Key('info-id'),
                     title: Text(l.idLabel, style: Tokens.caption.style.copyWith(color: p.secondaryLabel)),
                     subtitle: Text(displayId(other), style: Tokens.body.style.copyWith(color: p.accent)),
@@ -891,24 +891,24 @@ class _ChatInfoPageState extends State<ChatInfoPage> {
                     },
                   ),
                   if (bio.isNotEmpty)
-                    CupertinoListTile(
+                    IosTile(
                       key: const Key('info-bio'),
                       title: Text(l.bio, style: Tokens.caption.style.copyWith(color: p.secondaryLabel)),
                       subtitle: Text(bio, maxLines: 4, style: Tokens.body.style.copyWith(color: p.label)),
                     ),
                   if (birthdayText(l, birthday) case final b?)
-                    CupertinoListTile(
+                    IosTile(
                       key: const Key('info-birthday'),
                       title: Text(l.birthday, style: Tokens.caption.style.copyWith(color: p.secondaryLabel)),
                       subtitle: Text(b, style: Tokens.body.style.copyWith(color: p.label)),
                     ),
                   if (memo.isNotEmpty)
-                    CupertinoListTile(
+                    IosTile(
                       key: const Key('info-memo'),
                       title: Text(l.memo, style: Tokens.caption.style.copyWith(color: p.secondaryLabel)),
                       subtitle: Text(memo, maxLines: 4, style: Tokens.body.style.copyWith(color: p.label)),
                     ),
-                  CupertinoListTile(
+                  IosTile(
                     key: const Key('info-block'),
                     title: Text(blockedIds.contains(other) ? l.unblock : l.blockUser, style: const TextStyle(color: Palette.tileRed)),
                     onTap: () async {
@@ -930,19 +930,19 @@ class _ChatInfoPageState extends State<ChatInfoPage> {
               IosSection(
                 children: [
                   if (isAdmin)
-                    CupertinoListTile(
+                    IosTile(
                       key: const Key('info-tools'),
                       leading: iconTile(Palette.tileBlue, CupertinoIcons.shield_lefthalf_fill),
                       title: Text(l.manageTools),
-                      trailing: const CupertinoListTileChevron(),
+                      trailing: const IosChevron(),
                       onTap: openTools,
                     ),
                   if (rules.isNotEmpty)
-                    CupertinoListTile(
+                    IosTile(
                       key: const Key('info-rules'),
                       leading: iconTile(Palette.tileOrange, CupertinoIcons.doc_text_fill),
                       title: Text(l.roomRules),
-                      trailing: const CupertinoListTileChevron(),
+                      trailing: const IosChevron(),
                       onTap: () => Navigator.of(context).push(IosPageRoute(fullscreenDialog: true, builder: (_) => RulesSheet(rules: rules))),
                     ),
                 ],
@@ -951,12 +951,12 @@ class _ChatInfoPageState extends State<ChatInfoPage> {
               children: [
                 // v1's top-right menu had "보안 코드 확인"; it lives here now.
                 if (direct && other != null)
-                  CupertinoListTile(
+                  IosTile(
                     key: const Key('info-encryption'),
                     leading: iconTile(p.tileGreen, CupertinoIcons.lock_fill),
                     title: Text(l.encryption),
                     additionalInfo: Text(peerVerified ? l.encVerified : l.encNotVerified),
-                    trailing: const CupertinoListTileChevron(),
+                    trailing: const IosChevron(),
                     onTap: () async {
                       await Navigator.of(context).push(
                         IosPageRoute(
@@ -966,12 +966,12 @@ class _ChatInfoPageState extends State<ChatInfoPage> {
                       await loadVerified();
                     },
                   ),
-                CupertinoListTile(
+                IosTile(
                   key: const Key('info-theme'),
                   leading: iconTile(Palette.tileCyan, CupertinoIcons.paintbrush_fill),
                   title: Text(l.chatThemeHere),
                   additionalInfo: Text(themeHere),
-                  trailing: const CupertinoListTileChevron(),
+                  trailing: const IosChevron(),
                   onTap: () => Navigator.of(context).push(
                     IosPageRoute(
                       builder: (_) => ChoicePage(
@@ -1013,14 +1013,14 @@ class _ChatInfoPageState extends State<ChatInfoPage> {
                 footer: sectionFooter(context, l.deleteForBothInfo),
                 children: [
                   if (deleting == null)
-                    CupertinoListTile(
+                    IosTile(
                       key: const Key('delete-both'),
                       leading: iconTile(Palette.tileRed, CupertinoIcons.trash),
                       title: Text(l.deleteForBoth, style: const TextStyle(color: Palette.tileRed)),
                       onTap: leaving == null ? startDeleteForBoth : null,
                     )
                   else
-                    CupertinoListTile(
+                    IosTile(
                       key: const Key('deleting'),
                       title: Text(l.deletingIn(deleting!), style: Tokens.body.style.copyWith(color: p.label)),
                       trailing: CupertinoButton(
@@ -1040,14 +1040,14 @@ class _ChatInfoPageState extends State<ChatInfoPage> {
                 footer: sectionFooter(context, l.deleteRoomInfo),
                 children: [
                   if (removing == null)
-                    CupertinoListTile(
+                    IosTile(
                       key: const Key('delete-room'),
                       leading: iconTile(Palette.tileRed, CupertinoIcons.trash),
                       title: Text(widget.isChannel ? l.deleteChannel : l.deleteGroup, style: const TextStyle(color: Palette.tileRed)),
                       onTap: leaving == null ? askDeleteRoom : null,
                     )
                   else
-                    CupertinoListTile(
+                    IosTile(
                       key: const Key('removing'),
                       title: Text(l.deletingIn(removing!), style: Tokens.body.style.copyWith(color: p.label)),
                       trailing: CupertinoButton(
@@ -1065,14 +1065,14 @@ class _ChatInfoPageState extends State<ChatInfoPage> {
             IosSection(
               children: [
                 if (leaving == null)
-                  CupertinoListTile(
+                  IosTile(
                     key: const Key('leave'),
                     leading: iconTile(Palette.tileRed, CupertinoIcons.square_arrow_right),
                     title: Text(widget.isChannel ? l.leaveChannel : l.leaveChat, style: const TextStyle(color: Palette.tileRed)),
                     onTap: deleting == null && removing == null ? startLeave : null,
                   )
                 else
-                  CupertinoListTile(
+                  IosTile(
                     key: const Key('leaving'),
                     title: Text(l.leavingIn(leaving!), style: Tokens.body.style.copyWith(color: p.label)),
                     trailing: CupertinoButton(
@@ -1165,7 +1165,7 @@ class SharedList extends StatelessWidget {
     return IosSection(
       children: [
         for (final m in list)
-          CupertinoListTile(
+          IosTile(
             key: Key('shared-${m.id}'),
             leading: iconTile(tab == 1 ? Palette.tileBlue : Palette.tileOrange, tab == 1 ? CupertinoIcons.doc_fill : CupertinoIcons.link),
             title: Text(tab == 1 ? (m.body ?? '') : _link.firstMatch(m.body ?? '')!.group(0)!, maxLines: 1, overflow: TextOverflow.ellipsis),
@@ -1333,14 +1333,14 @@ class _ContactEditPageState extends State<ContactEditPage> {
             IosSection(
               footer: sectionFooter(context, l.contactPhotoInfo(widget.name)),
               children: [
-                CupertinoListTile(
+                IosTile(
                   key: const Key('contact-photo'),
                   leading: Icon(CupertinoIcons.camera, color: p.accent, size: Tokens.listIcon),
                   title: Text(l.contactPhotoSet(widget.name), style: TextStyle(color: p.accent)),
                   onTap: pickPhoto,
                 ),
                 if (hasPhoto)
-                  CupertinoListTile(
+                  IosTile(
                     key: const Key('contact-photo-remove'),
                     leading: Icon(CupertinoIcons.trash, color: Palette.tileRed, size: Tokens.listIcon),
                     title: Text(l.contactPhotoRemove, style: const TextStyle(color: Palette.tileRed)),
@@ -1467,7 +1467,7 @@ class _RoomEditPageState extends State<RoomEditPage> {
               hasLeading: false,
               footer: sectionFooter(context, widget.isChannel ? l.signPostsInfo : l.hideMembersInfo),
               children: [
-                CupertinoListTile(
+                IosTile(
                   title: Text(widget.isChannel ? l.signPosts : l.hideMembers),
                   trailing: IosSwitch(
                     key: const Key('room-switch'),
@@ -1554,7 +1554,7 @@ class _AddMembersPageState extends State<AddMembersPage> {
                   IosSection(
                     children: [
                       for (final c in list)
-                        CupertinoListTile(
+                        IosTile(
                           key: Key('add-${c.userId}'),
                           leading: Avatar(name: aliasOf(s, c.userId).isEmpty ? c.name : aliasOf(s, c.userId), size: 32),
                           title: Text(aliasOf(s, c.userId).isEmpty ? c.name : aliasOf(s, c.userId)),
@@ -1681,7 +1681,7 @@ class CommonGroups extends StatelessWidget {
     return IosSection(
       children: [
         for (final c in chats)
-          CupertinoListTile(
+          IosTile(
             key: Key('common-${c.roomId}'),
             leadingSize: Tokens.memberAvatar,
             padding: EdgeInsets.symmetric(horizontal: Tokens.space[3], vertical: Tokens.space[1]),

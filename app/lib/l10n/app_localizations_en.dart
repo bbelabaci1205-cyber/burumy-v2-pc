@@ -43,8 +43,7 @@ class LEn extends L {
   String get recoveryKeyTitle => 'Chat Recovery Key';
 
   @override
-  String get recoveryKeyBody =>
-      'You need this to open old chats on a new phone. Write it down somewhere safe.';
+  String get recoveryKeyBody => 'You need this to open old chats on a new phone. Write it down somewhere safe.';
 
   @override
   String get chatsEmpty => 'No chats yet';
@@ -53,8 +52,7 @@ class LEn extends L {
   String get messageLocked => 'This message can\'t be opened yet';
 
   @override
-  String get sendFailedNoEncryption =>
-      'Can\'t send to a chat that isn\'t encrypted';
+  String get sendFailedNoEncryption => 'Can\'t send to a chat that isn\'t encrypted';
 
   @override
   String get themeGreen => 'Green';
@@ -66,8 +64,7 @@ class LEn extends L {
   String get language => 'Language';
 
   @override
-  String get signUpSub =>
-      'All you need is an ID and a password. No phone number.';
+  String get signUpSub => 'All you need is an ID and a password. No phone number.';
 
   @override
   String get haveAccount => 'I already have an account';
@@ -82,8 +79,7 @@ class LEn extends L {
   String get fieldRequired => 'Enter your ID and password';
 
   @override
-  String get passwordRule =>
-      'Use 8 or more characters with letters and numbers';
+  String get passwordRule => 'Use 8 or more characters with letters and numbers';
 
   @override
   String get somethingWrong => 'Something went wrong. Try again in a moment.';
@@ -104,8 +100,7 @@ class LEn extends L {
   String get messageHint => 'Message';
 
   @override
-  String get encryptedNotice =>
-      'This chat is end-to-end encrypted. Not even Burumy can read it.';
+  String get encryptedNotice => 'This chat is end-to-end encrypted. Not even Burumy can read it.';
 
   @override
   String get photo => 'Photo';
@@ -195,8 +190,7 @@ class LEn extends L {
   String get enterRecoveryKey => 'Enter Chat Recovery Key';
 
   @override
-  String get enterRecoveryKeyBody =>
-      'Enter the Chat Recovery Key from your old phone to open your old chats.';
+  String get enterRecoveryKeyBody => 'Enter the Chat Recovery Key from your old phone to open your old chats.';
 
   @override
   String get recoveryKeyHint => '12 words';
@@ -235,8 +229,7 @@ class LEn extends L {
   String get create => 'Create';
 
   @override
-  String get channelInfo =>
-      'In a channel only you can post. Subscribers can read.';
+  String get channelInfo => 'In a channel only you can post. Subscribers can read.';
 
   @override
   String get groupInfo => 'Group chats are end-to-end encrypted too.';
@@ -357,8 +350,7 @@ class LEn extends L {
   }
 
   @override
-  String get enterToManage =>
-      'Enter your normal password to change lock settings';
+  String get enterToManage => 'Enter your normal password to change lock settings';
 
   @override
   String get streaks => 'Streaks';
@@ -406,8 +398,7 @@ class LEn extends L {
   String get timerOffLine => 'Auto-delete turned off';
 
   @override
-  String get timerInfo =>
-      'New messages in this chat are deleted for everyone after the time you choose.';
+  String get timerInfo => 'New messages in this chat are deleted for everyone after the time you choose.';
 
   @override
   String get attachOnce => 'View Once Photo';
@@ -493,8 +484,7 @@ class LEn extends L {
   String get archiveEmpty => 'No archived chats';
 
   @override
-  String get archiveFooter =>
-      'Archived chats are kept on this phone only. The server doesn\'t know which chats you archived.';
+  String get archiveFooter => 'Archived chats are kept on this phone only. The server doesn\'t know which chats you archived.';
 
   @override
   String get searchChats => 'Search';
@@ -578,27 +568,20 @@ class LEn extends L {
   String get pollMultipleShort => 'multiple';
 
   @override
-  String get pollAnonInfo =>
-      'Other members can\'t see who chose what. Votes go, encrypted, only to the maker\'s phone; the chat gets just the numbers.';
+  String get pollAnonInfo => 'Other members can\'t see who chose what. Votes go, encrypted, only to the maker\'s phone; the chat gets just the numbers.';
 
   @override
   String get pollOpenInfo => 'Everyone in the chat can see who chose what.';
 
   @override
-  String get pollChannelInfo =>
-      'Channel polls are always anonymous, so subscribers stay hidden.';
+  String get pollChannelInfo => 'Channel polls are always anonymous, so subscribers stay hidden.';
 
   @override
   String get pollCreate => 'Create';
 
   @override
   String pollVoters(int n) {
-    String _temp0 = intl.Intl.pluralLogic(
-      n,
-      locale: localeName,
-      other: '$n votes',
-      one: '1 vote',
-    );
+    String _temp0 = intl.Intl.pluralLogic(n, locale: localeName, other: '$n votes', one: '1 vote');
     return '$_temp0';
   }
 
@@ -639,12 +622,7 @@ class LEn extends L {
 
   @override
   String bubblesWaiting(int n) {
-    String _temp0 = intl.Intl.pluralLogic(
-      n,
-      locale: localeName,
-      other: '$n bubbles',
-      one: '1 bubble',
-    );
+    String _temp0 = intl.Intl.pluralLogic(n, locale: localeName, other: '$n bubbles', one: '1 bubble');
     return '$_temp0';
   }
 
@@ -658,8 +636,7 @@ class LEn extends L {
   String get bubblePopped => 'Popped';
 
   @override
-  String get bubbleOnce =>
-      'You can see this once. It\'s gone when you close it.';
+  String get bubbleOnce => 'You can see this once. It\'s gone when you close it.';
 
   @override
   String get bubbleGone => 'This bubble has already popped';
@@ -776,8 +753,7 @@ class LEn extends L {
   String get deleteForBoth => 'Delete for Both';
 
   @override
-  String get deleteForBothInfo =>
-      'This chat is deleted on your phone and your friend\'s phone.';
+  String get deleteForBothInfo => 'This chat is deleted on your phone and your friend\'s phone.';
 
   @override
   String deletingIn(int seconds) {
@@ -934,8 +910,7 @@ class LEn extends L {
   String get settingsPrivacy => 'Privacy and Security';
 
   @override
-  String get privacyInfo =>
-      'Manage app lock, hide and delete passwords and your chat recovery key.';
+  String get privacyInfo => 'Manage app lock, hide and delete passwords and your chat recovery key.';
 
   @override
   String get contactsAddById => 'Add a friend by ID';
@@ -1048,15 +1023,13 @@ class LEn extends L {
   String get defaultTimer => 'Auto-delete messages';
 
   @override
-  String get defaultTimerInfo =>
-      'New chats you start will delete messages for everyone after this time.';
+  String get defaultTimerInfo => 'New chats you start will delete messages for everyone after this time.';
 
   @override
   String get privacyWho => 'Privacy';
 
   @override
-  String get whoInfo =>
-      'Calls from others become missed calls; their messages and invitations stay hidden.';
+  String get whoInfo => 'Calls from others become missed calls; their messages and invitations stay hidden.';
 
   @override
   String get whoCalls => 'Calls';
@@ -1068,8 +1041,7 @@ class LEn extends L {
   String get whoInvites => 'Group and channel invites';
 
   @override
-  String get readTypingInfo =>
-      'When off, others do not see when you read or type.';
+  String get readTypingInfo => 'When off, others do not see when you read or type.';
 
   @override
   String get sendRead => 'Send read receipts';
@@ -1084,8 +1056,7 @@ class LEn extends L {
   String get encryptionKeys => 'Encryption keys';
 
   @override
-  String get blockedInfo =>
-      'Blocked people cannot reach you with messages or invites. They are not told.';
+  String get blockedInfo => 'Blocked people cannot reach you with messages or invites. They are not told.';
 
   @override
   String get blockSomeone => 'Block someone';
@@ -1115,12 +1086,10 @@ class LEn extends L {
   String get otherDevices => 'Other devices';
 
   @override
-  String get passwordAgainInfo =>
-      'For safety, enter your account password again.';
+  String get passwordAgainInfo => 'For safety, enter your account password again.';
 
   @override
-  String get keysInfo =>
-      'Compare these keys in person to make sure no one is in the middle. Tap to copy.';
+  String get keysInfo => 'Compare these keys in person to make sure no one is in the middle. Tap to copy.';
 
   @override
   String get myIdentityKey => 'My identity key';
@@ -1147,8 +1116,7 @@ class LEn extends L {
   String get veilDots => 'Hide chat';
 
   @override
-  String get veilDotsInfo =>
-      'Messages in this chat are covered with sparkling dots and show only while you hold them. Tap once to open the menu.';
+  String get veilDotsInfo => 'Messages in this chat are covered with sparkling dots and show only while you hold them. Tap once to open the menu.';
 
   @override
   String get readHere => 'Read receipts in this chat';
@@ -1157,8 +1125,7 @@ class LEn extends L {
   String get veilBlur => 'Sensitive chat';
 
   @override
-  String get veilBlurInfo =>
-      'A sensitive chat sits under frosted glass and is clear only while your finger rests on it, so people nearby can\'t read it.';
+  String get veilBlurInfo => 'A sensitive chat sits under frosted glass and is clear only while your finger rests on it, so people nearby can\'t read it.';
 
   @override
   String get tabMedia => 'Media';
@@ -1176,8 +1143,7 @@ class LEn extends L {
   String get bio => 'Bio';
 
   @override
-  String get bioInfo =>
-      'Choose who sees it in Settings > Privacy and Security. Up to 70 characters.';
+  String get bioInfo => 'Choose who sees it in Settings > Privacy and Security. Up to 70 characters.';
 
   @override
   String get markRead => 'Read';
@@ -1189,8 +1155,7 @@ class LEn extends L {
   String get hiddenChats => 'Hidden chats';
 
   @override
-  String get hiddenChatsInfo =>
-      'Chats you hid from the list. Messages and notifications still arrive. Tap one to show it again.';
+  String get hiddenChatsInfo => 'Chats you hid from the list. Messages and notifications still arrive. Tap one to show it again.';
 
   @override
   String get showInList => 'Show in list';
@@ -1239,8 +1204,7 @@ class LEn extends L {
   String get listTop => 'Show search and folders on top';
 
   @override
-  String get listTopInfo =>
-      'Off gives the chat list more room. Search and folders are in the menu at the top left.';
+  String get listTopInfo => 'Off gives the chat list more room. Search and folders are in the menu at the top left.';
 
   @override
   String get saveToSaved => 'Save to Saved Messages';
@@ -1266,8 +1230,7 @@ class LEn extends L {
   }
 
   @override
-  String get scheduledInfo =>
-      'Scheduled messages wait on this phone, encrypted. They go at the set time if the app is open, or the next time you open it.';
+  String get scheduledInfo => 'Scheduled messages wait on this phone, encrypted. They go at the set time if the app is open, or the next time you open it.';
 
   @override
   String get sendNow => 'Send now';
@@ -1300,8 +1263,7 @@ class LEn extends L {
   String get contactEdit => 'Edit contact';
 
   @override
-  String get contactNameInfo =>
-      'Only you see this name, on this phone. They won\'t know.';
+  String get contactNameInfo => 'Only you see this name, on this phone. They won\'t know.';
 
   @override
   String get memo => 'Note';
@@ -1316,8 +1278,7 @@ class LEn extends L {
   String get clearChat => 'Clear messages';
 
   @override
-  String get clearChatInfo =>
-      'Cleared only on your screen. Theirs stays as it is.';
+  String get clearChatInfo => 'Cleared only on your screen. Theirs stays as it is.';
 
   @override
   String get clearChatDone => 'Messages cleared';
@@ -1338,8 +1299,7 @@ class LEn extends L {
   String get attachPickFile => 'Choose files';
 
   @override
-  String get attachFileInfo =>
-      'Photos can go as original files too. Up to 20 at a time.';
+  String get attachFileInfo => 'Photos can go as original files too. Up to 20 at a time.';
 
   @override
   String selectedCount(int count) {
@@ -1388,8 +1348,7 @@ class LEn extends L {
   String get checklistOthersAdd => 'Others can add tasks';
 
   @override
-  String get checklistOthersInfo =>
-      'Checklists are encrypted like messages. Ticks or tasks from people you didn\'t allow are ignored on every phone.';
+  String get checklistOthersInfo => 'Checklists are encrypted like messages. Ticks or tasks from people you didn\'t allow are ignored on every phone.';
 
   @override
   String checklistDone(int done, int total) {
@@ -1412,8 +1371,7 @@ class LEn extends L {
   String get meetupWhen => 'When';
 
   @override
-  String get meetupInfo =>
-      'Events and answers are encrypted like messages. The server never knows who\'s coming.';
+  String get meetupInfo => 'Events and answers are encrypted like messages. The server never knows who\'s coming.';
 
   @override
   String get meetupYes => 'Going';
@@ -1469,8 +1427,7 @@ class LEn extends L {
   String get hideMembersOnInfo => 'Only admins see the member list.';
 
   @override
-  String get subscribersHiddenInfo =>
-      'Only admins can see subscribers. Other subscribers never know who follows.';
+  String get subscribersHiddenInfo => 'Only admins can see subscribers. Other subscribers never know who follows.';
 
   @override
   String get editGroup => 'Edit group';
@@ -1491,8 +1448,7 @@ class LEn extends L {
   String get hideMembers => 'Hide member list';
 
   @override
-  String get hideMembersInfo =>
-      'When on, only admins can see who is in the group.';
+  String get hideMembersInfo => 'When on, only admins can see who is in the group.';
 
   @override
   String get add => 'Add';
@@ -1518,15 +1474,13 @@ class LEn extends L {
   }
 
   @override
-  String get locationDenied =>
-      'Location access is off. Allow Burumy to use your location in Settings.';
+  String get locationDenied => 'Location access is off. Allow Burumy to use your location in Settings.';
 
   @override
   String get locationOff => 'Location services are turned off on this phone.';
 
   @override
-  String get locationUnavailable =>
-      'Your location can\'t be found right now. Try again in a moment.';
+  String get locationUnavailable => 'Your location can\'t be found right now. Try again in a moment.';
 
   @override
   String get locationRetry => 'Try again';
@@ -1569,22 +1523,19 @@ class LEn extends L {
   String get securityCheckTitle => 'Security check';
 
   @override
-  String get securityCheckInfo =>
-      'Do these two things and your chats stay safe even if you lose or change your phone.';
+  String get securityCheckInfo => 'Do these two things and your chats stay safe even if you lose or change your phone.';
 
   @override
   String get checkRecovery => 'Make a chat recovery key';
 
   @override
-  String get checkRecoveryInfo =>
-      'Use it to open your old chats on a new phone. If you lose it, nobody can bring them back.';
+  String get checkRecoveryInfo => 'Use it to open your old chats on a new phone. If you lose it, nobody can bring them back.';
 
   @override
   String get checkDevice => 'Confirm this device';
 
   @override
-  String get checkDeviceInfo =>
-      'Confirming this device is yours lets friends chat with you safely.';
+  String get checkDeviceInfo => 'Confirming this device is yours lets friends chat with you safely.';
 
   @override
   String get checkDone => 'Done';
@@ -1602,8 +1553,7 @@ class LEn extends L {
   String get accountManage => 'Account';
 
   @override
-  String get accountManageInfo =>
-      'Your ID, password, signed-in devices and encryption keys in one place.';
+  String get accountManageInfo => 'Your ID, password, signed-in devices and encryption keys in one place.';
 
   @override
   String get faq => 'FAQ';
@@ -1626,8 +1576,7 @@ class LEn extends L {
   String get openSourceLicenses => 'Open source licenses';
 
   @override
-  String get aboutInfo =>
-      'Burumy is a messenger where nobody can read your chats. Not the operator, not the server.';
+  String get aboutInfo => 'Burumy is a messenger where nobody can read your chats. Not the operator, not the server.';
 
   @override
   String get powerMode => 'Power saving mode';
@@ -1644,22 +1593,19 @@ class LEn extends L {
   String get powerNever => 'Off';
 
   @override
-  String get powerModeInfo =>
-      'When the battery is below this level, moving effects pause. The web can\'t read the battery, so only \'Always\' works there.';
+  String get powerModeInfo => 'When the battery is below this level, moving effects pause. The web can\'t read the battery, so only \'Always\' works there.';
 
   @override
   String get faqQ1 => 'Are my chats really safe?';
 
   @override
-  String get faqA1 =>
-      'All 1:1 and group chats are end-to-end encrypted. The server and the operator can\'t read them.';
+  String get faqA1 => 'All 1:1 and group chats are end-to-end encrypted. The server and the operator can\'t read them.';
 
   @override
   String get faqQ2 => 'Can I sign up without a phone number?';
 
   @override
-  String get faqA2 =>
-      'Yes. You only need an ID and a password. We don\'t use phone numbers or contacts.';
+  String get faqA2 => 'Yes. You only need an ID and a password. We don\'t use phone numbers or contacts.';
 
   @override
   String get faqQ3 => 'Will I lose my chats if I change phones?';
@@ -1672,36 +1618,31 @@ class LEn extends L {
   String get faqQ4 => 'Who can find me?';
 
   @override
-  String get faqA4 =>
-      'Only people who know your ID. Nobody can find you by name or phone number.';
+  String get faqA4 => 'Only people who know your ID. Nobody can find you by name or phone number.';
 
   @override
   String get faqQ5 => 'How do I turn on disappearing messages?';
 
   @override
-  String get faqA5 =>
-      'Tap the timer button at the top of a chat and pick a time. Messages sent after that disappear when the time is up.';
+  String get faqA5 => 'Tap the timer button at the top of a chat and pick a time. Messages sent after that disappear when the time is up.';
 
   @override
   String get faqQ6 => 'What is a bubble?';
 
   @override
-  String get faqA6 =>
-      'A photo that disappears once it\'s opened. The home-screen widget shows only the bubble, never the content.';
+  String get faqA6 => 'A photo that disappears once it\'s opened. The home-screen widget shows only the bubble, never the content.';
 
   @override
   String get faqQ7 => 'Can I lock the app?';
 
   @override
-  String get faqA7 =>
-      'Set a password in Settings > Privacy and Security and the app asks for it every time it opens.';
+  String get faqA7 => 'Set a password in Settings > Privacy and Security and the app asks for it every time it opens.';
 
   @override
   String get faqQ8 => 'Can I edit or delete a sent message?';
 
   @override
-  String get faqA8 =>
-      'Touch and hold a message to edit or delete it. Deleted messages disappear for the other person too.';
+  String get faqA8 => 'Touch and hold a message to edit or delete it. Deleted messages disappear for the other person too.';
 
   @override
   String get tourE2e => 'End-to-end encryption';
@@ -1713,50 +1654,43 @@ class LEn extends L {
   String get tourTimer => 'Disappearing messages';
 
   @override
-  String get tourTimerBody =>
-      'Messages delete themselves after the time you pick.';
+  String get tourTimerBody => 'Messages delete themselves after the time you pick.';
 
   @override
   String get tourOnce => 'View once';
 
   @override
-  String get tourOnceBody =>
-      'Send photos and videos that can be opened only once.';
+  String get tourOnceBody => 'Send photos and videos that can be opened only once.';
 
   @override
   String get tourBubble => 'Bubbles';
 
   @override
-  String get tourBubbleBody =>
-      'Float a photo bubble to a friend. It pops when opened.';
+  String get tourBubbleBody => 'Float a photo bubble to a friend. It pops when opened.';
 
   @override
   String get tourStreak => 'Streaks';
 
   @override
-  String get tourStreakBody =>
-      'Chat with a friend every day and the 🔥 count goes up.';
+  String get tourStreakBody => 'Chat with a friend every day and the 🔥 count goes up.';
 
   @override
   String get tourGroups => 'Groups and channels';
 
   @override
-  String get tourGroupsBody =>
-      'Groups for friends, channels for news to many people.';
+  String get tourGroupsBody => 'Groups for friends, channels for news to many people.';
 
   @override
   String get tourTools => 'Polls · checklists · meetups';
 
   @override
-  String get tourToolsBody =>
-      'Decide, share tasks and plan meetups right in the chat.';
+  String get tourToolsBody => 'Decide, share tasks and plan meetups right in the chat.';
 
   @override
   String get tourLocation => 'Send location';
 
   @override
-  String get tourLocationBody =>
-      'Send where you are. The map opens only when tapped.';
+  String get tourLocationBody => 'Send where you are. The map opens only when tapped.';
 
   @override
   String get myQr => 'My QR code';
@@ -1777,8 +1711,7 @@ class LEn extends L {
   String get undoSend => 'Undo send (5 s)';
 
   @override
-  String get undoSendInfo =>
-      'Messages wait 5 seconds before they really go, so you can take them back.';
+  String get undoSendInfo => 'Messages wait 5 seconds before they really go, so you can take them back.';
 
   @override
   String sendingIn(int n) {
@@ -1789,19 +1722,16 @@ class LEn extends L {
   String get veilAll => 'Hide all chats';
 
   @override
-  String get veilAllInfo =>
-      'Messages in every chat are covered and show only while you hold them. People nearby can\'t read them. This device only.';
+  String get veilAllInfo => 'Messages in every chat are covered and show only while you hold them. People nearby can\'t read them. This device only.';
 
   @override
   String get panic => 'Panic gesture';
 
   @override
-  String get panicInfo =>
-      'Double-tap with two fingers to lock at once. No sound or vibration. App lock must be on.';
+  String get panicInfo => 'Double-tap with two fingers to lock at once. No sound or vibration. App lock must be on.';
 
   @override
-  String get appearanceInfo =>
-      'Change how Burumy looks: colour theme, night mode, text size and chat background.';
+  String get appearanceInfo => 'Change how Burumy looks: colour theme, night mode, text size and chat background.';
 
   @override
   String get themePlain => 'Plain';
@@ -1840,8 +1770,7 @@ class LEn extends L {
   String get glassSolid => 'Solid';
 
   @override
-  String get glassInfo =>
-      'Solid shows clean panels instead of see-through glass. Power saving switches to this too.';
+  String get glassInfo => 'Solid shows clean panels instead of see-through glass. Power saving switches to this too.';
 
   @override
   String get autoNight => 'Auto night mode';
@@ -1856,15 +1785,13 @@ class LEn extends L {
   String get textSizeDefault => 'Default';
 
   @override
-  String get textSizePreview =>
-      'Did we say left or right at yesterday\'s meeting?';
+  String get textSizePreview => 'Did we say left or right at yesterday\'s meeting?';
 
   @override
   String get textSizePreviewReply => 'Right. I\'m sure.';
 
   @override
-  String get notificationsInfo =>
-      'Choose how new messages reach you, including alerts while you use the app and focus hours.';
+  String get notificationsInfo => 'Choose how new messages reach you, including alerts while you use the app and focus hours.';
 
   @override
   String get inAppNotices => 'While using the app';
@@ -1879,8 +1806,7 @@ class LEn extends L {
   String get inAppBanner => 'Banner';
 
   @override
-  String get inAppStyleInfo =>
-      'A banner shows at the top for a moment. With None, nothing shows while you use the app.';
+  String get inAppStyleInfo => 'A banner shows at the top for a moment. With None, nothing shows while you use the app.';
 
   @override
   String get inAppSound => 'Sounds in the app';
@@ -1892,8 +1818,7 @@ class LEn extends L {
   String get focusSchedule => 'Focus hours';
 
   @override
-  String get focusInfo =>
-      'No alerts during these hours. Messages still arrive; it all happens on this phone.';
+  String get focusInfo => 'No alerts during these hours. Messages still arrive; it all happens on this phone.';
 
   @override
   String get focusFrom => 'Starts';
@@ -1985,15 +1910,13 @@ class LEn extends L {
   }
 
   @override
-  String get whoExceptionsInfo =>
-      'People here come before the setting above. This phone applies it.';
+  String get whoExceptionsInfo => 'People here come before the setting above. This phone applies it.';
 
   @override
   String get bigEmoji => 'Big emoji';
 
   @override
-  String get bigEmojiInfo =>
-      'One to three emoji alone are shown big, without a bubble.';
+  String get bigEmojiInfo => 'One to three emoji alone are shown big, without a bubble.';
 
   @override
   String get burumyStickers => 'Burumy stickers';
@@ -2004,8 +1927,7 @@ class LEn extends L {
   }
 
   @override
-  String get stickerPacksInfo =>
-      'Characters switched off leave the sticker panel. Stickers you receive still show.';
+  String get stickerPacksInfo => 'Characters switched off leave the sticker panel. Stickers you receive still show.';
 
   @override
   String get clearRecentStickers => 'Clear recent stickers';
@@ -2029,8 +1951,7 @@ class LEn extends L {
   String get pack_burumi => 'Buru & Mi';
 
   @override
-  String get dataInfo =>
-      'See the space Burumy uses and choose when photos download.';
+  String get dataInfo => 'See the space Burumy uses and choose when photos download.';
 
   @override
   String get storageUsage => 'Storage used';
@@ -2045,8 +1966,7 @@ class LEn extends L {
   String get clearCache => 'Clear temporary files';
 
   @override
-  String get storageInfo =>
-      'Chats are kept. Temporary files download again when needed.';
+  String get storageInfo => 'Chats are kept. Temporary files download again when needed.';
 
   @override
   String get storageWeb => 'On the web, the browser manages storage.';
@@ -2061,8 +1981,7 @@ class LEn extends L {
   String get autoDlWifi => 'On Wi-Fi';
 
   @override
-  String get autoDownloadInfo =>
-      'When off, photos download when you tap them. Power saving always waits for a tap.';
+  String get autoDownloadInfo => 'When off, photos download when you tap them. Power saving always waits for a tap.';
 
   @override
   String get autoplayGif => 'Autoplay GIFs';
@@ -2074,8 +1993,7 @@ class LEn extends L {
   String get powerJobs => 'Battery-heavy features';
 
   @override
-  String get powerJobsInfo =>
-      'Power saving pauses these. They come back when the battery is fine.';
+  String get powerJobsInfo => 'Power saving pauses these. They come back when the battery is fine.';
 
   @override
   String sizeBytes(int n) {
@@ -2083,8 +2001,7 @@ class LEn extends L {
   }
 
   @override
-  String get chatsInfo =>
-      'How you send and reply, quick replies, away replies, and AI features that run only on this phone.';
+  String get chatsInfo => 'How you send and reply, quick replies, away replies, and AI features that run only on this phone.';
 
   @override
   String get aiFeatures => 'AI features';
@@ -2093,8 +2010,7 @@ class LEn extends L {
   String get scamWarning => 'Scam link warnings';
 
   @override
-  String get scamWarningInfo =>
-      'Flags odd links (look-alike, number-only or shortened addresses). Checked on this phone only; nothing is sent anywhere.';
+  String get scamWarningInfo => 'Flags odd links (look-alike, number-only or shortened addresses). Checked on this phone only; nothing is sent anywhere.';
 
   @override
   String get scamLink => 'Careful: suspicious link';
@@ -2103,8 +2019,7 @@ class LEn extends L {
   String get quickReplies => 'Quick replies';
 
   @override
-  String get quickRepliesInfo =>
-      'Pick them from the phrase button in the composer. Up to 20.';
+  String get quickRepliesInfo => 'Pick them from the phrase button in the composer. Up to 20.';
 
   @override
   String get addQuickReply => 'Add a phrase';
@@ -2138,8 +2053,7 @@ class LEn extends L {
   String get lastName => 'Last name (optional)';
 
   @override
-  String get nameHint =>
-      'Add your name and a photo so friends can recognise you.';
+  String get nameHint => 'Add your name and a photo so friends can recognise you.';
 
   @override
   String get newPhoto => 'Set a new photo';
@@ -2160,8 +2074,7 @@ class LEn extends L {
   String get manageTools => 'Admin tools';
 
   @override
-  String get manageToolsInfo =>
-      'Only admins see this. Messages are never sent to the server for this; your phone does the work.';
+  String get manageToolsInfo => 'Only admins see this. Messages are never sent to the server for this; your phone does the work.';
 
   @override
   String get toolsJoin => 'Joining';
@@ -2179,8 +2092,7 @@ class LEn extends L {
   String get roomRulesHint => 'e.g. 1. Be kind\n2. No ads\n3. Credit photos';
 
   @override
-  String get roomRulesInfo =>
-      'Rules show even before joining. Don\'t put secrets here.';
+  String get roomRulesInfo => 'Rules show even before joining. Don\'t put secrets here.';
 
   @override
   String get rulesAgree => 'Ask to agree to the rules';
@@ -2195,12 +2107,10 @@ class LEn extends L {
   String get welcomeMessage => 'Welcome message';
 
   @override
-  String get welcomeHint =>
-      'e.g. Welcome! Have a look at the pinned post first 😊';
+  String get welcomeHint => 'e.g. Welcome! Have a look at the pinned post first 😊';
 
   @override
-  String get welcomeInfo =>
-      'Shown once when someone opens the chat for the first time.';
+  String get welcomeInfo => 'Shown once when someone opens the chat for the first time.';
 
   @override
   String get reactionsSetting => 'Reactions';
@@ -2221,8 +2131,7 @@ class LEn extends L {
   String get reactionsMax => 'Max reactions per post';
 
   @override
-  String get reactionsMaxInfo =>
-      'How many different reactions one message can have.';
+  String get reactionsMaxInfo => 'How many different reactions one message can have.';
 
   @override
   String get reactionsPick => 'Allowed reactions';
@@ -2231,8 +2140,7 @@ class LEn extends L {
   String get hideCounts => 'Hide reaction and vote counts';
 
   @override
-  String get hideCountsInfo =>
-      'Members don\'t see the numbers. Admins still do.';
+  String get hideCountsInfo => 'Members don\'t see the numbers. Admins still do.';
 
   @override
   String get autoMod => 'Auto-moderation';
@@ -2248,8 +2156,7 @@ class LEn extends L {
   String get addBannedWord => 'Add a banned word';
 
   @override
-  String get bannedWordsInfo =>
-      'Messages with these words are removed. The list stays on this phone.';
+  String get bannedWordsInfo => 'Messages with these words are removed. The list stays on this phone.';
 
   @override
   String get modRules => 'Rules';
@@ -2258,8 +2165,7 @@ class LEn extends L {
   String get modNewLinks => 'Block links from new members';
 
   @override
-  String get modNewLinksInfo =>
-      'Links from people first seen less than 24 hours ago';
+  String get modNewLinksInfo => 'Links from people first seen less than 24 hours ago';
 
   @override
   String get modFlood => 'Remove flooding';
@@ -2291,8 +2197,7 @@ class LEn extends L {
   }
 
   @override
-  String get statsInfo =>
-      'Worked out on this phone from the chat on this phone. Nothing is sent, and there are no per-person numbers.';
+  String get statsInfo => 'Worked out on this phone from the chat on this phone. Nothing is sent, and there are no per-person numbers.';
 
   @override
   String get modLog => 'Admin log';
@@ -2301,8 +2206,7 @@ class LEn extends L {
   String get modLogEmpty => 'Nothing yet';
 
   @override
-  String get modLogInfo =>
-      'Only admin actions done on this phone. The last 200 are kept.';
+  String get modLogInfo => 'Only admin actions done on this phone. The last 200 are kept.';
 
   @override
   String logRemoved(String name, String why) {
@@ -2337,8 +2241,7 @@ class LEn extends L {
   String get movingBoard => 'Moving board';
 
   @override
-  String get movingInfo =>
-      'Enter how many were in your old group to see how many have moved over.';
+  String get movingInfo => 'Enter how many were in your old group to see how many have moved over.';
 
   @override
   String get oldMembers => 'Members in the old group';
@@ -2377,15 +2280,13 @@ class LEn extends L {
   String get levelMax => 'Top level reached';
 
   @override
-  String get levelInfo =>
-      'Levels come from members, people who wrote in the last 4 weeks, and the room\'s age. For now this phone works it out.';
+  String get levelInfo => 'Levels come from members, people who wrote in the last 4 weeks, and the room\'s age. For now this phone works it out.';
 
   @override
   String get chatThemeHere => 'Background for this chat';
 
   @override
-  String get chatThemeHereInfo =>
-      'Only on your phone. Nobody else\'s background changes.';
+  String get chatThemeHereInfo => 'Only on your phone. Nobody else\'s background changes.';
 
   @override
   String get useDefault => 'Use my default';
@@ -2394,8 +2295,7 @@ class LEn extends L {
   String get discussion => 'Discussion';
 
   @override
-  String get discussionInfo =>
-      'Link a group: every post gets a comments button, and comments live in that group.';
+  String get discussionInfo => 'Link a group: every post gets a comments button, and comments live in that group.';
 
   @override
   String get discussionNone => 'None';
@@ -2410,8 +2310,7 @@ class LEn extends L {
   String get deleteGroup => 'Delete group';
 
   @override
-  String get deleteRoomInfo =>
-      'Everyone is removed and you leave too. This can\'t be undone.';
+  String get deleteRoomInfo => 'Everyone is removed and you leave too. This can\'t be undone.';
 
   @override
   String get deleteRoomConfirm => 'Delete for good?';
@@ -2432,8 +2331,7 @@ class LEn extends L {
   String get pollVoted => 'Voted';
 
   @override
-  String get hideCountsInfoGroup =>
-      'Members don\'t see the numbers. Admins still do.';
+  String get hideCountsInfoGroup => 'Members don\'t see the numbers. Admins still do.';
 
   @override
   String get pollQuizKind => 'Quiz';
@@ -2442,8 +2340,7 @@ class LEn extends L {
   String get quizMode => 'Quiz mode';
 
   @override
-  String get quizModeInfo =>
-      'Pick one right answer. People see it with the explanation right after answering, and can\'t change their answer.';
+  String get quizModeInfo => 'Pick one right answer. People see it with the explanation right after answering, and can\'t change their answer.';
 
   @override
   String get quizPickAnswer => 'Tap a circle to mark the right answer';
@@ -2545,8 +2442,7 @@ class LEn extends L {
   String get lotteryPrizeHint => 'e.g. 2 coffee coupons';
 
   @override
-  String get lotteryPrizeInfo =>
-      'Members tap Join. When it ends, my phone picks winners at random.';
+  String get lotteryPrizeInfo => 'Members tap Join. When it ends, my phone picks winners at random.';
 
   @override
   String get lotteryWinners => 'Winners';
@@ -2561,12 +2457,10 @@ class LEn extends L {
   String get lotteryAnnounce => 'Announce winners';
 
   @override
-  String get lotteryAnnounceInfo =>
-      'When off, only the winners are told. Only I see the list.';
+  String get lotteryAnnounceInfo => 'When off, only the winners are told. Only I see the list.';
 
   @override
-  String get lotteryInfo =>
-      'Members can\'t see who joined. Admins can\'t win. The draw runs on my phone, so open the app after it ends.';
+  String get lotteryInfo => 'Members can\'t see who joined. Admins can\'t win. The draw runs on my phone, so open the app after it ends.';
 
   @override
   String get lotteryJoin => 'Join';
@@ -2623,8 +2517,7 @@ class LEn extends L {
   String get cardNoAnswers => 'No answers yet';
 
   @override
-  String get cardAnswersInfo =>
-      'Answers are only on this phone. The server and other members can\'t see them.';
+  String get cardAnswersInfo => 'Answers are only on this phone. The server and other members can\'t see them.';
 
   @override
   String get formTitleHint => 'e.g. December hike sign-up';
@@ -2653,8 +2546,7 @@ class LEn extends L {
   String get formAddQuestion => 'Add question';
 
   @override
-  String get formInfo =>
-      'Answers are encrypted and come only to me. Other members and the server can\'t see them.';
+  String get formInfo => 'Answers are encrypted and come only to me. Other members and the server can\'t see them.';
 
   @override
   String get formFill => 'Fill in';
@@ -2676,8 +2568,7 @@ class LEn extends L {
   String get formAnswerHint => 'Your answer';
 
   @override
-  String get formFillInfo =>
-      'Answers go only to the maker. Other members can\'t see them.';
+  String get formFillInfo => 'Answers go only to the maker. Other members can\'t see them.';
 
   @override
   String get faqQ => 'Question';
@@ -2686,8 +2577,7 @@ class LEn extends L {
   String get faqA => 'Answer';
 
   @override
-  String get faqInfo =>
-      'Members tap a question to open the answer. Nothing is sent, so nobody knows who read what.';
+  String get faqInfo => 'Members tap a question to open the answer. Nothing is sent, so nobody knows who read what.';
 
   @override
   String get guideTitleHint => 'How can we help?';
@@ -2708,8 +2598,7 @@ class LEn extends L {
   String get guideText => 'What it shows';
 
   @override
-  String get guideInfo =>
-      'Tapping a button opens the next screen right there. Nothing is sent, so nobody knows who read what.';
+  String get guideInfo => 'Tapping a button opens the next screen right there. Nothing is sent, so nobody knows who read what.';
 
   @override
   String get linksPreview => 'Preview';
@@ -2727,8 +2616,7 @@ class LEn extends L {
   String get linksIntro => 'Add buttons that go to websites under the post.';
 
   @override
-  String get linksInfo =>
-      'Buttons are encrypted with the post. Nobody can tell who tapped. Links are checked for scams on this phone.';
+  String get linksInfo => 'Buttons are encrypted with the post. Nobody can tell who tapped. Links are checked for scams on this phone.';
 
   @override
   String linksLeft(int n) {
@@ -2747,8 +2635,7 @@ class LEn extends L {
   String get linksColor => 'This button\'s colour';
 
   @override
-  String get linksColorInfo =>
-      'The first circle follows the colour chosen under \'Style all buttons\'.';
+  String get linksColorInfo => 'The first circle follows the colour chosen under \'Style all buttons\'.';
 
   @override
   String get linksRemove => 'Remove button';
@@ -2799,8 +2686,7 @@ class LEn extends L {
   String get inkBlack => 'Black';
 
   @override
-  String get linksStyleInfo =>
-      'Applies to every button. Each button can also have its own colour.';
+  String get linksStyleInfo => 'Applies to every button. Each button can also have its own colour.';
 
   @override
   String get linksBadUrl => 'Use a web address starting with https://';
@@ -2830,8 +2716,7 @@ class LEn extends L {
   String get checkinHint => 'e.g. There was an earthquake. Is everyone OK?';
 
   @override
-  String get checkinInfo =>
-      'Members tap \'I\'m OK\' or \'I need help\'. Answers come only to me.';
+  String get checkinInfo => 'Members tap \'I\'m OK\' or \'I need help\'. Answers come only to me.';
 
   @override
   String get checkinOk => 'I\'m OK';
@@ -2849,8 +2734,7 @@ class LEn extends L {
   String get templatesEmpty => 'No templates yet';
 
   @override
-  String get templatesInfo =>
-      'Templates stay on this phone. Tap one to put it in the message box.';
+  String get templatesInfo => 'Templates stay on this phone. Tap one to put it in the message box.';
 
   @override
   String get cardRemove => 'Remove';
@@ -2859,19 +2743,16 @@ class LEn extends L {
   String get attachPickAudio => 'Choose audio files';
 
   @override
-  String get attachAudioInfo =>
-      'Send music or recordings. People can play them right in the chat.';
+  String get attachAudioInfo => 'Send music or recordings. People can play them right in the chat.';
 
   @override
   String get remindMe => 'Remind me';
 
   @override
-  String get remindNote =>
-      'This phone will remind you. Nothing is sent to the server.';
+  String get remindNote => 'This phone will remind you. Nothing is sent to the server.';
 
   @override
-  String get remindNoteWeb =>
-      'You\'re reminded while this window is open. Nothing is sent to the server.';
+  String get remindNoteWeb => 'You\'re reminded while this window is open. Nothing is sent to the server.';
 
   @override
   String get remindIn20 => 'In 20 minutes';
@@ -2915,22 +2796,19 @@ class LEn extends L {
   String get emergencyHideRoomOff => 'Don\'t hide in emergency';
 
   @override
-  String get emergencyMarked =>
-      'Opening with the delete password erases this message';
+  String get emergencyMarked => 'Opening with the delete password erases this message';
 
   @override
   String get emergencyUnmarked => 'Removed from emergency delete';
 
   @override
-  String get emergencyHidden =>
-      'Opening with the hide password hides this chat';
+  String get emergencyHidden => 'Opening with the hide password hides this chat';
 
   @override
   String get emergencyUnhidden => 'Removed from emergency hide';
 
   @override
-  String get emergencyWebInfo =>
-      'App lock and emergency delete and hide can only be set in the phone app. A web browser can\'t keep secrets safe.';
+  String get emergencyWebInfo => 'App lock and emergency delete and hide can only be set in the phone app. A web browser can\'t keep secrets safe.';
 
   @override
   String get emergencyBadge => 'Emergency delete';
@@ -3037,15 +2915,13 @@ class LEn extends L {
   String get encStart => 'Start check';
 
   @override
-  String get encStartInfo =>
-      'Do it together or on a call. If both phones show the same 7 pictures, it\'s really them.';
+  String get encStartInfo => 'Do it together or on a call. If both phones show the same 7 pictures, it\'s really them.';
 
   @override
   String get encShowKeys => 'Show device keys (advanced)';
 
   @override
-  String get encKeysInfo =>
-      'Each device\'s key fingerprint. If it matches what their screen shows, it\'s the same device.';
+  String get encKeysInfo => 'Each device\'s key fingerprint. If it matches what their screen shows, it\'s the same device.';
 
   @override
   String get encNoDevices => 'No device info yet';
@@ -3068,8 +2944,7 @@ class LEn extends L {
   String get verifyDecline => 'Decline';
 
   @override
-  String get verifyCompare =>
-      'Do both phones show the same pictures in the same order?';
+  String get verifyCompare => 'Do both phones show the same pictures in the same order?';
 
   @override
   String get verifyMatch => 'They match';
@@ -3127,8 +3002,7 @@ class LEn extends L {
   String get msgReport => 'Report message';
 
   @override
-  String get reportNote =>
-      'Our team will read this message: its words are sent with the report. No other messages are sent.';
+  String get reportNote => 'Our team will read this message: its words are sent with the report. No other messages are sent.';
 
   @override
   String get reportSpam => 'Spam';
@@ -3199,8 +3073,7 @@ class LEn extends L {
   String get packDynamicInfo => 'Packs you used lately come first.';
 
   @override
-  String get packOrderInfo =>
-      'Drag the handle to change the order. Packs you turn off leave the sticker panel; stickers you get still show.';
+  String get packOrderInfo => 'Drag the handle to change the order. Packs you turn off leave the sticker panel; stickers you get still show.';
 
   @override
   String get attachFromGallery => 'Choose from gallery';
@@ -3328,19 +3201,16 @@ class LEn extends L {
   String get camLiveStart => 'Start live broadcast';
 
   @override
-  String get camLiveLater =>
-      'Live broadcasts open once our own server is ready';
+  String get camLiveLater => 'Live broadcasts open once our own server is ready';
 
   @override
   String get camGridRemove => 'Tap to remove grid';
 
   @override
-  String get camUnavailable =>
-      'Can\'t open the camera\nThe button below uses your phone\'s camera';
+  String get camUnavailable => 'Can\'t open the camera\nThe button below uses your phone\'s camera';
 
   @override
-  String get camDualHint =>
-      'Takes the back camera, then the front, right after';
+  String get camDualHint => 'Takes the back camera, then the front, right after';
 
   @override
   String camGridLeft(int n) {
@@ -3392,8 +3262,7 @@ class LEn extends L {
   String get storyAskHint => 'Your question';
 
   @override
-  String get storyPollInfo =>
-      'Each answer comes to you in a 1:1 chat. Nobody else, not even Burumy, sees who picked what.';
+  String get storyPollInfo => 'Each answer comes to you in a 1:1 chat. Nobody else, not even Burumy, sees who picked what.';
 
   @override
   String storyOption(int n) {
@@ -3407,12 +3276,10 @@ class LEn extends L {
   String get storyPlanPlace => 'Where (optional)';
 
   @override
-  String get storyPlanInfo =>
-      'When a friend taps \"I\'m in\", you hear it in your 1:1 chat.';
+  String get storyPlanInfo => 'When a friend taps \"I\'m in\", you hear it in your 1:1 chat.';
 
   @override
-  String get storyQuestionInfo =>
-      'Answers come to you in 1:1 chats, for you only.';
+  String get storyQuestionInfo => 'Answers come to you in 1:1 chats, for you only.';
 
   @override
   String get storyAllFriends => 'All friends';
@@ -3445,15 +3312,13 @@ class LEn extends L {
   String get storyWho => 'Who can see it?';
 
   @override
-  String get storyWhoInfo =>
-      'Only the friends you pick get it, sealed in each chat\'s encryption.';
+  String get storyWhoInfo => 'Only the friends you pick get it, sealed in each chat\'s encryption.';
 
   @override
   String get storyHowLong => 'How long?';
 
   @override
-  String get storyHowLongInfo =>
-      'After that it disappears from friends\' phones and the server.';
+  String get storyHowLongInfo => 'After that it disappears from friends\' phones and the server.';
 
   @override
   String storyHoursN(int n) {
@@ -3464,15 +3329,13 @@ class LEn extends L {
   String get storyArchive => 'My story archive';
 
   @override
-  String get storyArchiveEmpty =>
-      'Nothing yet. Stories you share are kept here, on this phone only.';
+  String get storyArchiveEmpty => 'Nothing yet. Stories you share are kept here, on this phone only.';
 
   @override
   String get storyArchiveWeb => 'The web keeps no archive. Use the phone app.';
 
   @override
-  String get storyArchiveInfo =>
-      'On this phone only. Tap to share again, hold to delete.';
+  String get storyArchiveInfo => 'On this phone only. Tap to share again, hold to delete.';
 
   @override
   String get storyNew => 'New story';
@@ -3484,8 +3347,7 @@ class LEn extends L {
   String get feedEmpty => 'No posts yet';
 
   @override
-  String get feedInfo =>
-      'Only your 1:1 friends see it. No ads, encrypted end to end.';
+  String get feedInfo => 'Only your 1:1 friends see it. No ads, encrypted end to end.';
 
   @override
   String get feedNew => 'New post';
@@ -3548,8 +3410,7 @@ class LEn extends L {
   String get emergencyDeleteRoom => 'Delete this chat in an emergency';
 
   @override
-  String get emergencyRoomMarked =>
-      'Opening with the delete password erases this chat';
+  String get emergencyRoomMarked => 'Opening with the delete password erases this chat';
 
   @override
   String get folderAddedTo => 'Added to the folder';
@@ -3576,24 +3437,19 @@ class LEn extends L {
   String get swipeUnarchive => 'Unarchive';
 
   @override
-  String get chatsHeaderInfo =>
-      'Choose how messages look, replies, stickers and emoji, and the on-device AI features you use in chats.';
+  String get chatsHeaderInfo => 'Choose how messages look, replies, stickers and emoji, and the on-device AI features you use in chats.';
 
   @override
-  String get faqHeaderInfo =>
-      'Common questions about Burumy. You can read them offline too.';
+  String get faqHeaderInfo => 'Common questions about Burumy. You can read them offline too.';
 
   @override
-  String get devicesHeaderInfo =>
-      'See every device signed in to your account. Sign out any device you don\'t recognise right here.';
+  String get devicesHeaderInfo => 'See every device signed in to your account. Sign out any device you don\'t recognise right here.';
 
   @override
-  String get languageHeaderInfo =>
-      'Pick the app\'s language. Messages in other languages can be translated right in the chat.';
+  String get languageHeaderInfo => 'Pick the app\'s language. Messages in other languages can be translated right in the chat.';
 
   @override
-  String get stickersHeaderInfo =>
-      'Set your quick reaction, big emoji and how sticker packs are ordered.';
+  String get stickersHeaderInfo => 'Set your quick reaction, big emoji and how sticker packs are ordered.';
 
   @override
   String get birthday => 'Birthday';
@@ -3602,8 +3458,7 @@ class LEn extends L {
   String get birthdayAdd => 'Add';
 
   @override
-  String get birthdayInfo =>
-      'Friends see only the month and day. Choose who sees it in Settings > Privacy and Security.';
+  String get birthdayInfo => 'Friends see only the month and day. Choose who sees it in Settings > Privacy and Security.';
 
   @override
   String get birthdayRemove => 'Remove birthday';
@@ -3632,8 +3487,7 @@ class LEn extends L {
   String get whoAlwaysNobody => 'Nobody';
 
   @override
-  String get whoCardInfo =>
-      '\'My contacts\' never goes to the server; friends get it only inside your encrypted 1:1 chats.';
+  String get whoCardInfo => '\'My contacts\' never goes to the server; friends get it only inside your encrypted 1:1 chats.';
 
   @override
   String get lastSeenInfo =>
@@ -3650,15 +3504,13 @@ class LEn extends L {
   String get editHistoryAlways => 'Always';
 
   @override
-  String get editHistoryInfo =>
-      'People see only the last version of a message you edited. Burumy never shows earlier versions.';
+  String get editHistoryInfo => 'People see only the last version of a message you edited. Burumy never shows earlier versions.';
 
   @override
   String get birthdayAlert => 'Birthday alerts';
 
   @override
-  String get birthdayAlertInfo =>
-      'On a friend\'s birthday (if they share it), you get an alert at 9 am. It\'s made on this phone only.';
+  String get birthdayAlertInfo => 'On a friend\'s birthday (if they share it), you get an alert at 9 am. It\'s made on this phone only.';
 
   @override
   String birthdayAlertTitle(String name) {
@@ -3672,8 +3524,7 @@ class LEn extends L {
   String get showErrors => 'Show error details';
 
   @override
-  String get showErrorsInfo =>
-      'When on, error details are kept on this phone so you can copy them when asking for help. No message content is included.';
+  String get showErrorsInfo => 'When on, error details are kept on this phone so you can copy them when asking for help. No message content is included.';
 
   @override
   String get errorLog => 'Error log';
@@ -3691,8 +3542,7 @@ class LEn extends L {
   String get autoDeleteRow => 'If away for';
 
   @override
-  String get autoDeleteInfo =>
-      'If you don\'t come back at least once in this time, your account is deleted with all groups, messages and contacts.';
+  String get autoDeleteInfo => 'If you don\'t come back at least once in this time, your account is deleted with all groups, messages and contacts.';
 
   @override
   String get months1 => '1 month';
@@ -3743,15 +3593,13 @@ class LEn extends L {
   String get panicSub => 'Double-tap with two fingers to lock at once';
 
   @override
-  String get birthdayAlertSub =>
-      'This phone reminds you at 9 am on a friend\'s birthday';
+  String get birthdayAlertSub => 'This phone reminds you at 9 am on a friend\'s birthday';
 
   @override
   String get showErrorsSub => 'Keeps error details on this phone for support';
 
   @override
-  String get autoDeleteSub =>
-      'Your account is deleted if you don\'t sign in for this long';
+  String get autoDeleteSub => 'Your account is deleted if you don\'t sign in for this long';
 
   @override
   String get autoDlPhotosSub => 'Photos load on their own';
@@ -3766,8 +3614,7 @@ class LEn extends L {
   String get autoplayGifSub => 'Off: GIFs stay on the first frame';
 
   @override
-  String get linkPreviewSub =>
-      'Your phone adds the title and picture when sending';
+  String get linkPreviewSub => 'Your phone adds the title and picture when sending';
 
   @override
   String get callsHeader => 'Calls';
@@ -3776,8 +3623,7 @@ class LEn extends L {
   String get lowDataCalls => 'Use less data for calls';
 
   @override
-  String get lowDataCallsSub =>
-      'Lower video quality so calls hold up on slow networks';
+  String get lowDataCallsSub => 'Lower video quality so calls hold up on slow networks';
 
   @override
   String get devicesArtInfo => 'Keep chatting on a PC or another phone.';
@@ -3789,8 +3635,7 @@ class LEn extends L {
   String get addDeviceTitle => 'Use on another device';
 
   @override
-  String get addDeviceStep1 =>
-      'Install Burumy on the new device. There\'s a Windows app for PCs.';
+  String get addDeviceStep1 => 'Install Burumy on the new device. There\'s a Windows app for PCs.';
 
   @override
   String get addDeviceStep2 => 'Sign in with your ID and password.';
@@ -3809,8 +3654,7 @@ class LEn extends L {
   String get chatFolders => 'Chat Folders';
 
   @override
-  String get foldersArtInfo =>
-      'Make folders for different groups of chats and switch between them from the top of the list or the side menu.';
+  String get foldersArtInfo => 'Make folders for different groups of chats and switch between them from the top of the list or the side menu.';
 
   @override
   String get createFolder => 'Create a Folder';
@@ -3822,8 +3666,7 @@ class LEn extends L {
   String get editList => 'Edit';
 
   @override
-  String get foldersEditInfo =>
-      'Tap Edit to change the order of folders or delete them.';
+  String get foldersEditInfo => 'Tap Edit to change the order of folders or delete them.';
 
   @override
   String get recommendedFolders => 'Recommended Folders';
@@ -3844,8 +3687,7 @@ class LEn extends L {
   String get folderTags => 'Show Folder Tags';
 
   @override
-  String get folderTagsInfo =>
-      'Show folder names as coloured tags under each chat in the list.';
+  String get folderTagsInfo => 'Show folder names as coloured tags under each chat in the list.';
 
   @override
   String folderChatsCount(int n) {
@@ -3859,15 +3701,13 @@ class LEn extends L {
   String get folderInclude => 'Included Chats';
 
   @override
-  String get folderIncludeInfo =>
-      'Choose chats or types of chats that will appear in this folder.';
+  String get folderIncludeInfo => 'Choose chats or types of chats that will appear in this folder.';
 
   @override
   String get folderExclude => 'Excluded Chats';
 
   @override
-  String get folderExcludeInfo =>
-      'Choose chats or types of chats that will never appear in this folder.';
+  String get folderExcludeInfo => 'Choose chats or types of chats that will never appear in this folder.';
 
   @override
   String get folderAddChats => 'Add Chats';
@@ -3879,8 +3719,7 @@ class LEn extends L {
   String get folderNoTag => 'No tag';
 
   @override
-  String get folderColorInfo =>
-      'This colour is used for the folder\'s tag in the chat list.';
+  String get folderColorInfo => 'This colour is used for the folder\'s tag in the chat list.';
 
   @override
   String get folderNeedChats => 'Add at least one chat.';
@@ -3955,8 +3794,7 @@ class LEn extends L {
   String get linkOpenBrowserShort => 'Browser';
 
   @override
-  String get linkOpenInfo =>
-      'Inside Burumy, links open without leaving the app and stay out of your other browser\'s history.';
+  String get linkOpenInfo => 'Inside Burumy, links open without leaving the app and stay out of your other browser\'s history.';
 
   @override
   String get linkNeverHeader => 'Never Open in App';
@@ -3965,22 +3803,19 @@ class LEn extends L {
   String get linkNeverAdd => 'Add Website';
 
   @override
-  String get linkNeverInfo =>
-      'These websites always open in your default browser.';
+  String get linkNeverInfo => 'These websites always open in your default browser.';
 
   @override
   String get tiltMove => 'Move When Tilted';
 
   @override
-  String get tiltInfo =>
-      'Tilt the phone and the chat background moves a little. Uses a bit more battery.';
+  String get tiltInfo => 'Tilt the phone and the chat background moves a little. Uses a bit more battery.';
 
   @override
   String get appIcon => 'App Icon';
 
   @override
-  String get appIconInfo =>
-      'Changes the Burumy icon on your home screen. The app may close for a moment while it changes.';
+  String get appIconInfo => 'Changes the Burumy icon on your home screen. The app may close for a moment while it changes.';
 
   @override
   String get appIconGreen => 'Default';
@@ -4040,8 +3875,7 @@ class LEn extends L {
   String get planPickSub => 'Tap a date or time in a message to set a reminder';
 
   @override
-  String get aiOnPhoneInfo =>
-      'All of this runs on this phone. Messages are never sent anywhere.';
+  String get aiOnPhoneInfo => 'All of this runs on this phone. Messages are never sent anywhere.';
 
   @override
   String planFound(String when) {
@@ -4053,4 +3887,40 @@ class LEn extends L {
 
   @override
   String get planAtTime => 'Remind at That Time';
+
+  @override
+  String get checkSectionTodo => 'To do';
+
+  @override
+  String get archiveToMenu => 'To menu';
+
+  @override
+  String get archiveMovedTitle => 'Archive moved to the side menu';
+
+  @override
+  String get archiveMovedBody => 'Tap the menu button at the top left to see it.';
+
+  @override
+  String get archivePinnedTitle => 'Archive pinned to the chat list';
+
+  @override
+  String get archivePinnedBody => 'Swipe it all the way left to move it again.';
+
+  @override
+  String get archivePinBack => 'Pin to list';
+
+  @override
+  String get menuStories => 'Stories';
+
+  @override
+  String get storiesMovedTitle => 'Stories moved to the side menu';
+
+  @override
+  String get bubblesMovedTitle => 'Bubbles moved to the side menu';
+
+  @override
+  String get storiesPinnedTitle => 'Stories pinned to the chat list';
+
+  @override
+  String get bubblesPinnedTitle => 'Bubbles pinned to the chat list';
 }

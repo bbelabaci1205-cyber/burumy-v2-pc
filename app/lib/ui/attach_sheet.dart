@@ -385,7 +385,7 @@ class _AttachSheetState extends State<AttachSheet> {
   Widget fileBody(L l, Palette p) {
     final audio = tab == 'audio';
     // Telegram 파일 tab: white card with accent rows, then my recent files.
-    Widget action(Key key, IconData icon, String text, VoidCallback tap) => CupertinoListTile(
+    Widget action(Key key, IconData icon, String text, VoidCallback tap) => IosTile(
       key: key,
       leading: Icon(icon, color: p.accent, size: Tokens.listIcon + 2),
       title: Text(text, style: TextStyle(color: p.accent)),
@@ -406,7 +406,7 @@ class _AttachSheetState extends State<AttachSheet> {
               action(const Key('attach-pick-file'), CupertinoIcons.cloud, l.attachFromFiles, () => pick('file')),
             ],
             for (var i = 0; i < picked.length; i++)
-              CupertinoListTile(
+              IosTile(
                 key: Key('attach-file-$i'),
                 leading: iconTile(Palette.tileGrey, picked[i].isImage ? CupertinoIcons.photo : CupertinoIcons.doc_fill),
                 title: Text(picked[i].name, maxLines: 1, overflow: TextOverflow.ellipsis),
@@ -422,7 +422,7 @@ class _AttachSheetState extends State<AttachSheet> {
             header: sectionHeader(context, l.recentSentFiles),
             children: [
               for (final m in widget.sentFiles.take(10))
-                CupertinoListTile(
+                IosTile(
                   key: Key('attach-recent-${m.id}'),
                   leading: iconTile(Palette.tileBlue, CupertinoIcons.doc_fill),
                   title: Text(m.body ?? '', maxLines: 1, overflow: TextOverflow.ellipsis),

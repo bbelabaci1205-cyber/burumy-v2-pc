@@ -107,9 +107,16 @@ Future<void> runChatAction(BuildContext context, ChatPreview chat, String what) 
 /// A row that slides sideways to show Telegram-style buttons: read and pin
 /// on the left, mute, delete and archive on the right.
 class SwipeRow extends StatefulWidget {
-  const SwipeRow({super.key, required this.chat, required this.child});
-  final ChatPreview chat;
+  const SwipeRow({super.key, this.chat, required this.child, this.leftItems, this.rightItems, this.onAction, this.color});
+  final ChatPreview? chat;
   final Widget child;
+
+  /// Other rows (보관함): their own buttons and what they do.
+  final List<(String, String, IconData, Color)>? leftItems, rightItems;
+  final ValueChanged<String>? onAction;
+
+  /// Row colour at rest (list white unless it sits on a card).
+  final Color? color;
   @override
   State<SwipeRow> createState() => _SwipeRowState();
 }
@@ -123,21 +130,27 @@ class _SwipeRowState extends State<SwipeRow> with SingleTickerProviderStateMixin
   late final anim = AnimationController.unbounded(vsync: this);
   double get dx => anim.value;
 
-  List<(String, String, IconData, Color)> left(L l, Palette p) => [
-    if (widget.chat.unread > 0) ('read', l.markRead, CupertinoIcons.chat_bubble_fill, Palette.tileBlue),
-    ('pin', widget.chat.pinned ? l.swipeUnpin : l.swipePin, widget.chat.pinned ? CupertinoIcons.pin_slash_fill : CupertinoIcons.pin_fill, p.tileGreen),
-  ];
+  List<(String, String, IconData, Color)> left(L l, Palette p) =>
+      widget.leftItems ??
+      [
+        if (widget.chat!.unread > 0) ('read', l.markRead, CupertinoIcons.chat_bubble_fill, Palette.tileBlue),
+        ('pin', widget.chat!.pinned ? l.swipeUnpin : l.swipePin, widget.chat!.pinned ? CupertinoIcons.pin_slash_fill : CupertinoIcons.pin_fill, p.tileGreen),
+      ];
 
-  List<(String, String, IconData, Color)> right(L l) => [
-    (
-      'mute',
-      widget.chat.muted ? l.swipeUnmute : l.swipeMute,
-      widget.chat.muted ? CupertinoIcons.bell_fill : CupertinoIcons.bell_slash_fill,
-      Palette.tileOrange,
-    ),
-    ('delete', l.delete, CupertinoIcons.trash_fill, Palette.tileRed),
-    ('archive', widget.chat.archived ? l.swipeUnarchive : l.swipeArchive, CupertinoIcons.archivebox_fill, Palette.tileGrey),
-  ];
+  List<(String, String, IconData, Color)> right(L l) =>
+      widget.rightItems ??
+      [
+        (
+          'mute',
+          widget.chat!.muted ? l.swipeUnmute : l.swipeMute,
+          widget.chat!.muted ? CupertinoIcons.bell_fill : CupertinoIcons.bell_slash_fill,
+          Palette.tileOrange,
+        ),
+        ('delete', l.delete, CupertinoIcons.trash_fill, Palette.tileRed),
+        ('archive', widget.chat!.archived ? l.swipeUnarchive : l.swipeArchive, CupertinoIcons.archivebox_fill, Palette.tileGrey),
+      ];
+
+  void run(String id) => widget.onAction != null ? widget.onAction!(id) : runChatAction(context, widget.chat!, id);
 
   void settle(double to) => anim.animateTo(to, duration: const Duration(milliseconds: 220), curve: Curves.easeOutCubic);
 
@@ -164,7 +177,7 @@ class _SwipeRowState extends State<SwipeRow> with SingleTickerProviderStateMixin
       behavior: HitTestBehavior.opaque,
       onTap: () {
         settle(0);
-        runChatAction(context, widget.chat, it.$1);
+        run(it.$1);
       },
       // Telegram iOS: a small coloured circle, the word under it.
       child: SizedBox(
@@ -231,20 +244,37 @@ class _SwipeRowState extends State<SwipeRow> with SingleTickerProviderStateMixin
       );
     }
 
+    void end(double v) {
+      if (fullL() || fullR()) {
+        final it = fullL() ? ls.first : rs.last;
+        settle(0);
+        run(it.$1);
+        return;
+      }
+      if (dx > 0) settle(dx > maxL / 2 || v > 400 ? maxL : 0);
+      if (dx < 0) settle(dx < -maxR / 2 || v < -400 ? -maxR : 0);
+    }
+
+    double reach() => math.max((context.size?.width ?? 0) - Tokens.sideStrip, full * 3);
+    void move(double by) => anim.value = (dx + by).clamp(rs.isEmpty ? 0.0 : -math.max(reach(), maxR + full), ls.isEmpty ? 0.0 : math.max(reach(), maxL + full));
+
     final r = Radius.circular(Tokens.radius[3]);
-    return GestureDetector(
-      onHorizontalDragUpdate: (d) => anim.value = (dx + d.delta.dx).clamp(-maxR - full * 3, maxL + full * 3),
-      onHorizontalDragEnd: (d) {
-        final v = d.primaryVelocity ?? 0;
-        if (fullL() || fullR()) {
-          final it = fullL() ? ls.first : rs.last;
-          settle(0);
-          runChatAction(context, widget.chat, it.$1);
-          return;
-        }
-        if (dx > 0) settle(dx > maxL / 2 || v > 400 ? maxL : 0);
-        if (dx < 0) settle(dx < -maxR / 2 || v < -400 ? -maxR : 0);
+    // A strip that scrolls sideways (스토리, 비눗방울): pulled past its end,
+    // the row itself moves.
+    final inner = NotificationListener<ScrollNotification>(
+      onNotification: (n) {
+        if (n.metrics.axis != Axis.horizontal) return false;
+        if (n is OverscrollNotification && n.dragDetails != null) move(-n.overscroll);
+        if (n is ScrollEndNotification && dx != 0) end(0);
+        return false;
       },
+      child: widget.child,
+    );
+    return GestureDetector(
+      // Telegram (Eric 2026-11-25 "여기까지 당겨 줘"): the row can be pulled
+      // almost all the way, leaving a side strip, and the capsule fills it.
+      onHorizontalDragUpdate: (d) => move(d.delta.dx),
+      onHorizontalDragEnd: (d) => end(d.primaryVelocity ?? 0),
       child: AnimatedBuilder(
         animation: anim,
         builder: (_, child) => ClipRect(
@@ -271,7 +301,7 @@ class _SwipeRowState extends State<SwipeRow> with SingleTickerProviderStateMixin
                   // opening the chat.
                   // Telegram: the pulled row turns light grey.
                   child: ColoredBox(
-                    color: dx == 0 ? p.list : Color.alphaBlend(p.incoming, p.list),
+                    color: dx == 0 ? (widget.color ?? p.list) : Color.alphaBlend(p.incoming, p.list),
                     child: GestureDetector(
                       behavior: HitTestBehavior.translucent,
                       onTap: dx == 0 ? null : () => settle(0),
@@ -283,11 +313,61 @@ class _SwipeRowState extends State<SwipeRow> with SingleTickerProviderStateMixin
             ],
           ),
         ),
-        child: widget.child,
+        child: inner,
       ),
     );
   }
 }
+
+/// Telegram-style black banner above the tab bar: an (i), a title and one
+/// line under it; goes away by itself.
+void showInfoBanner(BuildContext context, String title, String body) {
+  final o = Overlay.of(context, rootOverlay: true);
+  final e = OverlayEntry(
+    builder: (c) => Positioned(
+      left: Tokens.space[3],
+      right: Tokens.space[3],
+      bottom: FloatingTabBar.room(c) + Tokens.space[2],
+      child: Container(
+        key: const Key('info-banner'),
+        padding: EdgeInsets.symmetric(horizontal: Tokens.space[3], vertical: Tokens.space[2]),
+        decoration: BoxDecoration(color: const Color(0xE6333333), borderRadius: BorderRadius.circular(Tokens.radius[3])),
+        child: Row(
+          children: [
+            const Icon(CupertinoIcons.info_circle_fill, color: Color(0xFFFFFFFF), size: 28),
+            SizedBox(width: Tokens.space[3]),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: Tokens.preview.style.copyWith(color: const Color(0xFFFFFFFF), fontWeight: FontWeight.w500, decoration: TextDecoration.none),
+                  ),
+                  Text(
+                    body,
+                    style: Tokens.preview.style.copyWith(color: const Color(0xFFFFFFFF), decoration: TextDecoration.none),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+  o.insert(e);
+  Timer(const Duration(milliseconds: 3000), () {
+    if (e.mounted) e.remove();
+  });
+}
+
+/// 보관함 row: in the chat list, or moved to the side menu (Eric 2026-11-25:
+/// Telegram's swipe on the archive row, but it goes to the left menu).
+const archiveInMenuPref = 'archive_in_menu';
+const storiesInMenuPref = 'stories_in_menu';
+const bubblesInMenuPref = 'bubbles_in_menu';
 
 /// Bar above the tab bar while a chat waits to be deleted.
 class DeleteUndoBar extends StatelessWidget {

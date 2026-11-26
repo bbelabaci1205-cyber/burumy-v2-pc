@@ -125,7 +125,7 @@ class NotificationsPage extends StatelessWidget {
         group(context, footer: l.noticeTextHiddenInfo, const [NoticeTextSwitchTile()]),
         group(context, header: l.tabCalls, footer: l.callWaitingInfo, const [CallWaitingTile()]),
         group(context, [
-          CupertinoListTile(
+          IosTile(
             key: const Key('reset-notices'),
             title: Text(l.resetNotices, style: const TextStyle(color: Palette.tileRed)),
             onTap: () async {
@@ -178,7 +178,7 @@ class NoticeKindPage extends StatelessWidget {
           ),
         ]),
         group(context, header: l.noticeExceptions, footer: l.exceptionsInfo, [
-          CupertinoListTile(
+          IosTile(
             key: const Key('add-exception'),
             leading: Icon(CupertinoIcons.add, color: p.accent, size: Tokens.listIcon),
             title: Text(l.addException, style: TextStyle(color: p.accent)),
@@ -190,7 +190,7 @@ class NoticeKindPage extends StatelessWidget {
             },
           ),
           for (final (room, on) in exceptions)
-            CupertinoListTile(
+            IosTile(
               key: Key('exception-$room'),
               title: Text(nameOf(room)),
               additionalInfo: Text(on ? l.noticeOnHere : l.noticeOffHere),
@@ -224,13 +224,13 @@ class ChatPickPage extends StatelessWidget {
       children: [
         group(context, [
           for (final c in list)
-            CupertinoListTile(
+            IosTile(
               key: Key('pick-chat-${c.roomId}'),
               leading: Avatar(name: c.name, size: 30, squircle: !c.isDirect),
               title: Text(c.name),
               onTap: () => Navigator.of(context).pop(c.roomId),
             ),
-          if (list.isEmpty) CupertinoListTile(title: Text(l.nothingShared)),
+          if (list.isEmpty) IosTile(title: Text(l.nothingShared)),
         ]),
       ],
     );
@@ -252,7 +252,7 @@ class SoundPage extends StatelessWidget {
       children: [
         group(context, footer: l.soundInfo, [
           for (final name in ['none', ...messageSounds])
-            CupertinoListTile(
+            IosTile(
               key: Key('sound-$name'),
               title: Text(soundLabel(l, name)),
               trailing: name == now ? Icon(CupertinoIcons.check_mark, color: paletteOf(context).accent, size: 20) : null,

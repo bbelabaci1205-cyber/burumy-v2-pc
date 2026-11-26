@@ -166,7 +166,7 @@ class AppearancePage extends StatelessWidget {
             title: l.myPhotoBackground,
             onTap: () => pickPhoto(context),
           ),
-          CupertinoListTile(
+          IosTile(
             key: const Key('my-color'),
             leading: iconTile(Palette.tileBlue, CupertinoIcons.paintbrush_fill),
             title: Text(l.myColor),
@@ -175,7 +175,7 @@ class AppearancePage extends StatelessWidget {
               height: 22,
               decoration: BoxDecoration(color: p.accent, shape: BoxShape.circle),
             ),
-            trailing: const CupertinoListTileChevron(),
+            trailing: const IosChevron(),
             onTap: () => Navigator.of(context).push(
               IosPageRoute(
                 builder: (_) => ChoicePage(
@@ -203,7 +203,7 @@ class AppearancePage extends StatelessWidget {
           PrefSwitch('tilt', key: const Key('tilt-switch'), title: l.tiltMove, color: Palette.tileOrange, icon: CupertinoIcons.move),
         ]),
         group(context, [
-          CupertinoListTile(
+          IosTile(
             leading: iconTile(Palette.tileIndigo, CupertinoIcons.moon_fill),
             title: Text(l.nightMode),
             trailing: IosSwitch(
@@ -435,7 +435,7 @@ class StickersEmojiPage extends StatelessWidget {
         ]),
         const PackList(),
         group(context, [
-          CupertinoListTile(
+          IosTile(
             key: const Key('clear-recent-stickers'),
             title: Text(l.clearRecentStickers, style: TextStyle(color: recentStickers(s).isEmpty ? paletteOf(context).secondaryLabel : Palette.tileRed)),
             onTap: recentStickers(s).isEmpty ? null : () => s.setPref(recentStickersKey, ''),
@@ -576,7 +576,7 @@ class PowerSavingPage extends StatelessWidget {
         group(context, footer: l.powerModeInfo, [
           PrefChoice('power_below', title: l.powerMode, fallback: '15', color: Palette.tileOrange, icon: CupertinoIcons.battery_25, options: powerOptions(l)),
           if (s.battery != null)
-            CupertinoListTile(
+            IosTile(
               key: const Key('battery-now'),
               title: Text('${s.battery}%'),
               additionalInfo: Text(s.calm ? l.stateOn : l.stateOff),
@@ -766,7 +766,7 @@ class _QuickRepliesPageState extends State<QuickRepliesPage> {
       children: [
         group(context, footer: l.quickRepliesInfo, [
           for (var i = 0; i < list.length; i++)
-            CupertinoListTile(
+            IosTile(
               key: Key('quick-$i'),
               title: Text(list[i], maxLines: 2),
               trailing: GestureDetector(
@@ -836,7 +836,7 @@ class _AwayReplyPageState extends State<AwayReplyPage> {
       title: l.awayReply,
       children: [
         group(context, footer: l.awayReplyInfo, [
-          CupertinoListTile(
+          IosTile(
             title: Text(l.awayReply),
             trailing: IosSwitch(
               key: const Key('away-switch'),
@@ -887,14 +887,14 @@ class HiddenChatsPage extends StatelessWidget {
       children: [
         group(context, footer: l.hiddenChatsInfo, [
           for (final c in hidden)
-            CupertinoListTile(
+            IosTile(
               key: Key('unhide-${c.roomId}'),
               leading: Avatar(name: c.name, size: 30, squircle: !c.isDirect),
               title: Text(c.name),
               trailing: Text(l.showInList, style: TextStyle(color: paletteOf(context).accent)),
               onTap: () => app.setOn(hiddenKey(c.roomId), false),
             ),
-          if (hidden.isEmpty) CupertinoListTile(title: Text(l.nothingShared)),
+          if (hidden.isEmpty) IosTile(title: Text(l.nothingShared)),
         ]),
       ],
     );
@@ -941,11 +941,11 @@ class _DataPageState extends State<DataPage> {
         HeaderCard(color: Palette.tileTeal, icon: CupertinoIcons.chart_pie_fill, title: l.dataStorage, body: l.dataInfo),
         group(context, header: l.storageUsage, footer: u == null && read ? l.storageWeb : l.storageInfo, [
           if (!read)
-            const CupertinoListTile(title: CupertinoActivityIndicator())
+            IosTile(title: CupertinoActivityIndicator())
           else if (u != null) ...[
-            CupertinoListTile(key: const Key('storage-app'), title: Text(l.storageApp), additionalInfo: Text(sizeText(u.app))),
-            CupertinoListTile(key: const Key('storage-cache'), title: Text(l.storageCache), additionalInfo: Text(sizeText(u.cache))),
-            CupertinoListTile(
+            IosTile(key: const Key('storage-app'), title: Text(l.storageApp), additionalInfo: Text(sizeText(u.app))),
+            IosTile(key: const Key('storage-cache'), title: Text(l.storageCache), additionalInfo: Text(sizeText(u.cache))),
+            IosTile(
               key: const Key('clear-cache'),
               title: Text(l.clearCache, style: TextStyle(color: u.cache == 0 ? p.secondaryLabel : Palette.tileRed)),
               onTap: u.cache == 0
@@ -956,7 +956,7 @@ class _DataPageState extends State<DataPage> {
                     },
             ),
           ] else
-            CupertinoListTile(title: Text(l.storageUsage), additionalInfo: const Text('—')),
+            IosTile(title: Text(l.storageUsage), additionalInfo: const Text('—')),
         ]),
         group(context, header: l.autoDownload, footer: l.autoDownloadInfo, [
           PrefSwitch(
@@ -972,7 +972,7 @@ class _DataPageState extends State<DataPage> {
             builder: (context) {
               final s = AppScope.of(context);
               final changed = !s.on('auto_dl_cell', fallback: true) || !s.on('auto_dl_wifi', fallback: true);
-              return CupertinoListTile(
+              return IosTile(
                 key: const Key('auto-dl-reset'),
                 leading: Icon(CupertinoIcons.arrow_counterclockwise, color: p.secondaryLabel),
                 title: Text(l.autoDlReset, style: TextStyle(color: changed ? p.accent : p.secondaryLabel)),
@@ -1227,7 +1227,7 @@ class WhoPage extends StatelessWidget {
       children: [
         group(context, [
           for (final (v, label) in options)
-            CupertinoListTile(
+            IosTile(
               key: Key('pick-$v'),
               title: Text(label),
               trailing: v == now ? Icon(CupertinoIcons.check_mark, color: p.accent, size: 20) : null,
@@ -1295,14 +1295,14 @@ class _PeoplePickPageState extends State<PeoplePickPage> {
         else
           group(context, [
             for (final id in ids)
-              CupertinoListTile(
+              IosTile(
                 key: Key('person-$id'),
                 leading: Avatar(name: known[id] ?? id, size: 30),
                 title: Text(known[id] ?? displayId(id)),
                 trailing: picked.contains(id) ? Icon(CupertinoIcons.check_mark, color: p.accent, size: 20) : null,
                 onTap: () => setState(() => picked.contains(id) ? picked.remove(id) : picked.add(id)),
               ),
-            if (ids.isEmpty) CupertinoListTile(title: Text(l.contactsEmpty)),
+            if (ids.isEmpty) IosTile(title: Text(l.contactsEmpty)),
           ]),
       ],
     );
@@ -1372,7 +1372,7 @@ class _BlockedPageState extends State<BlockedPage> {
       title: l.blockedUsers,
       children: [
         group(context, footer: l.blockedInfo, [
-          CupertinoListTile(
+          IosTile(
             key: const Key('block-add'),
             leading: Icon(CupertinoIcons.person_badge_minus, color: p.accent),
             title: Text(l.blockSomeone, style: TextStyle(color: p.accent)),
@@ -1385,7 +1385,7 @@ class _BlockedPageState extends State<BlockedPage> {
         if (ids != null && ids!.isNotEmpty)
           group(context, [
             for (final id in ids!)
-              CupertinoListTile(
+              IosTile(
                 key: Key('blocked-$id'),
                 leading: Avatar(name: displayId(id), size: 36),
                 title: Text(displayId(id)),
@@ -1493,7 +1493,7 @@ class _DevicesPageState extends State<DevicesPage> {
     final all = list ?? const <DeviceRow>[];
     final mine = all.where((d) => d.thisDevice).toList();
     final others = all.where((d) => !d.thisDevice).toList();
-    Widget row(DeviceRow d) => CupertinoListTile(
+    Widget row(DeviceRow d) => IosTile(
       key: Key('device-${d.id}'),
       leadingSize: Tokens.listIcon + Tokens.space[3],
       leading: iconTile(d.thisDevice ? Palette.tileBlue : (d.verified ? p.tileGreen : Palette.tileGrey), deviceIcon(d.name)),
@@ -1519,7 +1519,7 @@ class _DevicesPageState extends State<DevicesPage> {
         if (others.isNotEmpty) ...[
           group(context, header: l.otherDevices, [for (final d in others) row(d)]),
           group(context, footer: l.devicesHeaderInfo, [
-            CupertinoListTile(
+            IosTile(
               key: const Key('logout-others'),
               title: Text(l.logOutOthers, style: const TextStyle(color: Palette.tileRed)),
               onTap: () async {
@@ -1741,7 +1741,7 @@ class _KeysPageState extends State<KeysPage> {
   Widget build(BuildContext context) {
     final l = L.of(context);
     final p = paletteOf(context);
-    Widget keyRow(String title, String value) => CupertinoListTile(
+    Widget keyRow(String title, String value) => IosTile(
       title: Text(title),
       subtitle: Text(
         _spaced(value),
@@ -1756,7 +1756,7 @@ class _KeysPageState extends State<KeysPage> {
       title: l.encryptionKeys,
       children: [
         group(context, [
-          CupertinoListTile(
+          IosTile(
             leading: iconTile(
               verified ? p.tileGreen : Palette.tileOrange,
               verified ? CupertinoIcons.checkmark_shield_fill : CupertinoIcons.exclamationmark_shield_fill,
@@ -1792,11 +1792,11 @@ class _ErrorLogPageState extends State<ErrorLogPage> {
       children: [
         group(context, [
           if (all.isEmpty)
-            CupertinoListTile(
+            IosTile(
               title: Text(l.errorLogEmpty, style: TextStyle(color: p.secondaryLabel)),
             ),
           for (final (t, text) in all)
-            CupertinoListTile(
+            IosTile(
               title: Text(
                 text,
                 maxLines: 6,
@@ -1808,7 +1808,7 @@ class _ErrorLogPageState extends State<ErrorLogPage> {
         ]),
         if (all.isNotEmpty)
           group(context, [
-            CupertinoListTile(
+            IosTile(
               key: const Key('error-copy'),
               title: Text(copied ? l.copied : l.errorLogCopy, style: TextStyle(color: p.accent)),
               onTap: () async {

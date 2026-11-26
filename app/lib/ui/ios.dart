@@ -14,6 +14,47 @@ import 'settings_kit.dart';
 
 /// One iOS 27 inset grouped card of rows, with an optional title above and
 /// note below. Same shape of arguments as CupertinoListSection.insetGrouped.
+/// iOS 27 Settings row: tile 18pt in from the card edge, text 14pt after
+/// the tile (so it starts where the separator starts, 60pt in), chevron
+/// 17pt from the right (measured from Eric's iPhone, 2026-11-25).
+/// Rows without an icon keep their text 20pt in.
+class IosTile extends CupertinoListTile {
+  IosTile({
+    super.key,
+    required Widget title,
+    super.subtitle,
+    super.additionalInfo,
+    super.leading,
+    super.trailing,
+    super.onTap,
+    super.backgroundColor,
+    super.backgroundColorActivated,
+    EdgeInsetsGeometry? padding,
+    super.leadingSize,
+    super.leadingToTitle = gap,
+  }) : super(
+         // iOS row titles are a little heavier than Pretendard Regular:
+         // measured ink sits between 400 and 500, nearer 500.
+         title: DefaultTextStyle.merge(
+           style: const TextStyle(fontWeight: FontWeight.w500),
+           child: title,
+         ),
+         padding: padding ?? (leading == null ? plainPad : iconedPad),
+       );
+
+  static const gap = 14.0;
+  static const plainPad = EdgeInsetsDirectional.only(start: 20, end: 17);
+  static const iconedPad = EdgeInsetsDirectional.only(start: 18, end: 17);
+}
+
+/// Row chevron in the iOS 27 Settings grey.
+class IosChevron extends StatelessWidget {
+  const IosChevron({super.key});
+
+  @override
+  Widget build(BuildContext context) => Icon(CupertinoIcons.right_chevron, size: Tokens.body.size, color: paletteOf(context).chevron);
+}
+
 class IosSection extends StatelessWidget {
   const IosSection({super.key, required this.children, this.header, this.footer, this.hasLeading = true, this.margin, this.backgroundColor});
   final List<Widget> children;

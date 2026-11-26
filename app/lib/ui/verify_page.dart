@@ -64,7 +64,7 @@ class _EncryptionPageState extends State<EncryptionPage> {
       children: [
         HeaderCard(color: p.tileGreen, icon: CupertinoIcons.lock_fill, title: l.encHeroTitle, body: l.encHeroBody),
         group(context, header: l.encMembers, [
-          CupertinoListTile(
+          IosTile(
             key: const Key('enc-member'),
             leading: Avatar(name: widget.name, size: 30),
             title: Text(widget.name),
@@ -93,7 +93,7 @@ class _EncryptionPageState extends State<EncryptionPage> {
             ),
           ),
         group(context, footer: showKeys ? l.encKeysInfo : null, [
-          CupertinoListTile(
+          IosTile(
             title: Text(l.encShowKeys),
             trailing: IosSwitch(
               key: const Key('enc-keys'),
@@ -105,12 +105,12 @@ class _EncryptionPageState extends State<EncryptionPage> {
             ),
           ),
           if (showKeys && devices != null && devices!.isEmpty)
-            CupertinoListTile(
+            IosTile(
               title: Text(l.encNoDevices, style: TextStyle(color: p.secondaryLabel)),
             ),
           if (showKeys)
             for (final d in devices ?? const <PeerDevice>[])
-              CupertinoListTile(
+              IosTile(
                 key: Key('enc-device-${d.id}'),
                 title: Text(d.name.isEmpty ? d.id : '${d.name} · ${d.id}'),
                 subtitle: Text(

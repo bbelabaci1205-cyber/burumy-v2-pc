@@ -1448,8 +1448,12 @@ class _ChatPageState extends State<ChatPage> {
   /// Saved messages: '' = all, 'note' = my notes, else the source chat.
   String savedSource = '';
 
+  /// Saved messages: the chat slides left while the side list is open.
+  Animation<double>? sideAnim;
+
   Future<void> openSavedSideList() async {
-    final pick = await openSavedSide(context, msgs: msgs, current: savedSource);
+    final pick = await openSavedSide(context, msgs: msgs, current: savedSource, onAnim: (a) => setState(() => sideAnim = a));
+    if (mounted) setState(() => sideAnim = null);
     if (pick == savedExit) {
       if (mounted) await Navigator.of(context).maybePop();
       return;
@@ -1762,7 +1766,8 @@ class _ChatPageState extends State<ChatPage> {
         )
         .toList();
     final sourceChat = isSaved && savedSource.isNotEmpty && savedSource != 'note' ? savedSource : null;
-    return CupertinoPageScaffold(
+    final anim = sideAnim ?? kAlwaysDismissedAnimation;
+    final page = CupertinoPageScaffold(
       backgroundColor: p.chatBackground,
       navigationBar: selected != null
           ? selectBar(context)
@@ -1779,56 +1784,64 @@ class _ChatPageState extends State<ChatPage> {
                   radius: Tokens.capsule,
                   child: Container(
                     height: Tokens.closeButton,
+                    constraints: const BoxConstraints(minWidth: Tokens.titlePillMin),
                     padding: EdgeInsets.symmetric(horizontal: Tokens.space[3]),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (sourceChat != null)
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Avatar(name: savedSourceName(state!, sourceChat), size: 22, roomId: sourceChat),
-                              SizedBox(width: Tokens.space[1]),
-                              Flexible(child: Text(savedSourceName(state!, sourceChat), key: const Key('saved-source-title'))),
-                            ],
-                          )
-                        else if (isSaved)
-                          Text(savedSource == 'note' ? l.savedNotes : l.savedMessages)
-                        else
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(CupertinoIcons.lock, key: const Key('title-lock'), size: 14, color: p.label),
-                              const SizedBox(width: 3),
-                              Flexible(child: Text(titleOf(AppScope.of(context), widget.roomId, widget.title))),
-                            ],
-                          ),
-                        if (isSaved && savedSource.isEmpty && savedSources(msgs, from).isNotEmpty)
-                          Text(
-                            l.savedChatsCount(savedSources(msgs, from).length),
-                            key: const Key('saved-count'),
-                            style: Tokens.caption.style.copyWith(color: p.secondaryLabel),
-                          ),
-                        if (typers.isNotEmpty)
-                          Text(
-                            isGroup ? '${typers.map(displayId).join(', ')} · ${l.typing}' : l.typing,
-                            key: const Key('typing'),
-                            style: Tokens.caption.style.copyWith(color: p.accent),
-                          )
-                        else if (!isSaved)
-                          Text(
-                            l.chatLocked,
-                            key: const Key('title-locked'),
-                            style: Tokens.caption.style.copyWith(color: p.accent),
-                          ),
-                      ],
+                    child: DefaultTextStyle.merge(
+                      style: Tokens.navTitle.style,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (sourceChat != null)
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Avatar(name: savedSourceName(state!, sourceChat), size: 22, roomId: sourceChat),
+                                SizedBox(width: Tokens.space[1]),
+                                Flexible(child: Text(savedSourceName(state!, sourceChat), key: const Key('saved-source-title'))),
+                              ],
+                            )
+                          else if (isSaved)
+                            Text(savedSource == 'note' ? l.savedNotes : l.savedMessages)
+                          else
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(CupertinoIcons.lock, key: const Key('title-lock'), size: 12, color: p.label),
+                                const SizedBox(width: 3),
+                                Flexible(child: Text(titleOf(AppScope.of(context), widget.roomId, widget.title))),
+                              ],
+                            ),
+                          if (isSaved && savedSource.isEmpty && savedSources(msgs, from).isNotEmpty)
+                            Text(
+                              l.savedChatsCount(savedSources(msgs, from).length),
+                              key: const Key('saved-count'),
+                              style: Tokens.navSubtitle.style.copyWith(color: p.secondaryLabel),
+                            ),
+                          if (typers.isNotEmpty)
+                            Text(
+                              isGroup ? '${typers.map(displayId).join(', ')} · ${l.typing}' : l.typing,
+                              key: const Key('typing'),
+                              style: Tokens.navSubtitle.style.copyWith(color: p.accent),
+                            )
+                          else if (!isSaved)
+                            Text(
+                              l.chatLocked,
+                              key: const Key('title-locked'),
+                              style: Tokens.navSubtitle.style.copyWith(color: p.accent),
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
               backgroundColor: p.chatBackground.withValues(alpha: 0.7),
               border: null,
+              // Telegram: the capsule may stretch up to 13pt from the buttons.
+              middleInset: isSaved ? 96 : Tokens.closeButton + Tokens.titlePillGap,
+              // Telegram chat header: buttons centred 27pt under the status bar.
+              lift: Tokens.chatBarLift,
               trailing: isSaved
                   ? Row(
                       mainAxisSize: MainAxisSize.min,
@@ -2299,6 +2312,19 @@ class _ChatPageState extends State<ChatPage> {
           ),
         ),
       ),
+    );
+    // Always wrapped, so the chat keeps its state when the side list opens.
+    return AnimatedBuilder(
+      animation: anim,
+      child: page,
+      builder: (c, child) {
+        final v = anim.value;
+        final w = MediaQuery.sizeOf(c).width - Tokens.sideStrip;
+        return Transform.translate(
+          offset: Offset(-w * v, 0),
+          child: ClipRRect(borderRadius: BorderRadius.circular(Tokens.radius[3] * v), child: child),
+        );
+      },
     );
   }
 }
@@ -3260,7 +3286,7 @@ class ScheduledPage extends StatelessWidget {
             footer: sectionFooter(context, l.scheduledInfo),
             children: [
               for (final m in mine)
-                CupertinoListTile(
+                IosTile(
                   key: Key('sched-${m['id']}'),
                   title: Text(m['text'] as String, maxLines: 2, overflow: TextOverflow.ellipsis),
                   subtitle: Text(fmt.format(DateTime.fromMillisecondsSinceEpoch(m['at'] as int)), style: Tokens.caption.style),
@@ -3291,7 +3317,7 @@ class ScheduledPage extends StatelessWidget {
                     ],
                   ),
                 ),
-              if (mine.isEmpty) CupertinoListTile(title: Text(l.nothingShared)),
+              if (mine.isEmpty) IosTile(title: Text(l.nothingShared)),
             ],
           ),
         ],

@@ -1753,5 +1753,17 @@
     }
   },
   "planHourBefore": "Remind 1 Hour Before",
-  "planAtTime": "Remind at That Time"
+  "planAtTime": "Remind at That Time",
+  "checkSectionTodo": "To do",
+  "archiveToMenu": "To menu",
+  "archiveMovedTitle": "Archive moved to the side menu",
+  "archiveMovedBody": "Tap the menu button at the top left to see it.",
+  "archivePinnedTitle": "Archive pinned to the chat list",
+  "archivePinnedBody": "Swipe it all the way left to move it again.",
+  "archivePinBack": "Pin to list",
+  "menuStories": "Stories",
+  "storiesMovedTitle": "Stories moved to the side menu",
+  "bubblesMovedTitle": "Bubbles moved to the side menu",
+  "storiesPinnedTitle": "Stories pinned to the chat list",
+  "bubblesPinnedTitle": "Bubbles pinned to the chat list"
 }

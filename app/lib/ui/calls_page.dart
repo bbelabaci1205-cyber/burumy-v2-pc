@@ -176,7 +176,7 @@ class _PickToCall extends StatelessWidget {
         padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top + GlassTopBar.height),
         children: [
           for (final c in dms)
-            CupertinoListTile(
+            IosTile(
               leading: Avatar(name: c.name, size: 40),
               title: Text(c.name),
               trailing: Row(

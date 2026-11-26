@@ -94,7 +94,7 @@ class _SecurityCheckCardState extends State<SecurityCheckCard> {
                     ],
                   ),
                 ),
-                const CupertinoListTileChevron(),
+                const IosChevron(),
               ],
             ),
           ),
@@ -164,28 +164,88 @@ class _SecurityCheckPageState extends State<SecurityCheckPage> {
     final l = L.of(context);
     final p = paletteOf(context);
     final st = state ?? (false, false);
-    Widget row(String key, bool done, IconData icon, String title, String info, Future<void> Function() fix) => CupertinoListTile(
+    // Like iOS Safety Check: things still to do first (with a chevron), finished ones
+    // below with a green check. The description gets the full row width.
+    Widget row(String key, bool done, Color c, IconData icon, String title, String info, Future<void> Function() fix) => GestureDetector(
       key: Key(key),
-      leading: iconTile(done ? p.tileGreen : Palette.tileOrange, icon),
-      title: Text(title),
-      subtitle: Text(info, maxLines: 3, style: Tokens.caption.style),
-      additionalInfo: Text(done ? l.checkDone : l.checkTodo, style: TextStyle(color: done ? p.secondaryLabel : Palette.tileOrange)),
-      trailing: done ? null : const CupertinoListTileChevron(),
+      behavior: HitTestBehavior.opaque,
       onTap: done
           ? null
           : () async {
               await fix();
               await load();
             },
+      child: Padding(
+        padding: IosTile.iconedPad.add(EdgeInsets.symmetric(vertical: Tokens.space[3])),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            iconTile(c, icon),
+            const SizedBox(width: IosTile.gap),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: Tokens.body.style.copyWith(color: p.label, fontWeight: FontWeight.w500),
+                  ),
+                  SizedBox(height: Tokens.space[1]),
+                  Text(info, style: Tokens.caption.style.copyWith(color: p.secondaryLabel)),
+                ],
+              ),
+            ),
+            SizedBox(width: Tokens.space[2]),
+            done ? Icon(CupertinoIcons.checkmark_circle_fill, key: Key('$key-done'), size: 22, color: p.tileGreen) : const IosChevron(),
+          ],
+        ),
+      ),
     );
+    final items = [
+      (
+        st.$1,
+        row(
+          'check-recovery',
+          st.$1,
+          Palette.tileOrange,
+          CupertinoIcons.arrow_clockwise,
+          l.checkRecovery,
+          l.checkRecoveryInfo,
+          () => SettingsPage.showKey(context),
+        ),
+      ),
+      (
+        st.$2,
+        row(
+          'check-device',
+          st.$2,
+          Palette.tileBlue,
+          CupertinoIcons.device_phone_portrait,
+          l.checkDevice,
+          l.checkDeviceInfo,
+          () => SettingsPage.enterKey(context),
+        ),
+      ),
+    ];
+    final todo = [
+      for (final i in items)
+        if (!i.$1) i.$2,
+    ];
+    final done = [
+      for (final i in items)
+        if (i.$1) i.$2,
+    ];
     return SettingsScaffold(
       title: l.securityCheckTitle,
       children: [
-        HeaderCard(color: p.tileGreen, icon: CupertinoIcons.checkmark_shield_fill, title: l.securityCheckTitle, body: l.securityCheckInfo),
-        group(context, [
-          row('check-recovery', st.$1, CupertinoIcons.arrow_clockwise_circle_fill, l.checkRecovery, l.checkRecoveryInfo, () => SettingsPage.showKey(context)),
-          row('check-device', st.$2, CupertinoIcons.device_phone_portrait, l.checkDevice, l.checkDeviceInfo, () => SettingsPage.enterKey(context)),
-        ]),
+        HeaderCard(
+          color: todo.isEmpty ? p.tileGreen : Palette.tileOrange,
+          icon: CupertinoIcons.checkmark_shield_fill,
+          title: l.securityCheckTitle,
+          body: todo.isEmpty ? l.securityAllDone : l.securityCheckInfo,
+        ),
+        if (todo.isNotEmpty) group(context, header: l.checkSectionTodo, todo),
+        if (done.isNotEmpty) group(context, header: l.checkDone, done),
       ],
     );
   }
@@ -213,7 +273,7 @@ class _AccountPageState extends State<AccountPage> {
       children: [
         HeaderCard(color: Palette.tileGrey, icon: CupertinoIcons.person_crop_circle_fill, title: l.accountManage, body: l.accountManageInfo),
         group(context, [
-          CupertinoListTile(
+          IosTile(
             key: const Key('account-id'),
             leading: iconTile(Palette.tileBlue, CupertinoIcons.at),
             title: Text(l.myId),
@@ -338,7 +398,7 @@ class FeatureTourPage extends StatelessWidget {
         HeaderCard(color: Palette.tileYellow, icon: CupertinoIcons.lightbulb_fill, title: l.featureTour, body: l.featureTourInfo),
         group(context, [
           for (final (c, icon, title, body) in items)
-            CupertinoListTile(
+            IosTile(
               leading: iconTile(c, icon),
               title: Text(title),
               subtitle: Text(body, maxLines: 2, style: Tokens.caption.style),
@@ -528,7 +588,7 @@ class _MyQrPageState extends State<MyQrPage> {
           ),
         ),
         group(context, [
-          CupertinoListTile(
+          IosTile(
             key: const Key('qr-copy'),
             leading: iconTile(Palette.tileBlue, CupertinoIcons.doc_on_doc_fill),
             title: Text(copied ? l.copied : l.copy),

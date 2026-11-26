@@ -15,7 +15,12 @@ import 'screens_test.dart' show loadFont;
 
 void main() {
   setUpAll(() async {
-    await loadFont('Pretendard', ['assets/fonts/Pretendard-Regular.otf', 'assets/fonts/Pretendard-Medium.otf', 'assets/fonts/Pretendard-SemiBold.otf']);
+    await loadFont('Pretendard', [
+      'assets/fonts/Pretendard-Regular.otf',
+      'assets/fonts/Pretendard-Medium.otf',
+      'assets/fonts/Pretendard-SemiBold.otf',
+      'assets/fonts/Pretendard-Bold.otf',
+    ]);
     final home = Platform.environment['HOME'];
     await loadFont('packages/cupertino_icons/CupertinoIcons', ['$home/.pub-cache/hosted/pub.dev/cupertino_icons-1.0.9/assets/CupertinoIcons.ttf']);
     await loadFont('CupertinoSystemText', ['assets/fonts/Pretendard-Regular.otf']);
@@ -34,7 +39,7 @@ void main() {
     await t.tap(find.text('설정').last);
     await t.pumpAndSettle();
     await expectLater(find.byType(CupertinoApp), matchesGoldenFile('shots/tall_settings.png'));
-    for (final row in ['privacy-row', 'look-row', 'notify-row', 'chats-row', 'data-row', 'power-row', 'devices-row', 'folders-row']) {
+    for (final row in ['privacy-row', 'look-row', 'notify-row', 'chats-row', 'data-row', 'power-row', 'devices-row', 'folders-row', 'security-check']) {
       final f = find.byKey(Key(row));
       if (f.evaluate().isEmpty) continue;
       unawaited(Scrollable.ensureVisible(t.element(f), alignment: 0.5));

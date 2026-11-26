@@ -124,7 +124,7 @@ class _SendLocationPageState extends State<SendLocationPage> {
               footer: sectionFooter(context, l.locationPrivacy),
               children: [
                 if (f != null)
-                  CupertinoListTile(
+                  IosTile(
                     key: const Key('location-send'),
                     title: Text(l.locationSend, style: Tokens.body.style.copyWith(color: p.accent)),
                     subtitle: Text(
@@ -135,7 +135,7 @@ class _SendLocationPageState extends State<SendLocationPage> {
                     onTap: send,
                   )
                 else if (error == null)
-                  CupertinoListTile(
+                  IosTile(
                     title: Text(l.locationFinding, style: Tokens.body.style.copyWith(color: p.secondaryLabel)),
                   )
                 else ...[
@@ -149,12 +149,12 @@ class _SendLocationPageState extends State<SendLocationPage> {
                     }, style: Tokens.body.style.copyWith(color: p.label)),
                   ),
                   if (error == 'denied' || error == 'off')
-                    CupertinoListTile(
+                    IosTile(
                       key: const Key('location-settings'),
                       title: Text(l.openPhoneSettings, style: Tokens.body.style.copyWith(color: p.accent)),
                       onTap: Phone.openSettings,
                     ),
-                  CupertinoListTile(
+                  IosTile(
                     key: const Key('location-retry'),
                     title: Text(l.locationRetry, style: Tokens.body.style.copyWith(color: p.accent)),
                     onTap: find,

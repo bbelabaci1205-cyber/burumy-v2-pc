@@ -170,7 +170,7 @@ void main() {
     expect(s.pref('who_calls', ''), 'nobody');
     await t.tap(find.byKey(const Key('who-allow')));
     await t.pumpAndSettle();
-    await t.tap(find.byType(CupertinoListTile).first);
+    await t.tap(find.byWidgetPredicate((w) => w is CupertinoListTile).first);
     await t.pumpAndSettle();
     await t.tap(find.byKey(const Key('people-done')));
     await t.pumpAndSettle();

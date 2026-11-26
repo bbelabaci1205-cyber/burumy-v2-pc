@@ -194,7 +194,7 @@ class _SettingsPageState extends State<SettingsPage> {
             row('about-row', Palette.tileGrey, CupertinoIcons.info_circle_fill, l.aboutApp, page: (_) => const AboutPage()),
           ]),
           group(context, [
-            CupertinoListTile(
+            IosTile(
               key: const Key('logout'),
               leading: iconTile(Palette.tileRed, CupertinoIcons.square_arrow_right),
               title: Text(l.logOut, style: const TextStyle(color: Palette.tileRed)),
@@ -234,7 +234,7 @@ class _StreakSwitchTileState extends State<StreakSwitchTile> {
   Widget build(BuildContext context) {
     final l = L.of(context);
     final s = AppScope.of(context);
-    return CupertinoListTile(
+    return IosTile(
       leading: iconTile(Palette.tileOrange, CupertinoIcons.flame_fill),
       title: Text(l.streaks),
       trailing: IosSwitch(
@@ -274,7 +274,7 @@ class _LinkPreviewSwitchTileState extends State<LinkPreviewSwitchTile> {
   Widget build(BuildContext context) {
     final l = L.of(context);
     final s = AppScope.of(context);
-    return CupertinoListTile(
+    return IosTile(
       leading: iconTile(Palette.tileBlue, CupertinoIcons.link),
       title: Text(l.linkPreviews),
       trailing: IosSwitch(
@@ -314,7 +314,7 @@ class _NoticeTextSwitchTileState extends State<NoticeTextSwitchTile> {
   Widget build(BuildContext context) {
     final l = L.of(context);
     final s = AppScope.of(context);
-    return CupertinoListTile(
+    return IosTile(
       leading: iconTile(Palette.tileRed, CupertinoIcons.bell_slash),
       title: Text(l.noticeTextHidden),
       trailing: IosSwitch(
@@ -359,12 +359,12 @@ class _CallWaitingTileState extends State<CallWaitingTile> {
       'busy' => l.callWaitingBusy,
       _ => l.callWaitingWait,
     };
-    return CupertinoListTile(
+    return IosTile(
       key: const Key('call-waiting-tile'),
       leading: iconTile(paletteOf(context).tileGreen, CupertinoIcons.phone_fill),
       title: Text(l.callWaitingTitle),
       additionalInfo: Text(label(mode ?? 'wait')),
-      trailing: const CupertinoListTileChevron(),
+      trailing: const IosChevron(),
       onTap: () => showCupertinoModalPopup<void>(
         useRootNavigator: !Wide.on,
         context: context,

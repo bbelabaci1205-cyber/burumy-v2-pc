@@ -91,18 +91,18 @@ class _NewChatPageState extends State<NewChatPage> {
           children: [
             IosSection(
               children: [
-                CupertinoListTile(
+                IosTile(
                   key: const Key('new-group'),
                   leading: iconTile(Palette.tileBlue, CupertinoIcons.person_2_fill),
                   title: Text(l.newGroup),
-                  trailing: const CupertinoListTileChevron(),
+                  trailing: const IosChevron(),
                   onTap: () => group(channel: false),
                 ),
-                CupertinoListTile(
+                IosTile(
                   key: const Key('new-channel'),
                   leading: iconTile(Palette.tileOrange, CupertinoIcons.speaker_2_fill),
                   title: Text(l.newChannel),
-                  trailing: const CupertinoListTileChevron(),
+                  trailing: const IosChevron(),
                   onTap: () => group(channel: true),
                 ),
               ],
@@ -129,7 +129,7 @@ class _NewChatPageState extends State<NewChatPage> {
                 header: sectionHeader(context, l.contactsSection),
                 children: [
                   for (final c in contacts)
-                    CupertinoListTile(
+                    IosTile(
                       leading: Avatar(name: c.name, size: 30),
                       title: Text(c.name),
                       subtitle: Text(displayId(c.userId), style: Tokens.caption.style),
@@ -183,7 +183,7 @@ class _MembersPageState extends State<MembersPage> {
                   IosSection(
                     children: [
                       for (final c in widget.contacts)
-                        CupertinoListTile(
+                        IosTile(
                           leading: Avatar(name: c.name, size: 30),
                           title: Text(c.name),
                           subtitle: Text(displayId(c.userId), style: Tokens.caption.style),

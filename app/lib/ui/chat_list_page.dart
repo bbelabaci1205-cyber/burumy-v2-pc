@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: LicenseRef-Burumy-Proprietary
 // Chat list (iOS large title, rows scroll under a clear bar).
+import 'package:flutter/gestures.dart' show PointerScrollEvent, PointerSignalEvent;
 import 'package:flutter/cupertino.dart';
 
 import '../core/app_state.dart';
@@ -33,6 +34,32 @@ class _ChatListPageState extends State<ChatListPage> {
   /// 'all', 'unread', 'direct', 'group', 'channel', 'bot' or 'folder:<id>'.
   String filter = 'all';
   bool menu = false;
+
+  /// The 스토리 / 비눗방울 card is down (shown).
+  bool cardOpen = true;
+  double scrolled = 0;
+
+  void setCard(bool on) {
+    if (on != cardOpen) setState(() => cardOpen = on);
+  }
+
+  /// Pull down past the top brings the card; scrolling up near the top
+  /// tucks it away. A mouse wheel does the same at the top (PC).
+  bool onScroll(ScrollNotification n) {
+    if (n.depth != 0 || n.metrics.axis != Axis.vertical) return false;
+    scrolled = n.metrics.pixels;
+    if (n is ScrollUpdateNotification && n.dragDetails != null) {
+      if (n.metrics.pixels < -Tokens.space[5]) setCard(true);
+      if ((n.scrollDelta ?? 0) > 0 && n.metrics.pixels > 2 && n.metrics.pixels < Tokens.space[5] * 2) setCard(false);
+    }
+    if (n is OverscrollNotification && n.dragDetails != null && n.overscroll < -Tokens.space[2]) setCard(true);
+    return false;
+  }
+
+  void onWheel(PointerSignalEvent e) {
+    if (e is! PointerScrollEvent || scrolled > 1) return;
+    setCard(e.scrollDelta.dy < 0);
+  }
 
   /// v1 edit mode (⋯): circles to pick chats, handles to order pinned ones,
   /// and 모두 읽음 / 보관 / 삭제 at the bottom instead of the tab bar.
@@ -158,6 +185,21 @@ class _ChatListPageState extends State<ChatListPage> {
     final app = AppScope.of(context);
     final all = app.chats;
     final q = query.trim().toLowerCase();
+    // 스토리 / 비눗방울 strips: pulled all the way left, they move into the
+    // side menu (Eric 2026-11-25), like 보관함.
+    Widget toMenu(String id, String pref, String title, Widget strip) => SwipeRow(
+      key: Key('$id-swipe'),
+      leftItems: const [],
+      rightItems: [('$id-menu', l.archiveToMenu, CupertinoIcons.sidebar_left, p.tileGreen)],
+      onAction: (_) {
+        app.setOn(pref, true);
+        showInfoBanner(context, title, l.archiveMovedBody);
+      },
+      child: strip,
+      color: p.dark ? p.card : p.background,
+    );
+    final showStories = all.isNotEmpty && !app.on(storiesInMenuPref);
+    final showBubbles = app.bubbles.isNotEmpty && !app.on(bubblesInMenuPref);
     // Searching looks through every chat, archived ones too.
     final chats = q.isEmpty
         ? [
@@ -202,121 +244,165 @@ class _ChatListPageState extends State<ChatListPage> {
       ),
       child: Stack(
         children: [
-          CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(child: SizedBox(height: MediaQuery.paddingOf(context).top + GlassTopBar.height + Tokens.space[1])),
-              if (all.isNotEmpty && top)
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(Tokens.space[3], 0, Tokens.space[3], Tokens.space[1]),
-                    child: CupertinoSearchTextField(
-                      borderRadius: const BorderRadius.all(Radius.circular(18)),
-                      key: const Key('chat-search'),
-                      placeholder: l.searchChats,
-                      onChanged: (v) => setState(() => query = v),
+          Listener(
+            onPointerSignal: onWheel,
+            child: NotificationListener<ScrollNotification>(
+              onNotification: onScroll,
+              child: CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(child: SizedBox(height: MediaQuery.paddingOf(context).top + GlassTopBar.height + Tokens.space[1])),
+                  if (all.isNotEmpty && top)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(Tokens.space[3], 0, Tokens.space[3], Tokens.space[1]),
+                        child: CupertinoSearchTextField(
+                          borderRadius: const BorderRadius.all(Radius.circular(18)),
+                          key: const Key('chat-search'),
+                          placeholder: l.searchChats,
+                          onChanged: (v) => setState(() => query = v),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              if (top && all.isNotEmpty)
-                SliverToBoxAdapter(
-                  child: SizedBox(
-                    height: 40,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      padding: EdgeInsets.symmetric(horizontal: Tokens.space[3]),
-                      children: [
-                        // Same choices as the left menu (Telegram folder tabs), then mine.
-                        for (final (id, name) in [
-                          for (final k in const ['all', 'unread', 'direct', 'group', 'channel', 'bot']) (k, filterName(l, k)),
-                          for (final f in folders) ('folder:${f.id}', f.label),
-                        ])
-                          Padding(
-                            padding: EdgeInsets.only(right: Tokens.space[1]),
-                            child: GestureDetector(
-                              key: Key('chip-$id'),
-                              onTap: () => setState(() => filter = id),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 200),
-                                padding: EdgeInsets.symmetric(horizontal: Tokens.space[2]),
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  color: filter == id ? p.card : const Color(0x00000000),
-                                  borderRadius: BorderRadius.circular(Tokens.capsule),
-                                  boxShadow: filter == id ? const [BoxShadow(color: Color(0x14000000), blurRadius: 8, offset: Offset(0, 2))] : null,
+                  if (top && all.isNotEmpty)
+                    SliverToBoxAdapter(
+                      child: SizedBox(
+                        height: 40,
+                        child: ListView(
+                          scrollDirection: Axis.horizontal,
+                          padding: EdgeInsets.symmetric(horizontal: Tokens.space[3]),
+                          children: [
+                            // Same choices as the left menu (Telegram folder tabs), then mine.
+                            for (final (id, name) in [
+                              for (final k in const ['all', 'unread', 'direct', 'group', 'channel', 'bot']) (k, filterName(l, k)),
+                              for (final f in folders) ('folder:${f.id}', f.label),
+                            ])
+                              Padding(
+                                padding: EdgeInsets.only(right: Tokens.space[1]),
+                                child: GestureDetector(
+                                  key: Key('chip-$id'),
+                                  onTap: () => setState(() => filter = id),
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 200),
+                                    padding: EdgeInsets.symmetric(horizontal: Tokens.space[2]),
+                                    alignment: Alignment.center,
+                                    decoration: BoxDecoration(
+                                      color: filter == id ? p.card : const Color(0x00000000),
+                                      borderRadius: BorderRadius.circular(Tokens.capsule),
+                                      boxShadow: filter == id ? const [BoxShadow(color: Color(0x14000000), blurRadius: 8, offset: Offset(0, 2))] : null,
+                                    ),
+                                    child: Text(name, style: Tokens.preview.style.copyWith(color: filter == id ? p.accent : p.label)),
+                                  ),
                                 ),
-                                child: Text(name, style: Tokens.preview.style.copyWith(color: filter == id ? p.accent : p.label)),
                               ),
-                            ),
-                          ),
-                      ],
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              for (final who in AppScope.of(context).erasedBy)
-                SliverToBoxAdapter(
-                  child: Padding(
-                    key: Key('erased-$who'),
-                    padding: EdgeInsets.fromLTRB(Tokens.space[3], 0, Tokens.space[3], Tokens.space[1]),
-                    child: Container(
-                      padding: EdgeInsets.fromLTRB(Tokens.space[2], Tokens.space[1], 0, Tokens.space[1]),
-                      decoration: BoxDecoration(color: p.card, borderRadius: BorderRadius.circular(Tokens.radius[2])),
-                      child: Row(
-                        children: [
-                          Icon(CupertinoIcons.trash, size: Tokens.listIcon, color: p.secondaryLabel),
-                          SizedBox(width: Tokens.space[1]),
-                          Expanded(
-                            child: Text(l.erasedByFriend(displayId(who)), style: Tokens.caption.style.copyWith(color: p.secondaryLabel)),
+                  for (final who in AppScope.of(context).erasedBy)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        key: Key('erased-$who'),
+                        padding: EdgeInsets.fromLTRB(Tokens.space[3], 0, Tokens.space[3], Tokens.space[1]),
+                        child: Container(
+                          padding: EdgeInsets.fromLTRB(Tokens.space[2], Tokens.space[1], 0, Tokens.space[1]),
+                          decoration: BoxDecoration(color: p.card, borderRadius: BorderRadius.circular(Tokens.radius[2])),
+                          child: Row(
+                            children: [
+                              Icon(CupertinoIcons.trash, size: Tokens.listIcon, color: p.secondaryLabel),
+                              SizedBox(width: Tokens.space[1]),
+                              Expanded(
+                                child: Text(l.erasedByFriend(displayId(who)), style: Tokens.caption.style.copyWith(color: p.secondaryLabel)),
+                              ),
+                              CupertinoButton(
+                                padding: EdgeInsets.zero,
+                                onPressed: () => AppScope.of(context).dismissErased(who),
+                                child: Icon(CupertinoIcons.xmark, size: Tokens.listIcon - 4, color: p.secondaryLabel),
+                              ),
+                            ],
                           ),
-                          CupertinoButton(
-                            padding: EdgeInsets.zero,
-                            onPressed: () => AppScope.of(context).dismissErased(who),
-                            child: Icon(CupertinoIcons.xmark, size: Tokens.listIcon - 4, color: p.secondaryLabel),
+                        ),
+                      ),
+                    ),
+                  for (final inv in AppScope.of(context).invites)
+                    SliverToBoxAdapter(
+                      child: InviteRow(key: Key('invite-${inv.roomId}'), invite: inv),
+                    ),
+                  // 스토리 + 비눗방울 in one card that drops down from the top
+                  // (Eric 2026-11-26): pull the list down to bring it, scroll up
+                  // to tuck it away.
+                  if (q.isEmpty && !editing && (showStories || showBubbles))
+                    SliverToBoxAdapter(
+                      child: AnimatedSize(
+                        duration: const Duration(milliseconds: 320),
+                        curve: Curves.easeOutCubic,
+                        alignment: Alignment.bottomCenter,
+                        child: !cardOpen
+                            ? const SizedBox(width: double.infinity)
+                            : Container(
+                                key: const Key('stories-card'),
+                                margin: EdgeInsets.fromLTRB(Tokens.space[2], Tokens.space[1], Tokens.space[2], Tokens.space[2]),
+                                padding: EdgeInsets.symmetric(vertical: Tokens.space[1]),
+                                decoration: BoxDecoration(color: p.dark ? p.card : p.background, borderRadius: BorderRadius.circular(Tokens.radius[3])),
+                                clipBehavior: Clip.antiAlias,
+                                child: Column(
+                                  children: [
+                                    if (showStories)
+                                      toMenu(
+                                        'stories',
+                                        storiesInMenuPref,
+                                        l.storiesMovedTitle,
+                                        StoriesBar(stories: app.stories, onChanged: () => app.refresh()),
+                                      ),
+                                    if (showBubbles) toMenu('bubbles', bubblesInMenuPref, l.bubblesMovedTitle, BubbleStrip(bubbles: app.bubbles)),
+                                  ],
+                                ),
+                              ),
+                      ),
+                    ),
+                  if (q.isEmpty && !editing && archived.isNotEmpty && !app.on(archiveInMenuPref))
+                    SliverToBoxAdapter(
+                      child: Column(
+                        children: [
+                          SwipeRow(
+                            key: const Key('archive-swipe'),
+                            leftItems: const [],
+                            rightItems: [('archive-menu', l.archiveToMenu, CupertinoIcons.sidebar_left, p.tileGreen)],
+                            onAction: (_) {
+                              app.setOn(archiveInMenuPref, true);
+                              showInfoBanner(context, l.archiveMovedTitle, l.archiveMovedBody);
+                            },
+                            child: ArchiveRow(chats: archived),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(left: Tokens.chatAvatar + Tokens.space[3] + Tokens.space[2]),
+                            child: Container(height: 1 / MediaQuery.devicePixelRatioOf(context), color: p.separator),
                           ),
                         ],
                       ),
                     ),
-                  ),
-                ),
-              for (final inv in AppScope.of(context).invites)
-                SliverToBoxAdapter(
-                  child: InviteRow(key: Key('invite-${inv.roomId}'), invite: inv),
-                ),
-              if (q.isEmpty && !editing && all.isNotEmpty)
-                SliverToBoxAdapter(
-                  child: StoriesBar(stories: app.stories, onChanged: () => app.refresh()),
-                ),
-              if (q.isEmpty && !editing && AppScope.of(context).bubbles.isNotEmpty)
-                SliverToBoxAdapter(child: BubbleStrip(bubbles: AppScope.of(context).bubbles)),
-              if (q.isEmpty && !editing && archived.isNotEmpty)
-                SliverToBoxAdapter(
-                  child: Column(
-                    children: [
-                      ArchiveRow(chats: archived),
-                      Padding(
-                        padding: EdgeInsets.only(left: Tokens.chatAvatar + Tokens.space[3] + Tokens.space[2]),
-                        child: Container(height: 1 / MediaQuery.devicePixelRatioOf(context), color: p.separator),
+                  if (all.isEmpty || chats.isEmpty)
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(
+                        child: Text(
+                          all.isEmpty ? l.chatsEmpty : (q.isEmpty ? '' : l.searchNone),
+                          style: Tokens.preview.style.copyWith(color: p.secondaryLabel),
+                        ),
                       ),
-                    ],
-                  ),
-                ),
-              if (all.isEmpty || chats.isEmpty)
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Center(
-                    child: Text(all.isEmpty ? l.chatsEmpty : (q.isEmpty ? '' : l.searchNone), style: Tokens.preview.style.copyWith(color: p.secondaryLabel)),
-                  ),
-                )
-              else if (editing)
-                EditRows(
-                  chats: chats,
-                  picked: picked,
-                  onToggle: (id) => setState(() => picked.contains(id) ? picked.remove(id) : picked.add(id)),
-                  onReorder: (a, z) => reorderPinned(chats, a, z),
-                )
-              else
-                ChatRows(chats: chats),
-              SliverToBoxAdapter(child: SizedBox(height: FloatingTabBar.room(context))),
-            ],
+                    )
+                  else if (editing)
+                    EditRows(
+                      chats: chats,
+                      picked: picked,
+                      onToggle: (id) => setState(() => picked.contains(id) ? picked.remove(id) : picked.add(id)),
+                      onReorder: (a, z) => reorderPinned(chats, a, z),
+                    )
+                  else
+                    ChatRows(chats: chats),
+                  SliverToBoxAdapter(child: SizedBox(height: FloatingTabBar.room(context))),
+                ],
+              ),
+            ),
           ),
           Positioned(left: 0, right: 0, bottom: FloatingTabBar.room(context) + Tokens.space[1], child: const DeleteUndoBar()),
           if (editing) Positioned(left: 0, right: 0, bottom: 0, child: editBar(context, chats)),
@@ -339,11 +425,33 @@ class _ChatListPageState extends State<ChatListPage> {
               page,
               if (menu)
                 Positioned.fill(
-                  child: GestureDetector(key: const Key('side-menu-close'), onTap: () => setMenu(false)),
+                  child: GestureDetector(
+                    key: const Key('side-menu-close'),
+                    onTap: () => setMenu(false),
+                    // Swipe back to the left also closes it.
+                    onHorizontalDragUpdate: (e) {
+                      if (e.delta.dx < -4) setMenu(false);
+                    },
+                  ),
                 ),
             ],
           ),
         ),
+        // Drag from the left screen edge opens the side menu (Telegram-like).
+        if (!menu)
+          Positioned(
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: Tokens.space[4],
+            child: GestureDetector(
+              key: const Key('side-menu-edge'),
+              behavior: HitTestBehavior.translucent,
+              onHorizontalDragUpdate: (e) {
+                if (e.delta.dx > 2) setMenu(true);
+              },
+            ),
+          ),
         AnimatedPositioned(
           duration: d,
           curve: Curves.easeOutCubic,
@@ -483,7 +591,15 @@ class ArchiveRow extends StatelessWidget {
             Container(
               width: Tokens.chatAvatar,
               height: Tokens.chatAvatar,
-              decoration: const BoxDecoration(color: Palette.tileGrey, shape: BoxShape.circle),
+              // Telegram: the pinned archive wears the theme colour (green / blue).
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color.lerp(p.tileGreen, const Color(0xFFFFFFFF), 0.18)!, p.tileGreen],
+                ),
+              ),
               child: const Icon(CupertinoIcons.archivebox_fill, color: Color(0xFFFFFFFF), size: 28),
             ),
             SizedBox(width: Tokens.space[2]),
@@ -639,6 +755,9 @@ class ChatRowTile extends StatelessWidget {
                         ),
                       ),
                       if (chat.streak > 0) StreakBadge(days: chat.streak, atRisk: chat.streakAtRisk),
+                      // Telegram: my last message gets one tick (sent) or two (read),
+                      // 1:1 only, and only when read receipts go both ways.
+                      if (last != null && last.mine && chat.isDirect && !chat.isChannel) ListTick(roomId: chat.roomId, at: last.time),
                       if (last != null) Text(shortTime(context, last.time), style: Tokens.preview.style.copyWith(color: p.secondaryLabel)),
                     ],
                   ),
@@ -827,6 +946,60 @@ class _InviteRowState extends State<InviteRow> {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// One green tick (sent) or two (read) in front of the time in a chat row.
+class ListTick extends StatefulWidget {
+  const ListTick({super.key, required this.roomId, required this.at});
+  final String roomId;
+  final DateTime at;
+
+  @override
+  State<ListTick> createState() => _ListTickState();
+}
+
+class _ListTickState extends State<ListTick> {
+  bool read = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    load();
+  }
+
+  @override
+  void didUpdateWidget(ListTick old) {
+    super.didUpdateWidget(old);
+    if (old.at != widget.at || old.roomId != widget.roomId) load();
+  }
+
+  Future<void> load() async {
+    final until = await AppScope.read(context).backend.readUntil(widget.roomId).catchError((_) => null);
+    final r = until != null && !widget.at.isAfter(until);
+    if (mounted && r != read) setState(() => read = r);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = paletteOf(context).accent;
+    final tick = Icon(CupertinoIcons.checkmark_alt, size: Tokens.listIconSmall, color: c);
+    return Padding(
+      padding: EdgeInsets.only(right: Tokens.space[0]),
+      child: read
+          ? SizedBox(
+              key: const Key('list-tick-read'),
+              width: Tokens.listIconSmall + Tokens.space[1] - 2,
+              height: Tokens.listIconSmall,
+              child: Stack(
+                children: [
+                  tick,
+                  Positioned(left: Tokens.space[1] - 2, child: tick),
+                ],
+              ),
+            )
+          : KeyedSubtree(key: const Key('list-tick-sent'), child: tick),
     );
   }
 }

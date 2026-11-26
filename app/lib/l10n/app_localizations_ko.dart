@@ -313,12 +313,10 @@ class LKo extends L {
   String get deletePassword => '삭제 비밀번호';
 
   @override
-  String get hidePasswordInfo =>
-      '이 비밀번호로 열면 고른 사람과 대화가 모든 목록에서 사라져요. 다음에 보통 비밀번호로 열어도 계속 숨겨져요.';
+  String get hidePasswordInfo => '이 비밀번호로 열면 고른 사람과 대화가 모든 목록에서 사라져요. 다음에 보통 비밀번호로 열어도 계속 숨겨져요.';
 
   @override
-  String get deletePasswordInfo =>
-      '이 비밀번호로 열면 고른 사람과 대화가 지워져요. 1:1 대화는 상대 쪽에서도 조용히 지워지고, 그룹·채널은 며칠에 걸쳐 조용히 나가요. 상대에게는 알림이 가지 않아요. 되돌릴 수 없어요.';
+  String get deletePasswordInfo => '이 비밀번호로 열면 고른 사람과 대화가 지워져요. 1:1 대화는 상대 쪽에서도 조용히 지워지고, 그룹·채널은 며칠에 걸쳐 조용히 나가요. 상대에게는 알림이 가지 않아요. 되돌릴 수 없어요.';
 
   @override
   String get hideList => '숨길 사람·대화';
@@ -356,8 +354,7 @@ class LKo extends L {
   String get streaks => '스트릭';
 
   @override
-  String get streakInfo =>
-      '1:1 대화에서 둘 다 3일 넘게 매일 메시지를 보내면 이름 옆에 불꽃이 생겨요. 계산은 휴대폰 안에서만 해요.';
+  String get streakInfo => '1:1 대화에서 둘 다 3일 넘게 매일 메시지를 보내면 이름 옆에 불꽃이 생겨요. 계산은 휴대폰 안에서만 해요.';
 
   @override
   String get sticker => '스티커';
@@ -428,8 +425,7 @@ class LKo extends L {
   String get changePhoto => '사진 바꾸기';
 
   @override
-  String get photoServerNote =>
-      '사진을 \'모두\'로 두면 서버에 저장돼요. \'내 연락처\'로 두면 서버에는 올라가지 않고 친구와의 암호화된 1:1 대화로만 전달돼요.';
+  String get photoServerNote => '사진을 \'모두\'로 두면 서버에 저장돼요. \'내 연락처\'로 두면 서버에는 올라가지 않고 친구와의 암호화된 1:1 대화로만 전달돼요.';
 
   @override
   String get chatInfo => '정보';
@@ -522,8 +518,7 @@ class LKo extends L {
   String get linkPreviews => '링크 미리보기';
 
   @override
-  String get linkPreviewInfo =>
-      '링크를 보낼 때 내 휴대폰이 그 페이지의 제목과 사진을 가져와 메시지에 암호화해 넣어요. 받는 사람은 그 사이트에 접속하지 않아요.';
+  String get linkPreviewInfo => '링크를 보낼 때 내 휴대폰이 그 페이지의 제목과 사진을 가져와 메시지에 암호화해 넣어요. 받는 사람은 그 사이트에 접속하지 않아요.';
 
   @override
   String get voiceHoldHint => '길게 눌러 음성 메시지를 녹음해요';
@@ -568,8 +563,7 @@ class LKo extends L {
   String get pollMultipleShort => '여러 개';
 
   @override
-  String get pollAnonInfo =>
-      '누가 무엇을 골랐는지 다른 멤버에게 보이지 않아요. 표는 만든 사람 휴대폰으로만 암호화돼 가고, 대화에는 숫자만 올라가요.';
+  String get pollAnonInfo => '누가 무엇을 골랐는지 다른 멤버에게 보이지 않아요. 표는 만든 사람 휴대폰으로만 암호화돼 가고, 대화에는 숫자만 올라가요.';
 
   @override
   String get pollOpenInfo => '누가 무엇을 골랐는지 멤버 모두에게 보여요.';
@@ -725,8 +719,7 @@ class LKo extends L {
   String get noticeTextHidden => '알림에 내용 숨기기';
 
   @override
-  String get noticeTextHiddenInfo =>
-      '켜면 알림에 대화 이름과 내용 없이 \'새 메시지\'만 보여요. 알림 내용은 이 휴대폰에서만 풀어요.';
+  String get noticeTextHiddenInfo => '켜면 알림에 대화 이름과 내용 없이 \'새 메시지\'만 보여요. 알림 내용은 이 휴대폰에서만 풀어요.';
 
   @override
   String get noticeChannel => '메시지';
@@ -735,8 +728,7 @@ class LKo extends L {
   String get wipeAfter => '틀리면 모두 지우기';
 
   @override
-  String get wipeAfterInfo =>
-      '비밀번호를 연속으로 이만큼 틀리면 이 휴대폰의 모든 대화가 지워져요. 1:1 대화는 상대 휴대폰에서도 지워지고, 그룹·채널은 며칠에 걸쳐 조용히 나가요.';
+  String get wipeAfterInfo => '비밀번호를 연속으로 이만큼 틀리면 이 휴대폰의 모든 대화가 지워져요. 1:1 대화는 상대 휴대폰에서도 지워지고, 그룹·채널은 며칠에 걸쳐 조용히 나가요.';
 
   @override
   String wipeTimes(int n) {
@@ -875,8 +867,7 @@ class LKo extends L {
   String get callWaitingBusy => '통화 중이라고 알리기';
 
   @override
-  String get callWaitingInfo =>
-      '대기 통화: 거는 사람은 계속 울리는 소리를 듣고, 나는 받을 수 있어요. 부재중으로 남기기: 통화 중에는 아무것도 뜨지 않고 부재중 전화로 남아요. 통화 중이라고 알리기: 거는 사람에게 통화 중이라고 보여요.';
+  String get callWaitingInfo => '대기 통화: 거는 사람은 계속 울리는 소리를 듣고, 나는 받을 수 있어요. 부재중으로 남기기: 통화 중에는 아무것도 뜨지 않고 부재중 전화로 남아요. 통화 중이라고 알리기: 거는 사람에게 통화 중이라고 보여요.';
 
   @override
   String get tabCalls => '통화';
@@ -1088,8 +1079,7 @@ class LKo extends L {
   String get passwordAgainInfo => '안전을 위해 계정 비밀번호를 한 번 더 넣어 주세요.';
 
   @override
-  String get keysInfo =>
-      '상대와 직접 만나 이 키를 비교하면 중간에서 엿보는 사람이 없는지 확인할 수 있어요. 눌러서 복사해요.';
+  String get keysInfo => '상대와 직접 만나 이 키를 비교하면 중간에서 엿보는 사람이 없는지 확인할 수 있어요. 눌러서 복사해요.';
 
   @override
   String get myIdentityKey => '내 신원 키';
@@ -1116,8 +1106,7 @@ class LKo extends L {
   String get veilDots => '대화방 가리기';
 
   @override
-  String get veilDotsInfo =>
-      '이 대화방의 메시지가 반짝이는 점으로 가려지고, 손가락으로 누르고 있는 동안만 보여요. 메뉴는 짧게 톡 누르면 열려요.';
+  String get veilDotsInfo => '이 대화방의 메시지가 반짝이는 점으로 가려지고, 손가락으로 누르고 있는 동안만 보여요. 메뉴는 짧게 톡 누르면 열려요.';
 
   @override
   String get readHere => '이 대화에서 읽음 표시';
@@ -1126,8 +1115,7 @@ class LKo extends L {
   String get veilBlur => '민감한 대화';
 
   @override
-  String get veilBlurInfo =>
-      '민감한 대화는 흐린 유리 아래 있고, 손가락을 대고 있는 동안만 선명하게 보여요. 옆사람이 훔쳐볼 수 없어요.';
+  String get veilBlurInfo => '민감한 대화는 흐린 유리 아래 있고, 손가락을 대고 있는 동안만 선명하게 보여요. 옆사람이 훔쳐볼 수 없어요.';
 
   @override
   String get tabMedia => '미디어';
@@ -1157,8 +1145,7 @@ class LKo extends L {
   String get hiddenChats => '숨긴 대화방';
 
   @override
-  String get hiddenChatsInfo =>
-      '목록에서 숨긴 대화방이에요. 메시지와 알림은 그대로 와요. 누르면 다시 목록에 보여요.';
+  String get hiddenChatsInfo => '목록에서 숨긴 대화방이에요. 메시지와 알림은 그대로 와요. 누르면 다시 목록에 보여요.';
 
   @override
   String get showInList => '목록에 다시 보이기';
@@ -1194,8 +1181,7 @@ class LKo extends L {
   String get folderKinds => '포함할 대화';
 
   @override
-  String get folderInfo =>
-      '고른 종류의 대화가 모두 들어가요. 아래에서 대화를 하나씩 넣거나 뺄 수도 있어요. 폴더는 이 기기에만 저장돼요.';
+  String get folderInfo => '고른 종류의 대화가 모두 들어가요. 아래에서 대화를 하나씩 넣거나 뺄 수도 있어요. 폴더는 이 기기에만 저장돼요.';
 
   @override
   String get folderChats => '대화 고르기';
@@ -1233,8 +1219,7 @@ class LKo extends L {
   }
 
   @override
-  String get scheduledInfo =>
-      '예약한 메시지는 이 휴대폰에 있다가, 정한 시간에 앱이 열려 있으면 바로, 아니면 다음에 앱을 열 때 보내져요.';
+  String get scheduledInfo => '예약한 메시지는 이 휴대폰에 있다가, 정한 시간에 앱이 열려 있으면 바로, 아니면 다음에 앱을 열 때 보내져요.';
 
   @override
   String get sendNow => '지금 보내기';
@@ -1352,8 +1337,7 @@ class LKo extends L {
   String get checklistOthersAdd => '다른 사람도 할 일을 추가할 수 있어요';
 
   @override
-  String get checklistOthersInfo =>
-      '체크리스트도 메시지처럼 암호화돼요. 허락하지 않은 사람이 체크하거나 추가하면 모든 휴대폰이 무시해요.';
+  String get checklistOthersInfo => '체크리스트도 메시지처럼 암호화돼요. 허락하지 않은 사람이 체크하거나 추가하면 모든 휴대폰이 무시해요.';
 
   @override
   String checklistDone(int done, int total) {
@@ -1432,8 +1416,7 @@ class LKo extends L {
   String get hideMembersOnInfo => '멤버 목록이 관리자에게만 보여요.';
 
   @override
-  String get subscribersHiddenInfo =>
-      '구독자 목록은 관리자만 볼 수 있어요. 누가 구독하는지 다른 구독자는 몰라요.';
+  String get subscribersHiddenInfo => '구독자 목록은 관리자만 볼 수 있어요. 누가 구독하는지 다른 구독자는 몰라요.';
 
   @override
   String get editGroup => '그룹 편집';
@@ -1498,8 +1481,7 @@ class LKo extends L {
   String get locationOpenMap => '지도에서 보기';
 
   @override
-  String get locationPrivacy =>
-      '보낼 때 그 순간의 위치를 한 번만 읽어요. 위치는 암호화되어 대화 상대만 보고, 지도 회사에는 보내지 않아요.';
+  String get locationPrivacy => '보낼 때 그 순간의 위치를 한 번만 읽어요. 위치는 암호화되어 대화 상대만 보고, 지도 회사에는 보내지 않아요.';
 
   @override
   String get attachAllPhotos => '모든 사진';
@@ -1535,8 +1517,7 @@ class LKo extends L {
   String get checkRecovery => '대화 복구 키 만들기';
 
   @override
-  String get checkRecoveryInfo =>
-      '새 폰에서 이전 대화를 다시 열 때 써요. 키를 잃어버리면 아무도 되살릴 수 없어요.';
+  String get checkRecoveryInfo => '새 폰에서 이전 대화를 다시 열 때 써요. 키를 잃어버리면 아무도 되살릴 수 없어요.';
 
   @override
   String get checkDevice => '이 기기 확인';
@@ -1600,8 +1581,7 @@ class LKo extends L {
   String get powerNever => '끄기';
 
   @override
-  String get powerModeInfo =>
-      '배터리가 정한 값보다 적으면 움직이는 효과를 잠시 멈춰요. 웹에서는 배터리를 알 수 없어서 \'항상\'만 적용돼요.';
+  String get powerModeInfo => '배터리가 정한 값보다 적으면 움직이는 효과를 잠시 멈춰요. 웹에서는 배터리를 알 수 없어서 \'항상\'만 적용돼요.';
 
   @override
   String get faqQ1 => '대화가 정말 안전한가요?';
@@ -1619,8 +1599,7 @@ class LKo extends L {
   String get faqQ3 => '폰을 바꾸면 대화가 사라지나요?';
 
   @override
-  String get faqA3 =>
-      '대화 복구 키를 만들어 두면 새 폰에서 이전 대화를 다시 열 수 있어요. 키는 나만 갖고 있어서, 잃어버리면 아무도 되살릴 수 없어요.';
+  String get faqA3 => '대화 복구 키를 만들어 두면 새 폰에서 이전 대화를 다시 열 수 있어요. 키는 나만 갖고 있어서, 잃어버리면 아무도 되살릴 수 없어요.';
 
   @override
   String get faqQ4 => '누가 나를 찾을 수 있나요?';
@@ -1632,8 +1611,7 @@ class LKo extends L {
   String get faqQ5 => '사라지는 메시지는 어떻게 켜나요?';
 
   @override
-  String get faqA5 =>
-      '대화 위쪽의 타이머 버튼을 눌러 시간을 고르면, 그 뒤에 보낸 메시지가 정한 시간이 지나면 사라져요.';
+  String get faqA5 => '대화 위쪽의 타이머 버튼을 눌러 시간을 고르면, 그 뒤에 보낸 메시지가 정한 시간이 지나면 사라져요.';
 
   @override
   String get faqQ6 => '비눗방울은 뭔가요?';
@@ -1731,19 +1709,16 @@ class LKo extends L {
   String get veilAll => '모든 대화방 가리기';
 
   @override
-  String get veilAllInfo =>
-      '모든 대화방의 메시지가 가려져서 누르고 있는 동안만 보여요. 옆 사람이 볼 수 없어요. 이 기기에만 적용돼요.';
+  String get veilAllInfo => '모든 대화방의 메시지가 가려져서 누르고 있는 동안만 보여요. 옆 사람이 볼 수 없어요. 이 기기에만 적용돼요.';
 
   @override
   String get panic => '패닉 동작';
 
   @override
-  String get panicInfo =>
-      '두 손가락으로 두 번 톡톡 치면 바로 잠겨요. 소리와 진동은 없어요. 앱 잠금이 켜져 있어야 해요.';
+  String get panicInfo => '두 손가락으로 두 번 톡톡 치면 바로 잠겨요. 소리와 진동은 없어요. 앱 잠금이 켜져 있어야 해요.';
 
   @override
-  String get appearanceInfo =>
-      '색 테마, 야간 모드, 글자 크기, 대화 배경처럼 부루미가 보이는 모습을 내 취향대로 바꿀 수 있어요.';
+  String get appearanceInfo => '색 테마, 야간 모드, 글자 크기, 대화 배경처럼 부루미가 보이는 모습을 내 취향대로 바꿀 수 있어요.';
 
   @override
   String get themePlain => '기본';
@@ -1803,8 +1778,7 @@ class LKo extends L {
   String get textSizePreviewReply => '오른쪽이요. 확실해요.';
 
   @override
-  String get notificationsInfo =>
-      '새 메시지 알림을 어떻게 받을지 정해요. 앱을 쓰는 중의 알림, 집중 일정도 여기서 바꿔요.';
+  String get notificationsInfo => '새 메시지 알림을 어떻게 받을지 정해요. 앱을 쓰는 중의 알림, 집중 일정도 여기서 바꿔요.';
 
   @override
   String get inAppNotices => '앱 사용 중 알림';
@@ -1819,8 +1793,7 @@ class LKo extends L {
   String get inAppBanner => '배너';
 
   @override
-  String get inAppStyleInfo =>
-      '배너는 화면 위에 잠깐 나타났다가 사라져요. 무음이면 앱을 쓰는 동안 아무것도 뜨지 않아요.';
+  String get inAppStyleInfo => '배너는 화면 위에 잠깐 나타났다가 사라져요. 무음이면 앱을 쓰는 동안 아무것도 뜨지 않아요.';
 
   @override
   String get inAppSound => '앱 사용 중 소리';
@@ -2015,8 +1988,7 @@ class LKo extends L {
   }
 
   @override
-  String get chatsInfo =>
-      '메시지 보내는 방법, 답장, 빠른 답장 문구, 자리 비움 답장, 휴대폰 안에서만 도는 AI 기능을 정해요.';
+  String get chatsInfo => '메시지 보내는 방법, 답장, 빠른 답장 문구, 자리 비움 답장, 휴대폰 안에서만 도는 AI 기능을 정해요.';
 
   @override
   String get aiFeatures => 'AI 기능';
@@ -2025,8 +1997,7 @@ class LKo extends L {
   String get scamWarning => '사기·피싱 링크 경고';
 
   @override
-  String get scamWarningInfo =>
-      '이상한 링크(가짜 주소, 숫자 주소, 줄인 주소)에 경고를 붙여요. 이 휴대폰 안에서만 확인하고, 메시지 내용은 어디로도 보내지 않아요.';
+  String get scamWarningInfo => '이상한 링크(가짜 주소, 숫자 주소, 줄인 주소)에 경고를 붙여요. 이 휴대폰 안에서만 확인하고, 메시지 내용은 어디로도 보내지 않아요.';
 
   @override
   String get scamLink => '주의: 의심스러운 링크예요';
@@ -2047,8 +2018,7 @@ class LKo extends L {
   String get awayReply => '자리 비움 답장';
 
   @override
-  String get awayReplyInfo =>
-      '켜 두면 1:1 대화에 새 메시지가 오면 이 문구로 한 번 답해요. 같은 사람에게는 6시간에 한 번만 보내요. 앱이 받을 때 이 휴대폰이 보내요.';
+  String get awayReplyInfo => '켜 두면 1:1 대화에 새 메시지가 오면 이 문구로 한 번 답해요. 같은 사람에게는 6시간에 한 번만 보내요. 앱이 받을 때 이 휴대폰이 보내요.';
 
   @override
   String get awayReplyText => '답장 문구';
@@ -2090,8 +2060,7 @@ class LKo extends L {
   String get manageTools => '운영 도구';
 
   @override
-  String get manageToolsInfo =>
-      '관리자만 보는 화면이에요. 대화 내용은 서버로 보내지 않고 이 휴대폰에서 처리해요.';
+  String get manageToolsInfo => '관리자만 보는 화면이에요. 대화 내용은 서버로 보내지 않고 이 휴대폰에서 처리해요.';
 
   @override
   String get toolsJoin => '가입';
@@ -2163,8 +2132,7 @@ class LKo extends L {
   String get autoMod => '자동 관리';
 
   @override
-  String get autoModInfo =>
-      '관리자 휴대폰이 규칙에 맞지 않는 글을 지워요. 서버는 대화 내용을 볼 수 없어서, 관리자 앱이 꺼져 있으면 조금 늦게 처리돼요.';
+  String get autoModInfo => '관리자 휴대폰이 규칙에 맞지 않는 글을 지워요. 서버는 대화 내용을 볼 수 없어서, 관리자 앱이 꺼져 있으면 조금 늦게 처리돼요.';
 
   @override
   String get bannedWords => '금지어';
@@ -2214,8 +2182,7 @@ class LKo extends L {
   }
 
   @override
-  String get statsInfo =>
-      '통계는 이 휴대폰에 있는 대화로 이 휴대폰이 계산해요. 서버로 보내지 않고, 사람별 숫자는 만들지 않아요.';
+  String get statsInfo => '통계는 이 휴대폰에 있는 대화로 이 휴대폰이 계산해요. 서버로 보내지 않고, 사람별 숫자는 만들지 않아요.';
 
   @override
   String get modLog => '관리 기록';
@@ -2298,8 +2265,7 @@ class LKo extends L {
   String get levelMax => '가장 높은 레벨이에요';
 
   @override
-  String get levelInfo =>
-      '레벨은 인원, 최근 4주 동안 글 쓴 사람, 방이 생긴 날로 정해요. 한 번 오른 레벨은 쉽게 내려가지 않아요. 지금은 이 휴대폰이 계산해서 보여 줘요.';
+  String get levelInfo => '레벨은 인원, 최근 4주 동안 글 쓴 사람, 방이 생긴 날로 정해요. 한 번 오른 레벨은 쉽게 내려가지 않아요. 지금은 이 휴대폰이 계산해서 보여 줘요.';
 
   @override
   String get chatThemeHere => '이 대화방 배경';
@@ -2479,8 +2445,7 @@ class LKo extends L {
   String get lotteryAnnounceInfo => '끄면 당첨자 본인에게만 알려요. 명단은 나만 봐요.';
 
   @override
-  String get lotteryInfo =>
-      '구독자끼리는 누가 참여했는지 볼 수 없어요. 운영진은 당첨될 수 없어요. 추첨은 내 폰에서 하니 마감 뒤에 앱을 열어 주세요.';
+  String get lotteryInfo => '구독자끼리는 누가 참여했는지 볼 수 없어요. 운영진은 당첨될 수 없어요. 추첨은 내 폰에서 하니 마감 뒤에 앱을 열어 주세요.';
 
   @override
   String get lotteryJoin => '참여하기';
@@ -2597,8 +2562,7 @@ class LKo extends L {
   String get faqA => '답';
 
   @override
-  String get faqInfo =>
-      '멤버가 질문을 누르면 답이 펼쳐져요. 눌러도 아무것도 보내지 않아서 누가 무엇을 봤는지 아무도 몰라요.';
+  String get faqInfo => '멤버가 질문을 누르면 답이 펼쳐져요. 눌러도 아무것도 보내지 않아서 누가 무엇을 봤는지 아무도 몰라요.';
 
   @override
   String get guideTitleHint => '무엇을 도와드릴까요?';
@@ -2619,8 +2583,7 @@ class LKo extends L {
   String get guideText => '누르면 보여 줄 글';
 
   @override
-  String get guideInfo =>
-      '멤버가 버튼을 누르면 그 자리에서 다음 화면이 열려요. 눌러도 아무것도 보내지 않아서 누가 무엇을 봤는지 아무도 몰라요.';
+  String get guideInfo => '멤버가 버튼을 누르면 그 자리에서 다음 화면이 열려요. 눌러도 아무것도 보내지 않아서 누가 무엇을 봤는지 아무도 몰라요.';
 
   @override
   String get linksPreview => '미리보기';
@@ -2638,8 +2601,7 @@ class LKo extends L {
   String get linksIntro => '글 아래에 웹사이트로 가는 버튼을 붙여요.';
 
   @override
-  String get linksInfo =>
-      '버튼은 글과 함께 암호화돼요. 누가 눌렀는지는 아무도 알 수 없어요. 주소는 이 휴대폰 안에서 사기 링크인지 확인해요.';
+  String get linksInfo => '버튼은 글과 함께 암호화돼요. 누가 눌렀는지는 아무도 알 수 없어요. 주소는 이 휴대폰 안에서 사기 링크인지 확인해요.';
 
   @override
   String linksLeft(int n) {
@@ -2831,8 +2793,7 @@ class LKo extends L {
   String get emergencyUnhidden => '비상 시 숨김에서 뺐어요';
 
   @override
-  String get emergencyWebInfo =>
-      '앱 잠금과 비상 시 삭제·숨김은 휴대폰 앱에서만 설정할 수 있어요. 웹은 브라우저라 비밀을 안전하게 지킬 수 없어서예요.';
+  String get emergencyWebInfo => '앱 잠금과 비상 시 삭제·숨김은 휴대폰 앱에서만 설정할 수 있어요. 웹은 브라우저라 비밀을 안전하게 지킬 수 없어서예요.';
 
   @override
   String get emergencyBadge => '비상 시 삭제';
@@ -2929,8 +2890,7 @@ class LKo extends L {
   String get encHeroTitle => '이 대화는 종단간 암호화되어 있어요';
 
   @override
-  String get encHeroBody =>
-      '메시지와 통화는 두 사람의 휴대폰에서만 열려요. 부루미 서버도 내용을 볼 수 없어요. 아래에서 상대 휴대폰이 진짜인지 확인할 수 있어요.';
+  String get encHeroBody => '메시지와 통화는 두 사람의 휴대폰에서만 열려요. 부루미 서버도 내용을 볼 수 없어요. 아래에서 상대 휴대폰이 진짜인지 확인할 수 있어요.';
 
   @override
   String get encMembers => '멤버';
@@ -2939,8 +2899,7 @@ class LKo extends L {
   String get encStart => '확인 시작';
 
   @override
-  String get encStartInfo =>
-      '두 사람이 함께 있을 때 또는 통화하면서 해 보세요. 두 휴대폰에 같은 그림 7개가 나오면 진짜예요.';
+  String get encStartInfo => '두 사람이 함께 있을 때 또는 통화하면서 해 보세요. 두 휴대폰에 같은 그림 7개가 나오면 진짜예요.';
 
   @override
   String get encShowKeys => '기기 키 보기 (고급)';
@@ -3027,8 +2986,7 @@ class LKo extends L {
   String get msgReport => '메시지 신고';
 
   @override
-  String get reportNote =>
-      '운영자가 이 글을 봐요. 신고하면 이 메시지 내용이 함께 보내져요. 다른 메시지는 보내지 않아요.';
+  String get reportNote => '운영자가 이 글을 봐요. 신고하면 이 메시지 내용이 함께 보내져요. 다른 메시지는 보내지 않아요.';
 
   @override
   String get reportSpam => '스팸';
@@ -3099,8 +3057,7 @@ class LKo extends L {
   String get packDynamicInfo => '최근에 쓴 스티커 묶음이 앞에 나와요.';
 
   @override
-  String get packOrderInfo =>
-      '오른쪽 줄 세 개를 끌어서 순서를 바꿔요. 끈 묶음은 스티커 칸에서 빠지고, 받은 스티커는 그대로 보여요.';
+  String get packOrderInfo => '오른쪽 줄 세 개를 끌어서 순서를 바꿔요. 끈 묶음은 스티커 칸에서 빠지고, 받은 스티커는 그대로 보여요.';
 
   @override
   String get attachFromGallery => '갤러리에서 선택';
@@ -3464,24 +3421,19 @@ class LKo extends L {
   String get swipeUnarchive => '보관 해제';
 
   @override
-  String get chatsHeaderInfo =>
-      '메시지 표시 방법, 답장, 스티커와 이모지, 이 휴대폰 안에서만 처리되는 AI 기능처럼 대화방에서 쓰는 기능을 정해요.';
+  String get chatsHeaderInfo => '메시지 표시 방법, 답장, 스티커와 이모지, 이 휴대폰 안에서만 처리되는 AI 기능처럼 대화방에서 쓰는 기능을 정해요.';
 
   @override
-  String get faqHeaderInfo =>
-      '부루미를 쓰면서 자주 궁금해하는 내용을 모았어요. 인터넷에 연결되지 않아도 볼 수 있어요.';
+  String get faqHeaderInfo => '부루미를 쓰면서 자주 궁금해하는 내용을 모았어요. 인터넷에 연결되지 않아도 볼 수 있어요.';
 
   @override
-  String get devicesHeaderInfo =>
-      '내 계정에 로그인된 기기를 모두 볼 수 있어요. 모르는 기기가 있으면 여기서 바로 로그아웃시킬 수 있어요.';
+  String get devicesHeaderInfo => '내 계정에 로그인된 기기를 모두 볼 수 있어요. 모르는 기기가 있으면 여기서 바로 로그아웃시킬 수 있어요.';
 
   @override
-  String get languageHeaderInfo =>
-      '앱에 보이는 말을 골라요. 다른 언어로 온 메시지는 대화방에서 바로 번역할 수 있어요.';
+  String get languageHeaderInfo => '앱에 보이는 말을 골라요. 다른 언어로 온 메시지는 대화방에서 바로 번역할 수 있어요.';
 
   @override
-  String get stickersHeaderInfo =>
-      '빠른 반응, 큰 이모지, 스티커 팩 순서처럼 스티커와 이모지를 쓰는 방법을 정해요.';
+  String get stickersHeaderInfo => '빠른 반응, 큰 이모지, 스티커 팩 순서처럼 스티커와 이모지를 쓰는 방법을 정해요.';
 
   @override
   String get birthday => '생일';
@@ -3522,12 +3474,10 @@ class LKo extends L {
   String get whoCardInfo => '\'내 연락처\'는 서버에 올라가지 않고, 1:1 대화의 암호화로만 친구에게 전달돼요.';
 
   @override
-  String get lastSeenInfo =>
-      '부루미는 접속 중인지, 마지막으로 언제 접속했는지 누구에게도 보여 주지 않아요. 처음부터 그렇게 만들어서 바꿀 필요가 없어요.';
+  String get lastSeenInfo => '부루미는 접속 중인지, 마지막으로 언제 접속했는지 누구에게도 보여 주지 않아요. 처음부터 그렇게 만들어서 바꿀 필요가 없어요.';
 
   @override
-  String get forwardsInfo =>
-      '누가 내 메시지를 전달해도 내 이름과 원래 대화방은 함께 가지 않아요. \'전달됨\' 표시만 붙어요. 처음부터 그렇게 만들었어요.';
+  String get forwardsInfo => '누가 내 메시지를 전달해도 내 이름과 원래 대화방은 함께 가지 않아요. \'전달됨\' 표시만 붙어요. 처음부터 그렇게 만들었어요.';
 
   @override
   String get editHistory => '내 수정 기록 숨기기';
@@ -3536,15 +3486,13 @@ class LKo extends L {
   String get editHistoryAlways => '항상';
 
   @override
-  String get editHistoryInfo =>
-      '내가 고친 메시지는 다른 사람에게 마지막 내용만 보여요. 부루미는 처음부터 고치기 전 내용을 보여 주지 않아요.';
+  String get editHistoryInfo => '내가 고친 메시지는 다른 사람에게 마지막 내용만 보여요. 부루미는 처음부터 고치기 전 내용을 보여 주지 않아요.';
 
   @override
   String get birthdayAlert => '생일 알림';
 
   @override
-  String get birthdayAlertInfo =>
-      '생일을 공개한 친구의 생일 당일 오전 9시에 알려 드려요. 이 휴대폰 안에서만 알려요.';
+  String get birthdayAlertInfo => '생일을 공개한 친구의 생일 당일 오전 9시에 알려 드려요. 이 휴대폰 안에서만 알려요.';
 
   @override
   String birthdayAlertTitle(String name) {
@@ -3558,8 +3506,7 @@ class LKo extends L {
   String get showErrors => '오류 내용 보기';
 
   @override
-  String get showErrorsInfo =>
-      '켜면 문제가 생겼을 때의 오류 내용을 이 휴대폰에 모아 보여 줘요. 문의할 때 복사해서 보내면 도움이 돼요. 메시지 내용은 담기지 않아요.';
+  String get showErrorsInfo => '켜면 문제가 생겼을 때의 오류 내용을 이 휴대폰에 모아 보여 줘요. 문의할 때 복사해서 보내면 도움이 돼요. 메시지 내용은 담기지 않아요.';
 
   @override
   String get errorLog => '오류 기록';
@@ -3577,8 +3524,7 @@ class LKo extends L {
   String get autoDeleteRow => '다음 기간 동안 미접속 시';
 
   @override
-  String get autoDeleteInfo =>
-      '이 기간 안에 한 번이라도 접속하지 않으면 모든 그룹, 메시지, 연락처와 함께 계정이 삭제돼요.';
+  String get autoDeleteInfo => '이 기간 안에 한 번이라도 접속하지 않으면 모든 그룹, 메시지, 연락처와 함께 계정이 삭제돼요.';
 
   @override
   String get months1 => '1개월';
@@ -3677,8 +3623,7 @@ class LKo extends L {
   String get addDeviceStep2 => '내 아이디와 비밀번호로 로그인해요.';
 
   @override
-  String get addDeviceStep3 =>
-      '이 휴대폰에 뜨는 확인 요청에서 두 기기의 이모지가 같은지 보면 끝이에요. 그러면 지난 대화도 열려요.';
+  String get addDeviceStep3 => '이 휴대폰에 뜨는 확인 요청에서 두 기기의 이모지가 같은지 보면 끝이에요. 그러면 지난 대화도 열려요.';
 
   @override
   String get devicesPlatforms => '부루미는 iPhone, Android, Windows에서 쓸 수 있어요.';
@@ -3690,8 +3635,7 @@ class LKo extends L {
   String get chatFolders => '대화방 폴더';
 
   @override
-  String get foldersArtInfo =>
-      '폴더를 만들어 대화방을 나눠 보세요. 목록 위나 왼쪽 메뉴에서 바로 바꿀 수 있어요.';
+  String get foldersArtInfo => '폴더를 만들어 대화방을 나눠 보세요. 목록 위나 왼쪽 메뉴에서 바로 바꿀 수 있어요.';
 
   @override
   String get createFolder => '폴더 만들기';
@@ -3809,8 +3753,7 @@ class LKo extends L {
   String get lockName => '잠금 화면에 이름 보이기';
 
   @override
-  String get lockNameInfo =>
-      '끄면 휴대폰이 잠겨 있을 때 알림에 보낸 사람 이름과 내용이 가려져요. 아이폰은 iOS 설정 > 알림 > 미리보기 표시도 함께 확인해 주세요.';
+  String get lockNameInfo => '끄면 휴대폰이 잠겨 있을 때 알림에 보낸 사람 이름과 내용이 가려져요. 아이폰은 iOS 설정 > 알림 > 미리보기 표시도 함께 확인해 주세요.';
 
   @override
   String get linkOpenTitle => '링크 열기';
@@ -3924,4 +3867,40 @@ class LKo extends L {
 
   @override
   String get planAtTime => '그 시각에 알림';
+
+  @override
+  String get checkSectionTodo => '할 일';
+
+  @override
+  String get archiveToMenu => '왼쪽 메뉴로';
+
+  @override
+  String get archiveMovedTitle => '보관함을 왼쪽 메뉴로 옮겼어요';
+
+  @override
+  String get archiveMovedBody => '왼쪽 위 메뉴 버튼을 누르면 보여요.';
+
+  @override
+  String get archivePinnedTitle => '보관함을 대화 목록에 고정했어요';
+
+  @override
+  String get archivePinnedBody => '다시 옮기려면 왼쪽으로 끝까지 밀어요.';
+
+  @override
+  String get archivePinBack => '목록에 고정';
+
+  @override
+  String get menuStories => '스토리';
+
+  @override
+  String get storiesMovedTitle => '스토리를 왼쪽 메뉴로 옮겼어요';
+
+  @override
+  String get bubblesMovedTitle => '비눗방울을 왼쪽 메뉴로 옮겼어요';
+
+  @override
+  String get storiesPinnedTitle => '스토리를 대화 목록에 고정했어요';
+
+  @override
+  String get bubblesPinnedTitle => '비눗방울을 대화 목록에 고정했어요';
 }

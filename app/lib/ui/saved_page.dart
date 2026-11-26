@@ -40,17 +40,45 @@ List<String> savedSources(List<Msg> msgs, Map<String, String> from) {
 
 /// The side list slides in from the left (Telegram); returns the choice,
 /// or null when closed.
-Future<String?> openSavedSide(BuildContext context, {required List<Msg> msgs, required String current}) => Navigator.of(context).push<String>(
-  PageRouteBuilder(
+/// Telegram: the chat slides left and stays as a strip (tap it to close);
+/// the list fills the rest. [onAnim] lets the chat follow the same motion.
+Future<String?> openSavedSide(BuildContext context, {required List<Msg> msgs, required String current, void Function(Animation<double>)? onAnim}) {
+  final r = PageRouteBuilder<String>(
+    opaque: false,
     transitionDuration: const Duration(milliseconds: 320),
     reverseTransitionDuration: const Duration(milliseconds: 240),
-    pageBuilder: (c, a, _) => SavedChatsPage(msgs: msgs, current: current),
-    transitionsBuilder: (c, a, _, child) => SlideTransition(
-      position: Tween(begin: const Offset(-1, 0), end: Offset.zero).animate(CurvedAnimation(parent: a, curve: Curves.easeOutCubic)),
-      child: child,
+    pageBuilder: (c, a, _) => Stack(
+      children: [
+        Positioned(
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: Tokens.sideStrip,
+          child: GestureDetector(key: const Key('saved-side-close'), behavior: HitTestBehavior.opaque, onTap: () => Navigator.pop(c)),
+        ),
+        Positioned(
+          left: Tokens.sideStrip,
+          top: 0,
+          right: 0,
+          bottom: 0,
+          child: SavedChatsPage(msgs: msgs, current: current),
+        ),
+      ],
     ),
-  ),
-);
+    transitionsBuilder: (c, a, _, child) {
+      final w = MediaQuery.sizeOf(c).width - Tokens.sideStrip;
+      final curved = CurvedAnimation(parent: a, curve: Curves.easeOutCubic);
+      return AnimatedBuilder(
+        animation: curved,
+        child: child,
+        builder: (_, ch) => Transform.translate(offset: Offset(w * (1 - curved.value), 0), child: ch),
+      );
+    },
+  );
+  final f = Navigator.of(context).push(r);
+  if (r.animation case final a?) onAnim?.call(CurvedAnimation(parent: a, curve: Curves.easeOutCubic));
+  return f;
+}
 
 /// Back on the side list leaves 저장한 메시지 altogether (Telegram):
 /// to Settings or the chat list, wherever it was opened from.
@@ -125,23 +153,44 @@ class _SavedChatsPageState extends State<SavedChatsPage> {
     final shown = q.isEmpty ? rows : rows.where((r) => r.$3.toLowerCase().contains(q) || r.$5.toLowerCase().contains(q)).toList();
     return CupertinoPageScaffold(
       backgroundColor: p.list,
-      navigationBar: GlassTopBar.nav(
-        middle: Text(l.savedMessages),
-        // Telegram: the bookmark opens 미디어·파일·링크; back closes the list.
-        leading: GlassCircle(
-          key: const Key('back'),
-          onTap: () => Navigator.of(context).pop(savedExit),
-          child: GlassCircle.icon(context, CupertinoIcons.chevron_back),
+      // Telegram: no back here (tap the chat strip to close); a wide title
+      // capsule and the bookmark that opens 미디어·파일·링크.
+      navigationBar: GlassTopBar(
+        tint: p.list,
+        full: Row(
+          children: [
+            Expanded(
+              child: Center(
+                child: LiquidGlass(
+                  radius: Tokens.capsule,
+                  child: Container(
+                    height: Tokens.closeButton,
+                    constraints: const BoxConstraints(minWidth: Tokens.titlePillMin),
+                    padding: EdgeInsets.symmetric(horizontal: Tokens.space[3]),
+                    child: Center(
+                      widthFactor: 1,
+                      child: Text(
+                        l.savedMessages,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Tokens.navTitle.style.copyWith(color: p.label),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: Tokens.space[2]),
+            AccentCircle(
+              key: const Key('saved-side-info'),
+              icon: CupertinoIcons.bookmark_fill,
+              onTap: () {
+                final id = AppScope.read(context).savedRoomId;
+                if (id != null) Navigator.of(context).push(IosPageRoute(builder: (_) => SavedInfoPage(roomId: id)));
+              },
+            ),
+          ],
         ),
-        trailing: AccentCircle(
-          key: const Key('saved-side-info'),
-          icon: CupertinoIcons.bookmark_fill,
-          onTap: () {
-            final id = AppScope.read(context).savedRoomId;
-            if (id != null) Navigator.of(context).push(IosPageRoute(builder: (_) => SavedInfoPage(roomId: id)));
-          },
-        ),
-        backgroundColor: p.list,
       ),
       child: SafeArea(
         child: ListView(

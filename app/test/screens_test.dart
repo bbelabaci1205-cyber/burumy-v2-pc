@@ -35,7 +35,12 @@ FakeBackend sample(bool ko) => demoSample(ko, File('test/assets/sample_photo.png
 
 void main() {
   setUpAll(() async {
-    await loadFont('Pretendard', ['assets/fonts/Pretendard-Regular.otf', 'assets/fonts/Pretendard-Medium.otf', 'assets/fonts/Pretendard-SemiBold.otf']);
+    await loadFont('Pretendard', [
+      'assets/fonts/Pretendard-Regular.otf',
+      'assets/fonts/Pretendard-Medium.otf',
+      'assets/fonts/Pretendard-SemiBold.otf',
+      'assets/fonts/Pretendard-Bold.otf',
+    ]);
     final home = Platform.environment['HOME'];
     await loadFont('packages/cupertino_icons/CupertinoIcons', ['$home/.pub-cache/hosted/pub.dev/cupertino_icons-1.0.9/assets/CupertinoIcons.ttf']);
     await loadFont('Noto Color Emoji', ['/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf']);

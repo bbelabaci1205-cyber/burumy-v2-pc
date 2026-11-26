@@ -141,7 +141,7 @@ class _FoldersPageState extends State<FoldersPage> {
             ),
           ConstrainedBox(
             constraints: const BoxConstraints(minHeight: IosSection.rowHeight),
-            child: CupertinoListTile(
+            child: IosTile(
               key: Key('folder-row-${f.id}'),
               backgroundColor: p.card,
               leading: editing
@@ -163,7 +163,7 @@ class _FoldersPageState extends State<FoldersPage> {
                       index: i,
                       child: Icon(CupertinoIcons.line_horizontal_3, key: Key('folder-drag-${f.id}'), color: p.secondaryLabel),
                     )
-                  : const CupertinoListTileChevron(),
+                  : const IosChevron(),
               onTap: editing ? null : () => edit(f),
             ),
           ),
@@ -216,17 +216,13 @@ class _FoldersPageState extends State<FoldersPage> {
               children: [
                 ArtHeader(art: const FolderArt(), text: l.foldersArtInfo),
                 group(context, header: l.myFolders, footer: folders.isEmpty ? null : l.foldersEditInfo, [
-                  CupertinoListTile(
+                  IosTile(
                     key: const Key('folders-new'),
                     leading: Icon(CupertinoIcons.add, color: p.accent),
                     title: Text(l.createFolder, style: TextStyle(color: p.accent)),
                     onTap: () => edit(null),
                   ),
-                  CupertinoListTile(
-                    key: const Key('folders-all'),
-                    leading: iconTile(p.tileGreen, CupertinoIcons.chat_bubble_2_fill),
-                    title: Text(l.allChatsFolder),
-                  ),
+                  IosTile(key: const Key('folders-all'), leading: iconTile(p.tileGreen, CupertinoIcons.chat_bubble_2_fill), title: Text(l.allChatsFolder)),
                   if (folders.isNotEmpty)
                     ReorderableList(
                       shrinkWrap: true,
@@ -258,7 +254,7 @@ class _FoldersPageState extends State<FoldersPage> {
                 if (suggestions.isNotEmpty && !editing)
                   group(context, header: l.recommendedFolders, [
                     for (final (key, f, info) in suggestions)
-                      CupertinoListTile(
+                      IosTile(
                         key: Key('suggest-$key'),
                         title: Text(f.name),
                         subtitle: Text(info),
@@ -438,7 +434,7 @@ class _FolderEditPageState extends State<FolderEditPage> {
     );
     Widget kindRow(String k, Set<String> from) {
       final (icon, color, title) = kindLook(context, k);
-      return CupertinoListTile(
+      return IosTile(
         key: Key('folder-kind-$k'),
         leading: iconTile(color, icon),
         title: Text(title),
@@ -449,7 +445,7 @@ class _FolderEditPageState extends State<FolderEditPage> {
     Widget chatRow(String id, Set<String> from) {
       final c = byId[id];
       final n = c == null ? id : nameOf(s, c);
-      return CupertinoListTile(
+      return IosTile(
         key: Key('folder-has-$id'),
         leading: Avatar(name: n, size: 28, squircle: c != null && !c.isDirect, userId: c?.isDirect == true ? c!.peer : null, roomId: id),
         title: Text(n),
@@ -457,7 +453,7 @@ class _FolderEditPageState extends State<FolderEditPage> {
       );
     }
 
-    Widget addRow(Key key, bool out) => CupertinoListTile(
+    Widget addRow(Key key, bool out) => IosTile(
       key: key,
       leading: Icon(CupertinoIcons.add, color: p.accent),
       title: Text(l.folderAddChats, style: TextStyle(color: p.accent)),
@@ -612,7 +608,7 @@ class _ChatPickPageState extends State<ChatPickPage> {
               Builder(
                 builder: (context) {
                   final (icon, color, title) = kindLook(context, k);
-                  return CupertinoListTile(
+                  return IosTile(
                     key: Key('pick-kind-$k'),
                     leading: iconTile(color, icon),
                     title: Text(title),
@@ -624,7 +620,7 @@ class _ChatPickPageState extends State<ChatPickPage> {
           ]),
         group(context, header: l.chatsHeader, [
           for (final c in list)
-            CupertinoListTile(
+            IosTile(
               key: Key('folder-chat-${c.roomId}'),
               leading: Avatar(name: nameOf(s, c), size: 28, squircle: !c.isDirect, userId: c.isDirect ? c.peer : null, roomId: c.roomId),
               title: Text(nameOf(s, c)),

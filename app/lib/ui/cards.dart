@@ -1916,7 +1916,7 @@ class _CardAnswersPageState extends State<CardAnswersPage> {
           IosSection(
             children: [
               for (final a in rows)
-                CupertinoListTile(
+                IosTile(
                   key: Key('answer-${a.user}'),
                   leading: Avatar(name: name(a.user), size: 32),
                   title: Text(name(a.user)),

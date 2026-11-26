@@ -305,7 +305,7 @@ class _PickContactPageState extends State<PickContactPage> {
                   IosSection(
                     children: [
                       for (final c in list)
-                        CupertinoListTile(
+                        IosTile(
                           key: Key('pick-contact-${c.userId}'),
                           leading: Avatar(name: aliasOf(s, c.userId).isEmpty ? c.name : aliasOf(s, c.userId), size: 32),
                           title: Text(aliasOf(s, c.userId).isEmpty ? c.name : aliasOf(s, c.userId)),

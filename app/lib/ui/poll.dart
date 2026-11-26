@@ -190,7 +190,7 @@ class _CreatePollPageState extends State<CreatePollPage> {
                         : null,
                   ),
                 if (options.length < maxOptions)
-                  CupertinoListTile(
+                  IosTile(
                     key: const Key('poll-add'),
                     leading: Icon(CupertinoIcons.add_circled_solid, color: p.accent),
                     title: Text(l.pollAddOption, style: Tokens.body.style.copyWith(color: p.accent)),
@@ -201,7 +201,7 @@ class _CreatePollPageState extends State<CreatePollPage> {
             IosSection(
               footer: sectionFooter(context, widget.isChannel ? l.pollChannelInfo : (anonymous ? l.pollAnonInfo : l.pollOpenInfo)),
               children: [
-                CupertinoListTile(
+                IosTile(
                   title: Text(l.pollAnonymous),
                   trailing: IosSwitch(
                     key: const Key('poll-anonymous'),
@@ -210,7 +210,7 @@ class _CreatePollPageState extends State<CreatePollPage> {
                     onChanged: widget.isChannel ? null : (v) => setState(() => anonymous = v),
                   ),
                 ),
-                CupertinoListTile(
+                IosTile(
                   title: Text(l.pollMultiple),
                   trailing: IosSwitch(
                     key: const Key('poll-multiple'),
@@ -224,7 +224,7 @@ class _CreatePollPageState extends State<CreatePollPage> {
             IosSection(
               footer: sectionFooter(context, quiz && correct == null ? l.quizPickAnswer : l.quizModeInfo),
               children: [
-                CupertinoListTile(
+                IosTile(
                   title: Text(l.quizMode),
                   trailing: IosSwitch(key: const Key('poll-quiz'), value: quiz, activeTrackColor: p.accent, onChanged: (v) => setState(() => quiz = v)),
                 ),
@@ -244,11 +244,11 @@ class _CreatePollPageState extends State<CreatePollPage> {
             IosSection(
               footer: sectionFooter(context, l.pollDeadlineInfo),
               children: [
-                CupertinoListTile(
+                IosTile(
                   key: const Key('poll-deadline'),
                   title: Text(l.pollDeadline),
                   additionalInfo: Text(deadlineLabel(l, closeIn)),
-                  trailing: const CupertinoListTileChevron(),
+                  trailing: const IosChevron(),
                   onTap: pickDeadline,
                 ),
               ],

@@ -78,7 +78,7 @@ List<String> audit(WidgetTester t, String screen) {
   }
 
   // 3. One-line rows in cards: all 52pt tall.
-  for (final e in find.descendant(of: find.byType(IosSection), matching: find.byType(CupertinoListTile)).evaluate()) {
+  for (final e in find.descendant(of: find.byType(IosSection), matching: find.byWidgetPredicate((w) => w is CupertinoListTile)).evaluate()) {
     final tile = e.widget as CupertinoListTile;
     final r = t.getRect(find.byElementPredicate((x) => x == e));
     if (r.height == 0) continue;
@@ -125,7 +125,9 @@ List<String> audit(WidgetTester t, String screen) {
             final iconGlyph = st?.fontFamily == 'CupertinoIcons' || (st?.fontFamily ?? '').contains('cupertino_icons');
             if (!emojiOnly && !iconGlyph) {
               if (!sizes.contains(fs)) bad.add('$screen: text "${_short(sp.text!)}" is ${fs}pt (allowed ${sizes.toList()..sort()})');
-              if (fw.value > 600) bad.add('$screen: text "${_short(sp.text!)}" weight ${fw.value} (max 600)');
+              // 700 only for the settings header card title (iOS 27, Eric 2026-11-25).
+              final headerTitle = fs == Tokens.headerTitle.size && fw == Tokens.headerTitle.weight;
+              if (fw.value > 600 && !headerTitle) bad.add('$screen: text "${_short(sp.text!)}" weight ${fw.value} (max 600)');
             }
           }
           sp.visitDirectChildren((c) {

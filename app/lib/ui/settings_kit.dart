@@ -27,7 +27,15 @@ class SettingsScaffold extends StatelessWidget {
     return WidePage(
       child: CupertinoPageScaffold(
         backgroundColor: p.background,
-        navigationBar: GlassTopBar(title: title, back: true, trailing: trailing, tint: p.background),
+        // iOS 27: with a header card the small title only shows once the
+        // card scrolls under the bar.
+        navigationBar: GlassTopBar(
+          title: title,
+          back: true,
+          trailing: trailing,
+          tint: p.background,
+          titleOnScroll: children.isNotEmpty && children.first is HeaderCard,
+        ),
         child: ListView(
           padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top + GlassTopBar.height, bottom: MediaQuery.paddingOf(context).bottom + Tokens.space[5]),
           children: children,
@@ -60,8 +68,8 @@ class HeaderCard extends StatelessWidget {
     final p = paletteOf(context);
     return Container(
       width: double.infinity,
-      margin: EdgeInsets.fromLTRB(Tokens.space[3], Tokens.space[2], Tokens.space[3], 0),
-      padding: EdgeInsets.fromLTRB(Tokens.space[3] + Tokens.space[0], Tokens.space[3], Tokens.space[3] + Tokens.space[0], Tokens.space[4]),
+      margin: EdgeInsets.fromLTRB(Tokens.space[3], Tokens.space[4] + Tokens.space[0], Tokens.space[3], 0),
+      padding: EdgeInsets.fromLTRB(Tokens.space[3] + Tokens.space[0], Tokens.space[3], Tokens.space[3] + Tokens.space[0], Tokens.space[3]),
       decoration: BoxDecoration(color: p.card, borderRadius: BorderRadius.circular(Tokens.radius[3])),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -72,10 +80,11 @@ class HeaderCard extends StatelessWidget {
             decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(Tokens.radius[2])),
             child: Icon(icon, size: 34, color: const Color(0xFFFFFFFF)),
           ),
-          SizedBox(height: Tokens.space[2]),
-          Text(title, style: Tokens.screenTitle.style.copyWith(color: p.label)),
+          // iOS 27 Settings (일반, 손쉬운 사용): 22 semibold title, 17 words.
+          SizedBox(height: Tokens.space[2] + Tokens.space[0]),
+          Text(title, style: Tokens.headerTitle.style.copyWith(color: p.label)),
           SizedBox(height: Tokens.space[0]),
-          Text(body, style: Tokens.preview.style.copyWith(color: p.secondaryLabel)),
+          Text(body, style: Tokens.body.style.copyWith(color: p.secondaryLabel)),
         ],
       ),
     );
@@ -98,12 +107,12 @@ class NavRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CupertinoListTile(
+    return IosTile(
       leading: icon == null ? null : iconTile(color ?? Palette.tileGrey, icon!),
       title: Text(title, style: danger ? const TextStyle(color: Palette.tileRed) : null),
       subtitle: subtitle == null ? null : Text(subtitle!),
       additionalInfo: value == null ? null : Text(value!),
-      trailing: page == null && onTap == null || danger ? null : const CupertinoListTileChevron(),
+      trailing: page == null && onTap == null || danger ? null : const IosChevron(),
       onTap: onTap ?? (page == null ? null : () => Navigator.of(context).push(IosPageRoute(builder: page!))),
     );
   }
@@ -123,7 +132,7 @@ class PrefSwitch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
-    return CupertinoListTile(
+    return IosTile(
       leading: icon == null ? null : iconTile(color ?? Palette.tileGrey, icon!),
       title: Text(title),
       subtitle: subtitle == null ? null : Text(subtitle!, maxLines: 2, style: Tokens.caption.style),
@@ -190,7 +199,7 @@ class ChoicePage extends StatelessWidget {
         ?card,
         group(context, header: header, footer: footer, [
           for (final (v, label) in options)
-            CupertinoListTile(
+            IosTile(
               key: Key('pick-$v'),
               title: Text(label),
               trailing: v == now ? Icon(CupertinoIcons.check_mark, color: paletteOf(context).accent, size: 20) : null,

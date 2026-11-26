@@ -133,7 +133,7 @@ class _CreateChecklistPageState extends State<CreateChecklistPage> {
                         : null,
                   ),
                 if (items.length < maxItems)
-                  CupertinoListTile(
+                  IosTile(
                     key: const Key('checklist-add'),
                     leading: Icon(CupertinoIcons.add_circled_solid, color: p.accent),
                     title: Text(l.checklistAddItem, style: Tokens.body.style.copyWith(color: p.accent)),
@@ -145,7 +145,7 @@ class _CreateChecklistPageState extends State<CreateChecklistPage> {
               hasLeading: false,
               footer: sectionFooter(context, l.checklistOthersInfo),
               children: [
-                CupertinoListTile(
+                IosTile(
                   title: Text(l.checklistOthersMark),
                   trailing: IosSwitch(
                     key: const Key('checklist-others-mark'),
@@ -154,7 +154,7 @@ class _CreateChecklistPageState extends State<CreateChecklistPage> {
                     onChanged: (v) => setState(() => othersMark = v),
                   ),
                 ),
-                CupertinoListTile(
+                IosTile(
                   title: Text(l.checklistOthersAdd),
                   trailing: IosSwitch(
                     key: const Key('checklist-others-add'),

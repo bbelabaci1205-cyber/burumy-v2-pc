@@ -131,28 +131,23 @@ class StoriesBar extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       onLongPress: onLong,
-      child: SizedBox(
-        width: ring + Tokens.space[1],
-        child: Column(
-          children: [
-            face,
-            SizedBox(height: Tokens.space[0]),
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: Tokens.caption.style.copyWith(color: p.label),
-            ),
-          ],
+      // No names under the rings (Eric 2026-11-26); screen readers still say them.
+      child: Semantics(
+        label: label,
+        button: true,
+        child: SizedBox(
+          width: ring + Tokens.space[0],
+          child: Center(child: face),
         ),
       ),
     );
     return SizedBox(
       key: const Key('stories-bar'),
-      height: ring + 26,
+      height: ring + Tokens.space[2],
       child: ListView(
         scrollDirection: Axis.horizontal,
+        // No bounce: past the end the whole strip slides (to the side menu).
+        physics: const ClampingScrollPhysics(),
         padding: EdgeInsets.symmetric(horizontal: Tokens.space[2]),
         children: [
           item(

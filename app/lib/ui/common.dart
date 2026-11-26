@@ -171,7 +171,7 @@ Widget iconTile(Color c, IconData i) => Container(
     ),
     gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color.lerp(c, const Color(0xFFFFFFFF), 0.08)!, c]),
   ),
-  child: Icon(i, size: Tokens.listIconSmall, color: const Color(0xFFFFFFFF)),
+  child: Icon(i, size: Tokens.tileGlyph, color: const Color(0xFFFFFFFF)),
 );
 
 /// iOS grouped-list section title: small, grey, regular weight.

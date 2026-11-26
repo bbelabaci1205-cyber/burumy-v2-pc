@@ -1781,5 +1781,17 @@
     }
   },
   "planHourBefore": "1시간 전에 알림",
-  "planAtTime": "그 시각에 알림"
+  "planAtTime": "그 시각에 알림",
+  "checkSectionTodo": "할 일",
+  "archiveToMenu": "왼쪽 메뉴로",
+  "archiveMovedTitle": "보관함을 왼쪽 메뉴로 옮겼어요",
+  "archiveMovedBody": "왼쪽 위 메뉴 버튼을 누르면 보여요.",
+  "archivePinnedTitle": "보관함을 대화 목록에 고정했어요",
+  "archivePinnedBody": "다시 옮기려면 왼쪽으로 끝까지 밀어요.",
+  "archivePinBack": "목록에 고정",
+  "menuStories": "스토리",
+  "storiesMovedTitle": "스토리를 왼쪽 메뉴로 옮겼어요",
+  "bubblesMovedTitle": "비눗방울을 왼쪽 메뉴로 옮겼어요",
+  "storiesPinnedTitle": "스토리를 대화 목록에 고정했어요",
+  "bubblesPinnedTitle": "비눗방울을 대화 목록에 고정했어요"
 }

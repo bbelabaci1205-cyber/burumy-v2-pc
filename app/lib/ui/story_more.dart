@@ -409,7 +409,7 @@ class _AudiencePageState extends State<_AudiencePage> {
     final p = paletteOf(context);
     final s = AppScope.of(context);
     final friends = storyFriends(s);
-    Widget option(String m, String title, String sub, IconData icon, Color color) => CupertinoListTile(
+    Widget option(String m, String title, String sub, IconData icon, Color color) => IosTile(
       key: Key('aud-$m'),
       leading: iconTile(color, icon),
       title: Text(title),
@@ -453,7 +453,7 @@ class _AudiencePageState extends State<_AudiencePage> {
               header: sectionHeader(context, mode == 'close' ? l.storyCloseFriends : l.storyPicked),
               children: [
                 for (final c in friends)
-                  CupertinoListTile(
+                  IosTile(
                     key: Key('aud-friend-${c.roomId}'),
                     leadingSize: Tokens.memberAvatar,
                     leading: Avatar(name: c.name, size: Tokens.memberAvatar, userId: c.peer),

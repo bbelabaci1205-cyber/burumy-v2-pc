@@ -11,6 +11,7 @@ import '../design/tokens.dart';
 import '../l10n/app_localizations.dart';
 import 'common.dart';
 import 'glass.dart';
+import 'ios.dart';
 import 'ios_route.dart';
 import 'settings_kit.dart';
 import 'wide.dart';
@@ -43,7 +44,7 @@ class WebBrowserPage extends StatelessWidget {
     final p = paletteOf(context);
     final now = s.pref('link_open', 'in_app');
     final sites = neverInApp(s);
-    Widget choice(String v, IconData icon, Color c, String title) => CupertinoListTile(
+    Widget choice(String v, IconData icon, Color c, String title) => IosTile(
       key: Key('link-open-$v'),
       leading: iconTile(c, icon),
       title: Text(title),
@@ -58,14 +59,14 @@ class WebBrowserPage extends StatelessWidget {
           choice('browser', CupertinoIcons.compass_fill, Palette.tileBlue, l.linkOpenBrowser),
         ]),
         group(context, header: l.linkNeverHeader, footer: l.linkNeverInfo, [
-          CupertinoListTile(
+          IosTile(
             key: const Key('link-never-add'),
             leading: Icon(CupertinoIcons.add, color: p.accent),
             title: Text(l.linkNeverAdd, style: TextStyle(color: p.accent)),
             onTap: () => paneNav(context).push(IosPageRoute<void>(builder: (_) => const _AddSitePage())),
           ),
           for (final h in sites)
-            CupertinoListTile(
+            IosTile(
               key: Key('link-never-$h'),
               title: Text(h),
               trailing: GestureDetector(

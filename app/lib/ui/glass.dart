@@ -163,7 +163,7 @@ class GlassBack extends StatelessWidget {
   Widget build(BuildContext context) => GlassCircle(
     key: const Key('back'),
     onTap: () => Navigator.of(context).maybePop(),
-    child: GlassCircle.icon(context, close ? CupertinoIcons.xmark : CupertinoIcons.chevron_back),
+    child: close ? GlassCircle.icon(context, CupertinoIcons.xmark) : GlassCircle.icon(context, CupertinoIcons.chevron_back, size: Tokens.backChevron),
   );
 }
 
@@ -233,6 +233,8 @@ class GlassTopBar extends StatefulWidget implements ObstructingPreferredSizeWidg
     this.tint,
     this.titleOnScroll = false,
     this.full,
+    this.middleInset = 96,
+    this.lift = iosLift,
   });
 
   /// Fills the whole bar instead of the left / middle / right layout (for
@@ -240,8 +242,19 @@ class GlassTopBar extends StatefulWidget implements ObstructingPreferredSizeWidg
   final Widget? full;
 
   /// Same arguments as CupertinoNavigationBar, so every page uses this bar.
-  factory GlassTopBar.nav({Key? key, Widget? leading, Widget? middle, Widget? trailing, Color? backgroundColor, Border? border}) => GlassTopBar(
+  factory GlassTopBar.nav({
+    Key? key,
+    Widget? leading,
+    Widget? middle,
+    Widget? trailing,
+    Color? backgroundColor,
+    Border? border,
+    double middleInset = 96,
+    double lift = iosLift,
+  }) => GlassTopBar(
     key: key,
+    middleInset: middleInset,
+    lift: lift,
     middle: middle == null
         ? null
         : Builder(
@@ -256,6 +269,14 @@ class GlassTopBar extends StatefulWidget implements ObstructingPreferredSizeWidg
     trailing: [?trailing],
     tint: backgroundColor,
   );
+
+  /// Room kept on each side of the middle for the round buttons.
+  final double middleInset;
+
+  /// Moves the buttons and title up by this much. iOS 27: back button
+  /// centre 22pt under the status bar (8pt higher than a plain 60pt bar).
+  final double lift;
+  static const iosLift = (height - Tokens.closeButton) / 2;
 
   /// Page colour behind the bar.
   final Color? tint;
@@ -309,7 +330,11 @@ class _GlassTopBarState extends State<GlassTopBar> {
     final top = MediaQuery.paddingOf(context).top;
     final left = [
       if (w.back)
-        GlassCircle(key: const Key('back'), onTap: () => Navigator.of(context).maybePop(), child: GlassCircle.icon(context, CupertinoIcons.chevron_back)),
+        GlassCircle(
+          key: const Key('back'),
+          onTap: () => Navigator.of(context).maybePop(),
+          child: GlassCircle.icon(context, CupertinoIcons.chevron_back, size: Tokens.backChevron),
+        ),
       ...w.leading,
     ];
     Widget side(List<Widget> items) => Row(
@@ -319,16 +344,16 @@ class _GlassTopBarState extends State<GlassTopBar> {
       ],
     );
     final bar = Padding(
-      padding: EdgeInsets.fromLTRB(Tokens.space[3], top, Tokens.space[3], 0),
+      padding: EdgeInsets.fromLTRB(Tokens.space[3], top, Tokens.space[3], 2 * w.lift),
       child: SizedBox(
-        height: GlassTopBar.height,
+        height: GlassTopBar.height - 2 * w.lift,
         child: w.full != null
             ? Center(child: w.full)
             : Stack(
                 alignment: Alignment.center,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 96),
+                    padding: EdgeInsets.symmetric(horizontal: w.middleInset),
                     child: Center(
                       child:
                           w.middle ??

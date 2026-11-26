@@ -62,8 +62,7 @@ import 'app_localizations_ko.dart';
 /// be consistent with the languages listed in the L.supportedLocales
 /// property.
 abstract class L {
-  L(String locale)
-    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  L(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -83,19 +82,15 @@ abstract class L {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
-      <LocalizationsDelegate<dynamic>>[
-        delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ];
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
+    delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+  ];
 
   /// A list of this localizations delegate's supported locales.
-  static const List<Locale> supportedLocales = <Locale>[
-    Locale('en'),
-    Locale('ko'),
-  ];
+  static const List<Locale> supportedLocales = <Locale>[Locale('en'), Locale('ko')];
 
   /// No description provided for @appName.
   ///
@@ -7518,6 +7513,78 @@ abstract class L {
   /// In ko, this message translates to:
   /// **'그 시각에 알림'**
   String get planAtTime;
+
+  /// No description provided for @checkSectionTodo.
+  ///
+  /// In ko, this message translates to:
+  /// **'할 일'**
+  String get checkSectionTodo;
+
+  /// No description provided for @archiveToMenu.
+  ///
+  /// In ko, this message translates to:
+  /// **'왼쪽 메뉴로'**
+  String get archiveToMenu;
+
+  /// No description provided for @archiveMovedTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'보관함을 왼쪽 메뉴로 옮겼어요'**
+  String get archiveMovedTitle;
+
+  /// No description provided for @archiveMovedBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'왼쪽 위 메뉴 버튼을 누르면 보여요.'**
+  String get archiveMovedBody;
+
+  /// No description provided for @archivePinnedTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'보관함을 대화 목록에 고정했어요'**
+  String get archivePinnedTitle;
+
+  /// No description provided for @archivePinnedBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'다시 옮기려면 왼쪽으로 끝까지 밀어요.'**
+  String get archivePinnedBody;
+
+  /// No description provided for @archivePinBack.
+  ///
+  /// In ko, this message translates to:
+  /// **'목록에 고정'**
+  String get archivePinBack;
+
+  /// No description provided for @menuStories.
+  ///
+  /// In ko, this message translates to:
+  /// **'스토리'**
+  String get menuStories;
+
+  /// No description provided for @storiesMovedTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'스토리를 왼쪽 메뉴로 옮겼어요'**
+  String get storiesMovedTitle;
+
+  /// No description provided for @bubblesMovedTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'비눗방울을 왼쪽 메뉴로 옮겼어요'**
+  String get bubblesMovedTitle;
+
+  /// No description provided for @storiesPinnedTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'스토리를 대화 목록에 고정했어요'**
+  String get storiesPinnedTitle;
+
+  /// No description provided for @bubblesPinnedTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'비눗방울을 대화 목록에 고정했어요'**
+  String get bubblesPinnedTitle;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {
@@ -7529,8 +7596,7 @@ class _LDelegate extends LocalizationsDelegate<L> {
   }
 
   @override
-  bool isSupported(Locale locale) =>
-      <String>['en', 'ko'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>['en', 'ko'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_LDelegate old) => false;

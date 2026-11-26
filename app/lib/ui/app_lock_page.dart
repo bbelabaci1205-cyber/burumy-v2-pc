@@ -106,11 +106,11 @@ class _AppLockPageState extends State<AppLockPage> {
       body = [
         IosSection(
           children: [
-            CupertinoListTile(
+            IosTile(
               key: const Key('lock-set-first'),
               leading: iconTile(Palette.tileIndigo, CupertinoIcons.lock),
               title: Text(l.setPassword),
-              trailing: const CupertinoListTileChevron(),
+              trailing: const IosChevron(),
               onTap: () => push(
                 PasswordPage(
                   title: l.setPassword,
@@ -137,12 +137,12 @@ class _AppLockPageState extends State<AppLockPage> {
       ];
     } else {
       final n = normal!;
-      Widget extraRow(String role, int i, Color c, IconData icon, String title, String info) => CupertinoListTile(
+      Widget extraRow(String role, int i, Color c, IconData icon, String title, String info) => IosTile(
         key: Key('lock-$role'),
         leading: iconTile(c, icon),
         title: Text(title),
         additionalInfo: Text(extras[i] ? l.appLockOn : l.notSet),
-        trailing: const CupertinoListTileChevron(),
+        trailing: const IosChevron(),
         onTap: () => push(
           PasswordPage(
             title: title,
@@ -152,21 +152,21 @@ class _AppLockPageState extends State<AppLockPage> {
           ),
         ),
       );
-      Widget listRow(int i, Color c, IconData icon, String title) => CupertinoListTile(
+      Widget listRow(int i, Color c, IconData icon, String title) => IosTile(
         key: Key('lock-list-$i'),
         leading: iconTile(c, icon),
         title: Text(title),
         additionalInfo: Text(lists[i].isEmpty ? l.notSet : l.chooseCount(lists[i].length)),
-        trailing: const CupertinoListTileChevron(),
+        trailing: const IosChevron(),
         onTap: () => push(QuietPickPage(title: title, chosen: lists[i], onSave: (v) => b.setQuietLists(i == 0 ? v : lists[0], i == 1 ? v : lists[1]))),
       );
       body = [
         IosSection(
           children: [
-            CupertinoListTile(
+            IosTile(
               leading: iconTile(Palette.tileIndigo, CupertinoIcons.lock),
               title: Text(l.changePassword),
-              trailing: const CupertinoListTileChevron(),
+              trailing: const IosChevron(),
               onTap: () => push(
                 PasswordPage(
                   title: l.changePassword,
@@ -196,7 +196,7 @@ class _AppLockPageState extends State<AppLockPage> {
         IosSection(
           footer: sectionFooter(context, l.wipeAfterInfo),
           children: [
-            CupertinoListTile(
+            IosTile(
               leading: iconTile(Palette.tilePink, CupertinoIcons.exclamationmark_shield),
               title: Text(l.wipeAfter),
               trailing: IosSegmented<int>(
@@ -224,7 +224,7 @@ class _AppLockPageState extends State<AppLockPage> {
             if (hideSession && hideOn)
               IosSection(
                 children: [
-                  CupertinoListTile(
+                  IosTile(
                     key: const Key('release-hidden'),
                     leading: iconTile(Palette.tileBlue, CupertinoIcons.eye),
                     title: Text(l.releaseHidden),
@@ -298,7 +298,7 @@ class _PasswordPageState extends State<PasswordPage> {
             if (widget.onRemove != null)
               IosSection(
                 children: [
-                  CupertinoListTile(
+                  IosTile(
                     title: Text(l.removePassword, style: const TextStyle(color: Palette.tileRed)),
                     onTap: () async {
                       await widget.onRemove!();
@@ -343,7 +343,7 @@ class _QuietPickPageState extends State<QuietPickPage> {
   Widget row(BuildContext context, String id, String name, String sub) {
     final p = paletteOf(context);
     final on = picked.contains(id);
-    return CupertinoListTile(
+    return IosTile(
       leading: Avatar(name: name, size: 30),
       title: Text(name),
       subtitle: Text(sub, style: Tokens.caption.style),
