@@ -23,10 +23,12 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:image_picker/image_picker.dart';
 
 import '../core/app_state.dart';
+import '../core/features.dart';
 import '../design/tokens.dart';
 import '../l10n/app_localizations.dart';
 import 'glass.dart';
 import 'ios_route.dart';
+import 'qr_watch.dart';
 import 'stories.dart';
 import 'wide.dart';
 
@@ -65,7 +67,18 @@ class CamSize {
 }
 
 class StoryCameraPage extends StatefulWidget {
-  const StoryCameraPage({super.key});
+  const StoryCameraPage({super.key, this.room = '', this.roomName = '', this.capture = false, this.video = false});
+
+  /// A group's or channel's story (tip 428): that room; '' = my own.
+  final String room, roomName;
+
+  /// 채널 짧은 영상 (4-app board, WhatsApp 2025): the camera only takes the
+  /// picture or clip and pops with it as (name, bytes), for the attach
+  /// sheet. No story editor, no 라이브.
+  final bool capture;
+
+  /// Opens on 영상 instead of 사진.
+  final bool video;
 
   /// Tests and screenshots without a camera: a painted scene stands in.
   static bool fake = false;
@@ -81,6 +94,14 @@ class _StoryCameraPageState extends State<StoryCameraPage> with WidgetsBindingOb
   bool starting = true, unavailable = false, busy = false;
   CamMode mode = CamMode.photo;
   FlashMode flash = FlashMode.off;
+
+  /// Front camera "flash" = the screen lights up (TelegramTips 404).
+  /// Hold the ⚡ button to set its warmth and brightness (kept on this
+  /// phone only).
+  bool flashPanel = false, screenFlash = false;
+  double get flashWarm => double.tryParse(AppScope.read(context).pref('front_flash_warm', '0.4')) ?? .4;
+  double get flashBright => double.tryParse(AppScope.read(context).pref('front_flash_bright', '1')) ?? 1;
+  bool get frontFlashOn => lens == CameraLensDirection.front && flash != FlashMode.off;
   bool dual = false, pickingGrid = false;
   int? layout;
   List<Uint8List?> cells = const [];
@@ -94,10 +115,36 @@ class _StoryCameraPageState extends State<StoryCameraPage> with WidgetsBindingOb
   int pointers = 0;
   int fakeShots = 0;
 
+  /// QR codes in the picture (tip 503): on in plain photo mode only.
+  QrWatcher? qr;
+
+  bool get qrWanted =>
+      Features.shareLinks && mode == CamMode.photo && layout == null && !dual && !recording && (StoryCameraPage.fake || (ctl?.value.isInitialized ?? false));
+
+  /// Starts or stops the QR watcher to match the camera and mode.
+  void syncQr() {
+    if (!mounted) return;
+    final want = qrWanted;
+    if (want && qr != null && qr!.camera == (StoryCameraPage.fake ? null : ctl)) return;
+    if (!want && qr == null) return;
+    dropQr();
+    if (want) {
+      qr = QrWatcher(StoryCameraPage.fake ? null : ctl);
+      unawaited(qr!.start());
+    }
+    setState(() {});
+  }
+
+  void dropQr() {
+    qr?.dispose();
+    qr = null;
+  }
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    if (widget.video) mode = CamMode.video;
     start();
   }
 
@@ -105,6 +152,7 @@ class _StoryCameraPageState extends State<StoryCameraPage> with WidgetsBindingOb
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     tick?.cancel();
+    dropQr();
     ctl?.dispose();
     super.dispose();
   }
@@ -116,6 +164,7 @@ class _StoryCameraPageState extends State<StoryCameraPage> with WidgetsBindingOb
     if (st == AppLifecycleState.inactive || st == AppLifecycleState.paused) {
       final c = ctl;
       ctl = null;
+      dropQr();
       c?.dispose();
       if (mounted) setState(() {});
     } else if (st == AppLifecycleState.resumed && ctl == null) {
@@ -150,6 +199,7 @@ class _StoryCameraPageState extends State<StoryCameraPage> with WidgetsBindingOb
     final desc = camFor(d) ?? cams.firstOrNull;
     if (desc == null) return;
     final old = ctl;
+    dropQr();
     setState(() {
       ctl = null;
       starting = true;
@@ -262,8 +312,13 @@ class _StoryCameraPageState extends State<StoryCameraPage> with WidgetsBindingOb
     if (StoryCameraPage.fake) return fakePhoto(fakeShots++, front: lens == CameraLensDirection.front);
     final c = ctl;
     if (c == null || !c.value.isInitialized) return null;
-    final x = await c.takePicture();
-    return x.readAsBytes();
+    await qr?.pause();
+    try {
+      final x = await c.takePicture();
+      return await x.readAsBytes();
+    } finally {
+      unawaited(qr?.resume());
+    }
   }
 
   Future<Uint8List?> snapFront() async {
@@ -285,12 +340,12 @@ class _StoryCameraPageState extends State<StoryCameraPage> with WidgetsBindingOb
       showStoryToast(context, l.camLiveLater);
       return;
     }
-    if (mode == CamMode.video) {
-      await (recording ? stopVideo() : startVideo());
+    if (unavailable && !StoryCameraPage.fake) {
+      await pickFrom(ImageSource.camera);
       return;
     }
-    if (unavailable) {
-      await pickFrom(ImageSource.camera);
+    if (mode == CamMode.video) {
+      await (recording ? stopVideo() : startVideo());
       return;
     }
     setState(() {
@@ -298,7 +353,7 @@ class _StoryCameraPageState extends State<StoryCameraPage> with WidgetsBindingOb
       pickingGrid = false;
     });
     try {
-      final b = await snap();
+      final b = await flashed(snap);
       if (b == null) return;
       if (layout != null) {
         final next = [...cells];
@@ -326,6 +381,123 @@ class _StoryCameraPageState extends State<StoryCameraPage> with WidgetsBindingOb
     }
   }
 
+  /// Front camera + flash: the screen glows in the chosen colour while the
+  /// picture is taken (iPhone front cameras have no lamp).
+  Future<T> flashed<T>(Future<T> Function() take) async {
+    if (!frontFlashOn) return take();
+    setState(() => screenFlash = true);
+    await Future<void>.delayed(const Duration(milliseconds: 260));
+    try {
+      return await take();
+    } finally {
+      if (mounted) setState(() => screenFlash = false);
+    }
+  }
+
+  /// The glow colour: white warmed towards amber.
+  Color flashColor() => Color.lerp(const Color(0xFFFFFFFF), Palette.flashWarm, flashWarm)!;
+
+  Widget flashSlider({required Key key, required String label, required double value, required ValueChanged<double> onChanged}) {
+    return LayoutBuilder(
+      builder: (context, box) {
+        void at(Offset o) => onChanged((o.dx / box.maxWidth).clamp(0.0, 1.0));
+        return GestureDetector(
+          key: key,
+          behavior: HitTestBehavior.opaque,
+          onHorizontalDragUpdate: (d) => at(d.localPosition),
+          onTapDown: (d) => at(d.localPosition),
+          child: LiquidGlass(
+            radius: Tokens.capsule,
+            child: SizedBox(
+              height: 44,
+              width: double.infinity,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  FractionallySizedBox(
+                    alignment: Alignment.centerLeft,
+                    widthFactor: value,
+                    child: const ColoredBox(color: Color(0xFFFFFFFF), child: SizedBox.expand()),
+                  ),
+                  Positioned.fill(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: Tokens.space[3]),
+                      child: Row(
+                        children: [
+                          Text(label, style: Tokens.body.style.copyWith(color: value > .3 ? const Color(0xFF000000) : const Color(0xFFFFFFFF))),
+                          const Spacer(),
+                          Text(
+                            '${(value * 100).round()}%',
+                            style: Tokens.body.style.copyWith(color: value > .9 ? const Color(0xFF000000) : const Color(0xFFFFFFFF)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Held ⚡: two sliders (warmth, brightness) over a preview of the glow.
+  List<Widget> flashLayers(double top) {
+    final s = AppScope.read(context);
+    final l = L.of(context);
+    return [
+      if (flashPanel)
+        Positioned.fill(
+          child: GestureDetector(
+            key: const Key('cam-flash-panel-close'),
+            onTap: () => setState(() => flashPanel = false),
+            child: ColoredBox(color: flashColor().withValues(alpha: .35 * flashBright)),
+          ),
+        ),
+      if (flashPanel)
+        Positioned(
+          key: const Key('cam-flash-panel'),
+          top: top + Tokens.closeButton + Tokens.space[3],
+          left: Tokens.space[5],
+          right: Tokens.space[5],
+          child: Column(
+            children: [
+              flashSlider(
+                key: const Key('cam-flash-warm'),
+                label: l.camFlashWarm,
+                value: flashWarm,
+                onChanged: (v) => s.setPref('front_flash_warm', v.toStringAsFixed(2)).then((_) => mounted ? setState(() {}) : null),
+              ),
+              SizedBox(height: Tokens.space[2]),
+              flashSlider(
+                key: const Key('cam-flash-bright'),
+                label: l.camFlashBright,
+                value: flashBright,
+                onChanged: (v) => s.setPref('front_flash_bright', v.clamp(.2, 1.0).toStringAsFixed(2)).then((_) => mounted ? setState(() {}) : null),
+              ),
+              SizedBox(height: Tokens.space[2]),
+              Text(
+                l.camFlashFront,
+                textAlign: TextAlign.center,
+                style: Tokens.caption.style.copyWith(color: const Color(0xFFFFFFFF)),
+              ),
+            ],
+          ),
+        ),
+      if (screenFlash || (recording && frontFlashOn))
+        Positioned.fill(
+          child: IgnorePointer(
+            child: ColoredBox(
+              key: const Key('cam-screen-flash'),
+              color: flashColor().withValues(alpha: .4 + .6 * flashBright),
+            ),
+          ),
+        ),
+    ];
+  }
+
   Future<void> startVideo() async {
     final c = ctl;
     if (StoryCameraPage.fake) {
@@ -337,6 +509,7 @@ class _StoryCameraPageState extends State<StoryCameraPage> with WidgetsBindingOb
       return;
     }
     if (c == null) return;
+    dropQr();
     try {
       await c.startVideoRecording();
     } catch (_) {
@@ -356,7 +529,11 @@ class _StoryCameraPageState extends State<StoryCameraPage> with WidgetsBindingOb
     tick?.cancel();
     watch.stop();
     setState(() => recording = false);
-    if (StoryCameraPage.fake) return;
+    if (StoryCameraPage.fake) {
+      // Tests: a stand-in clip, so the capture path can be followed.
+      if (widget.capture) await compose(('clip.mp4', Uint8List.fromList(List.filled(64, 7))));
+      return;
+    }
     final c = ctl;
     if (c == null) return;
     try {
@@ -372,6 +549,9 @@ class _StoryCameraPageState extends State<StoryCameraPage> with WidgetsBindingOb
     try {
       final x = src == ImageSource.gallery
           ? await ImagePicker().pickMedia(maxWidth: 1440, imageQuality: 88)
+          // No camera here, on 영상: the phone's own camera records a clip.
+          : mode == CamMode.video
+          ? await ImagePicker().pickVideo(source: src, maxDuration: CamSize.maxVideo)
           : await ImagePicker().pickImage(source: src, maxWidth: 1440, imageQuality: 88);
       if (x == null) return;
       final b = await x.readAsBytes();
@@ -388,7 +568,15 @@ class _StoryCameraPageState extends State<StoryCameraPage> with WidgetsBindingOb
     final c = ctl;
     ctl = null;
     await c?.dispose();
-    final shared = await nav.push<bool>(IosPageRoute(builder: (_) => StoryComposer(picked: file)));
+    if (widget.capture) {
+      nav.pop(file);
+      return;
+    }
+    final shared = await nav.push<bool>(
+      IosPageRoute(
+        builder: (_) => StoryComposer(picked: file, room: widget.room, roomName: widget.roomName),
+      ),
+    );
     if (!mounted) return;
     if (shared == true) {
       nav.pop(true);
@@ -431,6 +619,7 @@ class _StoryCameraPageState extends State<StoryCameraPage> with WidgetsBindingOb
 
   @override
   Widget build(BuildContext context) {
+    if (qrWanted != (qr != null) || (qr != null && !StoryCameraPage.fake && qr!.camera != ctl)) WidgetsBinding.instance.addPostFrameCallback((_) => syncQr());
     return CupertinoTheme(
       data: CupertinoTheme.of(context).copyWith(brightness: Brightness.dark),
       child: PhoneFrame(child: Builder(builder: page)),
@@ -483,6 +672,7 @@ class _StoryCameraPageState extends State<StoryCameraPage> with WidgetsBindingOb
               ],
             ),
           ),
+          ...flashLayers(top),
         ],
       ),
     );
@@ -532,22 +722,33 @@ class _StoryCameraPageState extends State<StoryCameraPage> with WidgetsBindingOb
     const white = Color(0xFFFFFFFF);
     final lay = layout;
     final children = <Widget>[];
-    if (lay == null) {
-      children.add(Positioned.fill(child: live()));
-    } else {
+    // The live picture keeps one place in the tree whether or not a grid is
+    // on, and only moves into the cell being shot. Rebuilding it inside a
+    // cell made a new camera view that stayed black on iPhone (Eric
+    // 2026-11-28 "그리드에서 화면이 안 보임").
+    Rect cellRect(Rect r) => Rect.fromLTWH(r.left * size.width, r.top * size.height, r.width * size.width, r.height * size.height);
+    final liveAt = lay == null || nextCell < 0 ? Offset.zero & size : cellRect(storyLayouts[lay][nextCell]);
+    children.add(
+      Positioned.fromRect(
+        key: const ValueKey('cam-live'),
+        rect: liveAt,
+        child: ClipRect(child: live()),
+      ),
+    );
+    if (lay != null) {
       final rects = storyLayouts[lay];
       final next = nextCell;
       for (var i = 0; i < rects.length; i++) {
-        final r = Rect.fromLTWH(rects[i].left * size.width, rects[i].top * size.height, rects[i].width * size.width, rects[i].height * size.height);
+        final r = cellRect(rects[i]);
         final b = i < cells.length ? cells[i] : null;
+        // The cell being shot shows the live picture underneath.
+        if (b == null && i == next) continue;
         children.add(
           Positioned.fromRect(
             key: Key('cam-cell-$i'),
             rect: r,
             child: b != null
                 ? Image.memory(b, fit: BoxFit.cover, gaplessPlayback: true)
-                : i == next
-                ? ClipRect(child: live())
                 : ColoredBox(color: Palette.of(AppScope.of(context).family, Brightness.dark).card),
           ),
         );
@@ -606,6 +807,15 @@ class _StoryCameraPageState extends State<StoryCameraPage> with WidgetsBindingOb
         ...children,
         gestures,
         ?dualCircle,
+        if (qr case final q?)
+          Positioned.fill(
+            child: QrOverlay(
+              watcher: q,
+              size: size,
+              bottom: CamSize.shutterLift + CamSize.shutter + Tokens.space[3],
+              onClose: () => Navigator.of(context).maybePop(),
+            ),
+          ),
         Positioned(top: Tokens.space[1], left: 0, right: Tokens.space[0], child: topRow(l)),
         if (recording)
           Positioned(
@@ -683,11 +893,12 @@ class _StoryCameraPageState extends State<StoryCameraPage> with WidgetsBindingOb
     );
   }
 
-  Widget topIcon({required Key key, required Widget icon, required VoidCallback onTap, bool on = false}) {
+  Widget topIcon({required Key key, required Widget icon, required VoidCallback onTap, bool on = false, VoidCallback? onLongPress}) {
     return GestureDetector(
       key: key,
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
+      onLongPress: onLongPress,
       child: SizedBox(
         width: Tokens.closeButton,
         height: Tokens.closeButton,
@@ -731,19 +942,27 @@ class _StoryCameraPageState extends State<StoryCameraPage> with WidgetsBindingOb
                   ),
                   for (var i = storyLayouts.length - 1; i >= 0; i--) ...[
                     gap,
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        topIcon(key: Key('cam-layout-$i'), on: layout == i, icon: _GridIcon(storyLayouts[i]), onTap: () => chooseLayout(i)),
-                        if (layout == i)
-                          Container(
-                            key: const Key('cam-grid-tip'),
-                            margin: EdgeInsets.only(top: Tokens.space[0]),
-                            padding: EdgeInsets.symmetric(horizontal: Tokens.space[2], vertical: Tokens.space[0] + 2),
-                            decoration: BoxDecoration(color: const Color(0xCC1C1C1E), borderRadius: BorderRadius.circular(Tokens.radius[1])),
-                            child: Text(l.camGridRemove, style: Tokens.caption.style.copyWith(color: const Color(0xFFFFFFFF))),
-                          ),
-                      ],
+                    // The tip hangs under its button without taking room in
+                    // the row (it pushed the other buttons off the left edge).
+                    Align(
+                      alignment: Alignment.topCenter,
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          topIcon(key: Key('cam-layout-$i'), on: layout == i, icon: _GridIcon(storyLayouts[i]), onTap: () => chooseLayout(i)),
+                          if (layout == i)
+                            Positioned(
+                              top: Tokens.closeButton + Tokens.space[0],
+                              right: 0,
+                              child: Container(
+                                key: const Key('cam-grid-tip'),
+                                padding: EdgeInsets.symmetric(horizontal: Tokens.space[2], vertical: Tokens.space[0] + 2),
+                                decoration: BoxDecoration(color: const Color(0xCC1C1C1E), borderRadius: BorderRadius.circular(Tokens.radius[1])),
+                                child: Text(l.camGridRemove, maxLines: 1, style: Tokens.caption.style.copyWith(color: const Color(0xFFFFFFFF))),
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
                   ],
                 ],
@@ -785,6 +1004,7 @@ class _StoryCameraPageState extends State<StoryCameraPage> with WidgetsBindingOb
               _ => CupertinoIcons.bolt_fill,
             }),
             onTap: cycleFlash,
+            onLongPress: () => setState(() => flashPanel = !flashPanel),
           ),
           gap,
         ],
@@ -810,19 +1030,20 @@ class _StoryCameraPageState extends State<StoryCameraPage> with WidgetsBindingOb
           mainAxisSize: MainAxisSize.min,
           children: [
             for (final m in CamMode.values)
-              GestureDetector(
-                key: Key('cam-mode-${m.name}'),
-                behavior: HitTestBehavior.opaque,
-                onTap: () => setMode(m),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  width: CamSize.segment,
-                  height: CamSize.bar - Tokens.space[0] * 2,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(color: mode == m ? const Color(0x2EFFFFFF) : null, borderRadius: BorderRadius.circular(Tokens.capsule)),
-                  child: Text(names[m]!, style: Tokens.preview.style.copyWith(color: mode == m ? Palette.tileYellow : const Color(0xFFFFFFFF))),
+              if (!widget.capture || m != CamMode.live)
+                GestureDetector(
+                  key: Key('cam-mode-${m.name}'),
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => setMode(m),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: CamSize.segment,
+                    height: CamSize.bar - Tokens.space[0] * 2,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(color: mode == m ? const Color(0x2EFFFFFF) : null, borderRadius: BorderRadius.circular(Tokens.capsule)),
+                    child: Text(names[m]!, style: Tokens.preview.style.copyWith(color: mode == m ? Palette.tileYellow : const Color(0xFFFFFFFF))),
+                  ),
                 ),
-              ),
           ],
         ),
       ),

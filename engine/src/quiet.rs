@@ -52,6 +52,12 @@ pub struct QuietState {
     /// Messages already erased from this device: event ids (never shown).
     #[serde(default)]
     pub gone: Vec<String>,
+    /// Single messages chosen for hiding: "chat id event id". Like hidden
+    /// chats: out of sight once a hide-password session switched hiding on,
+    /// back only when released inside a hide-password session (no extra
+    /// password, no toggle, no timer).
+    #[serde(default)]
+    pub veiled: Vec<String>,
 }
 
 fn mark_key(room_id: &RoomId, event_id: &str) -> String {
@@ -140,6 +146,41 @@ impl Engine {
         self.save_quiet(&q).await
     }
 
+    /// Marks (or unmarks) one message for the hide password.
+    pub async fn mark_for_hide(&self, room_id: &RoomId, event_id: &str, on: bool) -> Result<()> {
+        anyhow::ensure!(event_id.starts_with('$'), "not a message id");
+        let key = mark_key(room_id, event_id);
+        let mut q = self.quiet_state().await?;
+        q.veiled.retain(|m| *m != key);
+        if on {
+            q.veiled.push(key);
+        }
+        self.save_quiet(&q).await
+    }
+
+    /// Event ids of this chat's messages marked for the hide password.
+    pub async fn hide_marked_messages(&self, room_id: &RoomId) -> Result<Vec<String>> {
+        let head = format!("{room_id} ");
+        Ok(self
+            .quiet_state()
+            .await?
+            .veiled
+            .iter()
+            .filter_map(|m| m.strip_prefix(&head).map(str::to_owned))
+            .collect())
+    }
+
+    /// Event ids that must not be shown right now: erased ones, plus the
+    /// messages chosen for hiding while hiding is on (outside a
+    /// hide-password session).
+    pub(crate) fn unseen(&self, q: &QuietState) -> Vec<String> {
+        let mut out = q.gone.clone();
+        if q.hide_active && self.session_role() != Role::Hide {
+            out.extend(q.veiled.iter().filter_map(|k| k.split_once(' ').map(|(_, e)| e.to_owned())));
+        }
+        out
+    }
+
     /// Event ids of this chat's messages marked for the delete password.
     pub async fn marked_messages(&self, room_id: &RoomId) -> Result<Vec<String>> {
         let head = format!("{room_id} ");
@@ -207,6 +248,8 @@ impl Engine {
                 }
             }
             Role::Delete => self.erase(&mut q).await?,
+            // The app erases the chosen accounts itself; this one opens as usual.
+            Role::Account => {}
         }
         Ok(())
     }

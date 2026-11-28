@@ -34,6 +34,12 @@ class GeoPoint {
 
   String get shown => '${lat.toStringAsFixed(5)}, ${lon.toStringAsFixed(5)}';
 
+  /// 실시간 위치: when the sharing ends (null = a one-time location).
+  static DateTime? liveUntil(String? uri) {
+    final m = RegExp(r';live=(\d+)').firstMatch(uri ?? '');
+    return m == null ? null : DateTime.fromMillisecondsSinceEpoch(int.parse(m[1]!));
+  }
+
   /// The phone's own Maps app (iPhone: Apple Maps; Android: the chosen map
   /// app; web: OpenStreetMap, which needs no account).
   Uri get mapsUri {
@@ -78,6 +84,20 @@ class _SendLocationPageState extends State<SendLocationPage> {
       if (mounted) setState(() => error = e.code);
     } catch (_) {
       if (mounted) setState(() => error = 'unavailable');
+    }
+  }
+
+  /// 실시간 위치 for 15 minutes, 1 hour or 8 hours.
+  Future<void> sendLive(Duration length) async {
+    if (busy) return;
+    setState(() => busy = true);
+    try {
+      await AppScope.of(context).startLiveLocation(widget.roomId, length);
+      if (mounted) Navigator.pop(context, true);
+    } catch (_) {
+      if (mounted) setState(() => error = 'unavailable');
+    } finally {
+      if (mounted) setState(() => busy = false);
     }
   }
 
@@ -162,6 +182,25 @@ class _SendLocationPageState extends State<SendLocationPage> {
                 ],
               ],
             ),
+            if (f != null)
+              IosSection(
+                hasLeading: false,
+                header: sectionHeader(context, l.liveLocation),
+                footer: sectionFooter(context, l.liveLocationInfo),
+                children: [
+                  for (final (key, d, label) in [
+                    ('live-15m', const Duration(minutes: 15), l.live15m),
+                    ('live-1h', const Duration(hours: 1), l.live1h),
+                    ('live-8h', const Duration(hours: 8), l.live8h),
+                  ])
+                    IosTile(
+                      key: Key(key),
+                      title: Text(label, style: Tokens.body.style.copyWith(color: p.accent)),
+                      trailing: Icon(CupertinoIcons.location_circle_fill, color: p.accent, size: Tokens.listIcon),
+                      onTap: () => sendLive(d),
+                    ),
+                ],
+              ),
           ],
         ),
       ),
@@ -259,8 +298,9 @@ class _MapPainter extends CustomPainter {
 /// The location bubble: drawn map card with the pin, the place's numbers and
 /// "open in Maps".
 class LocationBubble extends StatelessWidget {
-  const LocationBubble({super.key, required this.msg, required this.fg, required this.meta});
+  const LocationBubble({super.key, required this.msg, required this.fg, required this.meta, this.roomId = ''});
   final Msg msg;
+  final String roomId;
   final Color fg;
   final Widget meta;
 
@@ -269,6 +309,10 @@ class LocationBubble extends StatelessWidget {
     final l = L.of(context);
     final g = GeoPoint.parse(msg.body);
     if (g == null) return Text(l.location, style: Tokens.body.style.copyWith(color: fg));
+    final s = AppScope.of(context);
+    final until = GeoPoint.liveUntil(msg.body);
+    final live = until != null && until.isAfter(s.backend.clock);
+    final left = until?.difference(s.backend.clock);
     return SizedBox(
       width: 240,
       child: Column(
@@ -294,16 +338,32 @@ class LocationBubble extends StatelessWidget {
               SizedBox(width: Tokens.space[0]),
               Expanded(
                 child: Text(
-                  l.location,
-                  style: Tokens.body.style.copyWith(color: fg, fontWeight: FontWeight.w600),
+                  until == null ? l.location : (live ? l.liveLocation : l.liveLocationEnded),
+                  key: Key(until == null ? 'location-title' : (live ? 'live-on' : 'live-ended')),
+                  style: Tokens.body.style.copyWith(color: fg, fontWeight: Tokens.semi),
                 ),
               ),
             ],
           ),
           Text(
-            g.accuracy == null ? g.shown : '${g.shown} · ${l.locationAccuracy(g.accuracy!.round())}',
+            live
+                ? (left!.inMinutes < 60 ? l.liveLeftMinutes(left.inMinutes + 1) : l.liveLeftHours((left.inMinutes / 60).ceil()))
+                : (g.accuracy == null ? g.shown : '${g.shown} · ${l.locationAccuracy(g.accuracy!.round())}'),
             style: Tokens.caption.style.copyWith(color: fg.withValues(alpha: 0.75)),
           ),
+          if (live && msg.mine && s.liveShares[roomId]?.$1 == msg.id) ...[
+            SizedBox(height: Tokens.space[1]),
+            GestureDetector(
+              key: const Key('live-stop'),
+              onTap: () => s.stopLiveLocation(roomId),
+              child: Container(
+                height: 34,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(color: fg.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(Tokens.capsule)),
+                child: Text(l.liveStop, style: Tokens.caption.style.copyWith(color: fg)),
+              ),
+            ),
+          ],
           SizedBox(height: Tokens.space[1]),
           GestureDetector(
             onTap: () => launchUrl(g.mapsUri, mode: LaunchMode.externalApplication),

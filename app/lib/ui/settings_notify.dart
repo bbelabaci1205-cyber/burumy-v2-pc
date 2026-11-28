@@ -8,12 +8,15 @@ import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
 
 import '../core/app_state.dart';
+import '../core/chat_badge.dart';
+import '../core/my_sounds.dart';
 import '../core/sounds.dart';
 import '../design/tokens.dart';
 import '../l10n/app_localizations.dart';
 import 'common.dart';
 import 'ios.dart';
 import 'ios_route.dart';
+import 'login_safety_ui.dart' show showUndoCountdown;
 import 'settings_kit.dart';
 import 'settings_page.dart' show NoticeTextSwitchTile, CallWaitingTile;
 import 'wide.dart';
@@ -38,9 +41,14 @@ const _noticeKeys = [
   'focus_from',
   'focus_to',
   'focus_days',
+  badgeChannelsPref,
+  badgeMutedPref,
+  badgeMessagesPref,
 ];
 
-String soundLabel(L l, String name) => switch (name) {
+/// A sound's name in the lists; saved ones ("my:…") need [s].
+String soundLabel(L l, String name, [AppState? s]) => switch (name) {
+  _ when name.startsWith('my:') => (s == null ? null : MySounds.find(s, name)?.name) ?? l.sound_nuri,
   'nuri' => l.sound_nuri,
   'pop' => l.sound_pop,
   'drop' => l.sound_drop,
@@ -111,6 +119,12 @@ class NotificationsPage extends StatelessWidget {
           PrefSwitch('in_app_vibrate', key: const Key('in-app-vibrate'), title: l.inAppVibrate, fallback: true),
           PrefSwitch('in_app_preview', key: const Key('in-app-preview'), title: l.inAppPreview, fallback: true),
         ]),
+        // Telegram tip 185: what the red number on 대화 (and the app icon) counts.
+        group(context, header: l.iconBadgeHeader, footer: l.iconBadgeInfo, [
+          PrefSwitch(badgeChannelsPref, key: const Key('badge-channels'), title: l.iconBadgeChannels, fallback: true),
+          PrefSwitch(badgeMutedPref, key: const Key('badge-muted'), title: l.iconBadgeMuted),
+          PrefSwitch(badgeMessagesPref, key: const Key('badge-messages'), title: l.iconBadgeMessages, fallback: true),
+        ]),
         group(context, [
           NavRow(
             key: const Key('focus-row'),
@@ -167,13 +181,16 @@ class NoticeKindPage extends StatelessWidget {
     return SettingsScaffold(
       title: title,
       children: [
-        group(context, [PrefSwitch('notify_$kind', title: l.showNotices, fallback: true)]),
+        group(context, footer: kind == 'group' ? l.mentionsOnlyInfo : null, [
+          PrefSwitch('notify_$kind', title: l.showNotices, fallback: true),
+          if (kind == 'group') PrefSwitch('mentions_only_group', key: const Key('mentions-only'), title: l.mentionsOnly),
+        ]),
         group(context, footer: l.messagePreviewInfo, [
           PrefSwitch('preview_$kind', title: l.messagePreview, fallback: true),
           NavRow(
             key: const Key('sound-row'),
             title: l.sound,
-            value: soundLabel(l, sound),
+            value: soundLabel(l, sound, s),
             page: (_) => SoundPage(prefKey: 'sound_$kind'),
           ),
         ]),
@@ -226,7 +243,7 @@ class ChatPickPage extends StatelessWidget {
           for (final c in list)
             IosTile(
               key: Key('pick-chat-${c.roomId}'),
-              leading: Avatar(name: c.name, size: 30, squircle: !c.isDirect),
+              leading: Avatar(name: c.name, size: 30, squircle: !c.isDirect, roomId: c.roomId),
               title: Text(c.name),
               onTap: () => Navigator.of(context).pop(c.roomId),
             ),
@@ -237,30 +254,86 @@ class ChatPickPage extends StatelessWidget {
   }
 }
 
-/// Our own message sounds; tapping one plays it.
-class SoundPage extends StatelessWidget {
-  const SoundPage({super.key, required this.prefKey});
+/// Our own message sounds and my saved ones (tip 329); tapping one plays
+/// it. With [chatDefault] (one chat's sound) the first row is "기본" =
+/// the sound of its kind of chat, shown in brackets.
+class SoundPage extends StatefulWidget {
+  const SoundPage({super.key, required this.prefKey, this.chatDefault});
   final String prefKey;
+  final String? chatDefault;
+
+  @override
+  State<SoundPage> createState() => _SoundPageState();
+}
+
+class _SoundPageState extends State<SoundPage> {
+  /// Saved sounds waiting out the 5 seconds before they go.
+  final going = <String>{};
+
+  void pick(AppState s, String name) {
+    s.setPref(widget.prefKey, name);
+    unawaited(Sounds.play(s, name.isEmpty ? widget.chatDefault ?? 'nuri' : name));
+  }
+
+  void drop(AppState s, MySound m) {
+    final l = L.of(context);
+    setState(() => going.add(m.id));
+    showUndoCountdown(
+      context,
+      (n) => l.toneGoing(m.name, n),
+      () async {
+        await MySounds.remove(s, m.id);
+        if (mounted) setState(() => going.remove(m.id));
+      },
+      onUndo: () {
+        if (mounted) setState(() => going.remove(m.id));
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
     final s = AppScope.of(context);
-    final now = s.pref(prefKey, 'nuri');
+    final p = paletteOf(context);
+    final fallback = widget.chatDefault == null ? 'nuri' : '';
+    final now = s.pref(widget.prefKey, fallback);
+    final mine = [
+      for (final m in MySounds.list(s))
+        if (!going.contains(m.id)) m,
+    ];
+    Widget? tick(String name) => name == now ? Icon(CupertinoIcons.check_mark, color: p.accent, size: 20) : null;
     return SettingsScaffold(
       title: l.sound,
       children: [
-        group(context, footer: l.soundInfo, [
-          for (final name in ['none', ...messageSounds])
+        if (widget.chatDefault case final d?)
+          group(context, [
+            IosTile(key: const Key('sound-default'), title: Text(l.soundChatDefault(soundLabel(l, d, s))), trailing: tick(''), onTap: () => pick(s, '')),
+          ]),
+        // 내 소리: saved from voice messages in chats.
+        group(context, header: l.toneMine, footer: mine.isEmpty ? l.toneMineEmpty : l.toneMineInfo, [
+          for (final m in mine)
             IosTile(
-              key: Key('sound-$name'),
-              title: Text(soundLabel(l, name)),
-              trailing: name == now ? Icon(CupertinoIcons.check_mark, color: paletteOf(context).accent, size: 20) : null,
-              onTap: () {
-                s.setPref(prefKey, name);
-                unawaited(Sounds.message(name));
-              },
+              key: Key('sound-${m.key}'),
+              leading: GestureDetector(
+                key: Key('tone-drop-${m.id}'),
+                onTap: () => drop(s, m),
+                child: const Icon(CupertinoIcons.minus_circle_fill, color: Palette.tileRed, size: 22),
+              ),
+              title: Text(m.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+              additionalInfo: Text(l.toneSeconds(((m.ms + 500) ~/ 1000).clamp(1, 5))),
+              trailing: tick(m.key),
+              onTap: () => pick(s, m.key),
             ),
+          if (mine.isEmpty)
+            IosTile(
+              key: const Key('tone-none'),
+              title: Text(l.toneNone, style: TextStyle(color: p.secondaryLabel)),
+            ),
+        ]),
+        group(context, header: l.toneOurs, footer: l.soundInfo, [
+          for (final name in ['none', ...messageSounds])
+            IosTile(key: Key('sound-$name'), title: Text(soundLabel(l, name)), trailing: tick(name), onTap: () => pick(s, name)),
         ]),
       ],
     );

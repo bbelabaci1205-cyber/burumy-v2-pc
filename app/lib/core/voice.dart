@@ -36,6 +36,12 @@ abstract class VoiceRecorder {
 abstract class VoicePlayer {
   Future<void> play(Uint8List bytes, String key);
   Future<void> pause();
+
+  /// 1, 1.5 or 2 (v1 voice speed).
+  Future<void> setSpeed(double speed);
+
+  /// Jump to [at] (이어 듣기, tip 199).
+  Future<void> seek(Duration at);
   Stream<Duration> get position;
   Stream<bool> get playing;
   Future<void> dispose();
@@ -174,6 +180,12 @@ class _SpeakerPlayer implements VoicePlayer {
 
   @override
   Future<void> pause() => _p.pause();
+
+  @override
+  Future<void> setSpeed(double speed) => _p.setSpeed(speed);
+
+  @override
+  Future<void> seek(Duration at) => _p.seek(at);
 
   @override
   Stream<Duration> get position => _p.positionStream;

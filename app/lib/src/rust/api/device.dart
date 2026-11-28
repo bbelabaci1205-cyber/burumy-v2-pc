@@ -7,7 +7,7 @@ import '../frb_generated.dart';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `msg`, `person`
+// These functions are ignored because they are not marked as `pub`: `invite_row`, `msg`, `person`
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BurumyDevice>>
 abstract class BurumyDevice implements RustOpaqueInterface {
@@ -15,10 +15,19 @@ abstract class BurumyDevice implements RustOpaqueInterface {
 
   Future<void> addChecklistItem({required String roomId, required String checklistId, required String text});
 
+  /// A member adds an answer (when the poll allows it).
+  Future<String> addPollOption({required String roomId, required String pollId, required String text});
+
+  Future<void> addToCommunity({required String id, required String roomId, required bool hidden});
+
+  Future<bool> addressFree({required String roomId, required String address});
+
   Future<void> answerCall({required String roomId, required String callId});
 
   /// Answers a card (JSON; null takes it back). Goes only to the maker.
   Future<void> answerCard({required String roomId, required String cardId, required String answer});
+
+  Future<void> answerJoinRequest({required String roomId, required String userId, required bool accept});
 
   Future<void> answerMeetup({required String roomId, required String meetupId, required String answer});
 
@@ -26,10 +35,16 @@ abstract class BurumyDevice implements RustOpaqueInterface {
 
   Future<String> bioOf({required String userId});
 
+  Future<Uint8List?> blob({required String name});
+
   Future<void> block({required String userId, required bool on_});
 
   /// People I blocked.
   Future<List<String>> blocked();
+
+  /// Messages already on this phone (no server round trip), for the chat
+  /// list's unseen mention / reaction marks.
+  Future<List<ChatMessage>> cachedMessages({required String roomId});
 
   Future<CallAskRow> callAsk({required String roomId, required String callId});
 
@@ -42,6 +57,9 @@ abstract class BurumyDevice implements RustOpaqueInterface {
   Future<String> callWaiting();
 
   Future<bool> canPost({required String roomId});
+
+  /// Stops a running cached download (true = one was running).
+  Future<bool> cancelDownload({required String eventId});
 
   Future<void> cancelMeetup({required String roomId, required String meetupId});
 
@@ -59,6 +77,8 @@ abstract class BurumyDevice implements RustOpaqueInterface {
 
   Future<void> closePoll({required String roomId, required String pollId});
 
+  Future<List<CommunityRow>> communities();
+
   Future<bool> confirmSas({required String userId, required String flowId});
 
   Future<List<PersonRow>> contacts();
@@ -74,12 +94,17 @@ abstract class BurumyDevice implements RustOpaqueInterface {
     required bool othersAdd,
   });
 
+  Future<String> createCommunity({required String name, required String about});
+
   Future<String> createDm({required String userId});
+
+  /// 1:1 chat with an 아이디 키 proof ("" = a plain 1:1 chat).
+  Future<String> createDmKeyed({required String userId, required String proof});
 
   /// New group (channel = true: only I can post). Returns the room id.
   Future<String> createGroup({required String name, required List<String> invite, required bool channel});
 
-  Future<String> createMeetup({required String roomId, required String title, required BigInt startsAt, required String place});
+  Future<String> createMeetup({required String roomId, required String title, required BigInt startsAt, required BigInt endsAt, required String place});
 
   Future<String> createPoll({
     required String roomId,
@@ -90,12 +115,21 @@ abstract class BurumyDevice implements RustOpaqueInterface {
     int? quiz,
     required String explain,
     required PlatformInt64 closeAt,
+    required String extra,
+    required List<PollPhotoIn> photos,
   });
 
   Future<void> decline({required String roomId});
 
+  /// Turn down an invitation because only contacts may add me (tip 385).
+  Future<void> declineBlocked({required String roomId});
+
+  Future<void> deleteCommunity({required String id});
+
   /// Deletes a 1:1 chat on both phones.
   Future<void> deleteForBoth({required String roomId});
+
+  Future<void> deleteInviteLink({required String roomId, required String code});
 
   Future<void> deleteMessage({required String roomId, required String eventId});
 
@@ -104,10 +138,57 @@ abstract class BurumyDevice implements RustOpaqueInterface {
 
   Future<List<DeviceInfo>> devices();
 
+  /// Downloads and decrypts a file reference from inside a document.
+  Future<Uint8List> downloadEncrypted({required String file});
+
   /// Returns the file bytes (decrypted on this device).
   Future<Uint8List> downloadFile({required String roomId, required String eventId});
 
+  /// Same, keeping a copy in the encrypted store when [cache] is true.
+  Future<Uint8List> downloadFileCached({required String roomId, required String eventId, required bool cache});
+
+  /// Downloads and decrypts a file from [upload_secret].
+  Future<Uint8List> downloadSecret({required String file});
+
+  Future<void> dropBlob({required String name});
+
+  /// The photo / video / file of earlier message [index] (or its small
+  /// picture), decrypted on this phone.
+  Future<Uint8List> earlierFile({required String roomId, required int index, required bool thumb});
+
+  /// Messages from before I came, if a member sent them (oldest first).
+  Future<List<EarlierRow>> earlierMessages({required String roomId});
+
   Future<void> edit({required String roomId, required String eventId, required String text});
+
+  Future<InviteLinkRow> editInviteLink({required String roomId, required String code, required String name, required BigInt until, required BigInt max});
+
+  /// Edit my photo/video/file message: words, above/under, and with a
+  /// new file swap it (not in public chats). Tips 452 B, 482, 81, 224.
+  Future<void> editMedia({
+    required String roomId,
+    required String eventId,
+    required String caption,
+    required bool captionAbove,
+    String? fileName,
+    String? fileMime,
+    Uint8List? fileData,
+  });
+
+  /// Changes a story I posted (tip 393) or keeps it on my profile (pin
+  /// JSON; "" = not kept). Empty `data` keeps the picture.
+  Future<int> editStory({
+    required String storyId,
+    required String mime,
+    required List<int> data,
+    required String caption,
+    required String extra,
+    required List<String> only,
+    required String pin,
+  });
+
+  /// Someone's emoji status: (emoji or "", until ms or 0).
+  Future<EmojiStatusRow> emojiStatusOf({required String userId});
 
   Future<String> enableRecovery();
 
@@ -118,9 +199,21 @@ abstract class BurumyDevice implements RustOpaqueInterface {
 
   Future<List<FeedLikeRow>> feedLikes();
 
+  /// Drops the kept copy of one file.
+  Future<void> forgetFile({required String roomId, required String eventId});
+
   /// Oldest first, from this device's own copy.
   /// Passes a message on to another chat.
   Future<String> forward({required String fromRoom, required String eventId, required String toRoom});
+
+  Future<GateHelperRow> gateHelperState({required String roomId});
+
+  /// The helper's decision log as JSON ({"e": [...]}).
+  Future<String> gateLog({required String roomId});
+
+  /// 누가 읽었는지 (384): "user\tread up to ms\twhen ms" per member
+  /// (groups of up to 100; empty otherwise).
+  Future<List<String>> groupReceipts({required String roomId});
 
   Future<void> hangupCall({required String roomId, required String callId, required String reason});
 
@@ -129,12 +222,24 @@ abstract class BurumyDevice implements RustOpaqueInterface {
   /// Hiding is on (shown only inside a hide session).
   Future<bool> hideActive();
 
+  /// Event ids in this chat marked for the hide password.
+  Future<List<String>> hideMarkedMessages({required String roomId});
+
+  /// 다른 앱 대화 가져오기: the checked messages of an import card (JSON,
+  /// oldest first), downloaded and decrypted once, then kept on this phone.
+  Future<String> importedMessages({required String roomId, required String cardId});
+
   /// Invitations to show, with name, sender and 1:1-or-not.
   Future<List<InviteRow>> invitations();
+
+  Future<List<InviteLinkRow>> inviteLinks({required String roomId});
 
   Future<void> inviteUsers({required String roomId, required List<String> users});
 
   List<String> invitedRooms();
+
+  /// People who turned down this room's invitation for that reason.
+  Future<List<String>> invitesBlocked({required String roomId});
 
   Future<bool> isChannel({required String roomId});
 
@@ -144,25 +249,58 @@ abstract class BurumyDevice implements RustOpaqueInterface {
 
   Future<void> join({required String roomId});
 
+  /// [room id, "asked" | "joined"].
+  Future<List<String>> joinCommunityChat({required String id, required String roomId});
+
+  /// Returns [room id, "asked" or "joined"].
+  Future<List<String>> joinLink({required String kind, required String code});
+
+  /// Like join_link, sending answers to the join questions with a request.
+  Future<List<String>> joinLinkWith({required String kind, required String code, required List<String> answers});
+
+  Future<List<JoinRequestRow>> joinRequests({required String roomId});
+
+  /// "in", "no", "waiting" or "unknown" after asking to come in.
+  Future<String> knockState({required String roomId});
+
   Future<void> leave({required String roomId});
 
+  Future<void> leaveCommunity({required String id});
+
   Future<bool> linkPreviewsEnabled();
+
+  /// The decrypted clip of a 움직이는 사진 (its bytes; always MP4/MOV).
+  Future<Uint8List> liveVideo({required String roomId, required String eventId});
 
   Future<void> logOutDevices({required List<String> ids, required String password});
 
   Future<String> login({required String username, required String password, required String deviceName});
 
+  /// QR로 PC 연결: sign in with a one-time token (returns my user id).
+  Future<String> loginToken({required String token, required String deviceName});
+
   Future<void> logout();
+
+  /// The main private link's count: [people, ...who came in].
+  Future<List<String>> mainLinkUses({required String roomId});
+
+  Future<InviteLinkRow> makeInviteLink({required String roomId, required String name, required BigInt until, required BigInt max, required BigInt now});
 
   Future<void> markChecklist({required String roomId, required String checklistId, required String item, required bool done});
 
   /// Marks one message for the delete password (or takes the mark off).
   Future<void> markForDelete({required String roomId, required String eventId, required bool on_});
 
+  /// Marks one message for the hide password (or takes the mark off).
+  Future<void> markForHide({required String roomId, required String eventId, required bool on_});
+
   Future<void> markRead({required String roomId});
 
   /// Event ids in this chat marked for the delete password.
   Future<List<String>> markedMessages({required String roomId});
+
+  /// "user\ttag" per person who tagged themselves here.
+  Future<List<String>> memberTags({required String roomId});
 
   Future<List<MemberRow>> members({required String roomId});
 
@@ -177,6 +315,11 @@ abstract class BurumyDevice implements RustOpaqueInterface {
 
   Future<String> myRole({required String roomId});
 
+  /// "user\tcolour" per person who picked a name colour.
+  Future<List<String>> nameColors({required String roomId});
+
+  Future<RoomLinkRow> newPrivateLink({required String roomId});
+
   Future<bool> noticeTextHidden();
 
   /// New messages to notify about (each once; muted/hidden chats never).
@@ -185,8 +328,16 @@ abstract class BurumyDevice implements RustOpaqueInterface {
   static Future<BurumyDevice> open({required String homeserver, required String dataDir, required String storePassphrase}) =>
       RustLib.instance.api.crateApiDeviceBurumyDeviceOpen(homeserver: homeserver, dataDir: dataDir, storePassphrase: storePassphrase);
 
+  /// The whole document of a long post (checked again on this phone).
+  Future<String> openArticle({required String roomId, required String eventId});
+
   /// Bytes of a view-once photo, one time only.
   Future<Uint8List> openViewOnce({required String roomId, required String eventId});
+
+  /// Short-lived OpenID token for our trust service (badges, reports).
+  Future<String> openidToken();
+
+  Future<LinkPeekRow> peekAddress({required String address});
 
   Future<List<PeerKey>> peerKeys({required String userId});
 
@@ -195,6 +346,22 @@ abstract class BurumyDevice implements RustOpaqueInterface {
   Future<void> pin({required String roomId, required String eventId, required bool pinned});
 
   List<String> pinned({required String roomId});
+
+  /// A poll's photo, decrypted: slot "" = under the question, else answer id.
+  Future<Uint8List> pollPhoto({required String roomId, required String pollId, required String slot});
+
+  /// One upload, several stories (tip 525: parts of a long video, each
+  /// with its own `extras` entry). `room` empty: to my 1:1 friends; else
+  /// a group's or channel's story (admins only, tip 428).
+  Future<StoryPostedRow> postStories({
+    required String mime,
+    required List<int> data,
+    required String caption,
+    required List<String> only,
+    required int hours,
+    required List<String> extras,
+    required String room,
+  });
 
   /// A photo or video to my 1:1 friends (all, or the chats in `only`) for
   /// 6 / 12 / 24 / 48 hours; returns how many got it.
@@ -210,12 +377,18 @@ abstract class BurumyDevice implements RustOpaqueInterface {
   /// Decrypted picture of a message's link card.
   Future<Uint8List> previewImage({required String roomId, required String eventId});
 
+  /// My privacy settings kept in my account, as JSON (see the engine).
+  Future<String> privacyJson();
+
   Future<ProfileCardRow> profileOf({required String userId});
 
   /// [hide list, delete list] (user ids and chat ids).
   Future<List<List<String>>> quietLists();
 
   Future<String> react({required String roomId, required String eventId, required String key});
+
+  /// [read up to, when they read it] in ms (1:1 read time, tip 421).
+  Future<Uint64List> readReceipt({required String roomId});
 
   /// Others have read everything sent up to this time (ms).
   Future<BigInt> readUntil({required String roomId});
@@ -229,6 +402,10 @@ abstract class BurumyDevice implements RustOpaqueInterface {
 
   Future<void> releaseHidden();
 
+  Future<void> removeFromCommunity({required String id, required String roomId});
+
+  Future<void> removeLink({required String roomId});
+
   Future<void> removeMember({required String roomId, required String userId});
 
   Future<String> reply({required String roomId, required String toEvent, required String text});
@@ -236,19 +413,35 @@ abstract class BurumyDevice implements RustOpaqueInterface {
   /// "스레드로 답장": a text inside the thread that starts at `root`.
   Future<String> replyInThread({required String roomId, required String root, required String text});
 
+  /// 부분 인용 답장 / 다른 대화에서 답장 (tip 399); `to_event` "" = from
+  /// another chat (then `quote_name` is shown as the writer).
+  Future<String> replyQuote({required String roomId, required String toEvent, required String text, required String quote, required String quoteName});
+
   /// "메시지 신고": reason plus the reported words go to our operators.
   Future<void> reportMessage({required String roomId, required String eventId, required String reason, required String shown});
 
   /// Emoji check with another person: ask (returns the check's id).
   Future<String> requestUserVerification({required String userId});
 
+  /// An admin's phone sends the photo again for people who joined later.
+  Future<bool> reshareRoomPhoto({required String roomId});
+
   Future<void> restore({required String sessionJson});
+
+  Future<void> restoreInviteLink({required String roomId, required String code});
+
+  Future<void> revokeInviteLink({required String roomId, required String code});
 
   Future<List<RingingRow>> ringingCalls();
 
   Future<String> roomAbout({required String roomId});
 
   Future<String> roomConfig({required String roomId});
+
+  Future<RoomLinkRow> roomLink({required String roomId});
+
+  /// Group/channel photo bytes, or None.
+  Future<Uint8List?> roomPhoto({required String roomId});
 
   Future<bool> roomSwitch({required String roomId, required String key});
 
@@ -259,13 +452,26 @@ abstract class BurumyDevice implements RustOpaqueInterface {
 
   Future<List<String>?> sasEmoji({required String userId, required String flowId});
 
+  /// 내 알림음 (tip 329): small data kept in the encrypted local store.
+  Future<void> saveBlob({required String name, required List<int> data});
+
   /// My "saved messages" chat id (made when `create` and missing).
   Future<String?> savedRoom({required bool create});
+
+  /// 전체 검색 on this phone: kind "text", "media", "link", "file",
+  /// "music" or "voice"; newest first, at most `limit`.
+  Future<List<FoundRow>> searchAll({required String term, required String kind, required int limit});
 
   /// Messages in one chat containing the words, newest first (on this phone only).
   Future<List<ChatMessage>> searchMessages({required String roomId, required String term});
 
   Future<List<PersonRow>> searchPeople({required String term});
+
+  /// Public groups / channels with these words (server's public list).
+  Future<List<PublicRoomRow>> searchPublic({required String term, required bool channelsOnly});
+
+  /// Posts a long post / formatted message (document JSON).
+  Future<String> sendArticle({required String roomId, required String doc});
 
   /// kind: "emoji" (data = the emoji as text), "photo" or "voice".
   Future<String> sendBubble({required String roomId, required String kind, required String mime, required List<int> data});
@@ -277,11 +483,62 @@ abstract class BurumyDevice implements RustOpaqueInterface {
   /// A photo, video or file with words under it.
   Future<String> sendFileCaptioned({required String roomId, required String name, required String mime, required List<int> data, required String caption});
 
+  /// With words above the photo or video (설명 위로, tip 452).
+  Future<String> sendFileOpts({
+    required String roomId,
+    required String name,
+    required String mime,
+    required List<int> data,
+    required String caption,
+    required bool captionAbove,
+  });
+
+  /// 새 멤버에게 지난 메시지 보내기: the last [count] (≤50) messages, end-to-end
+  /// encrypted to that person's phones only. Returns how many went.
+  Future<int> sendHistory({required String roomId, required String userId, required int count});
+
+  /// 실시간 위치: starts sharing until `until_ms`.
+  Future<String> sendLiveLocation({required String roomId, required double lat, required double lon, double? accuracy, required BigInt untilMs});
+
+  /// 움직이는 사진: still photo + short clip, both encrypted here.
+  Future<String> sendLivePhoto({
+    required String roomId,
+    required String name,
+    required String mime,
+    required List<int> data,
+    required String videoMime,
+    required List<int> video,
+    required BigInt durationMs,
+    required String style,
+    required String caption,
+  });
+
   Future<String> sendLocation({required String roomId, required double lat, required double lon, double? accuracy});
+
+  /// 임시 글 이어쓰기 (tip 241): my draft for a chat to my other devices
+  /// (end-to-end encrypted). False when this is my only device.
+  Future<bool> sendMyDraft({required String roomId, required String text, required BigInt at});
+
+  /// Sends a hidden end-to-end encrypted signal into a chat.
+  Future<void> sendSignal({required String roomId, required String kind, required String data});
 
   Future<String> sendSticker({required String roomId, required String stickerId});
 
   Future<String> sendText({required String roomId, required String text});
+
+  /// Text (or a reply when `to_event` is set) with the sender's link
+  /// card set-up (tips 400 + 401): `url` = the picked link ("" = first),
+  /// card `above` the words, `small` picture, or `off` = no card.
+  Future<String> sendTextLink({
+    required String roomId,
+    required String toEvent,
+    required String text,
+    required bool silent,
+    required String url,
+    required bool above,
+    required bool small,
+    required bool off,
+  });
 
   /// Sends without a notification sound on the other phones.
   Future<String> sendTextQuietly({required String roomId, required String text});
@@ -307,7 +564,32 @@ abstract class BurumyDevice implements RustOpaqueInterface {
 
   Future<void> setChatPinned({required String roomId, required bool on_});
 
+  Future<void> setCommunityAddAll({required String id, required bool all});
+
+  Future<void> setCommunityAdmin({required String id, required String userId, required bool on_});
+
+  Future<void> setCommunityChatHidden({required String id, required String roomId, required bool hidden});
+
+  Future<void> setCommunityInfo({required String id, required String name, required String about});
+
+  /// 이모지 상태 (tip 359): my emoji to each friend's 1:1 chat,
+  /// end-to-end encrypted. `until_ms` 0 = until I change it.
+  Future<int> setEmojiStatus({required String emoji, required BigInt untilMs});
+
+  Future<void> setGateHelper({required String roomId, required bool on_});
+
+  /// "아이디 검색 막기" on my account (our server hides me from search).
+  Future<void> setIdSearchHidden({required bool on_});
+
+  Future<void> setLinkApproval({required String roomId, required bool on_});
+
   Future<void> setLinkPreviewsEnabled({required bool on_});
+
+  /// Biggest kept file and how long kept copies stay (None = no limit).
+  Future<void> setMediaKeep({BigInt? maxFile, BigInt? keepSecs});
+
+  /// Someone's level: -1 (can't write), 0, 50 (admin), 100 (owner).
+  Future<void> setMemberLevel({required String roomId, required String userId, required PlatformInt64 level});
 
   Future<void> setMyBio({required String text});
 
@@ -315,7 +597,18 @@ abstract class BurumyDevice implements RustOpaqueInterface {
 
   Future<void> setMyPhoto({required String mime, required List<int> data});
 
+  /// My name / name colour in one room (None = keep).
+  Future<void> setMyRoomLook({required String roomId, String? name, String? color});
+
+  /// 멤버 태그 (556): my own tag in this room ("" removes it).
+  Future<void> setMyRoomTag({required String roomId, required String tag});
+
   Future<void> setNoticeTextHidden({required bool on_});
+
+  /// Changes one account privacy setting; `value_json` "null" removes it.
+  Future<void> setPrivacyValue({required String key, required String valueJson});
+
+  Future<RoomLinkRow> setPublicLink({required String roomId, required String address});
 
   Future<void> setPush({required String gatewayUrl, required String pushkey, required String appId});
 
@@ -327,7 +620,18 @@ abstract class BurumyDevice implements RustOpaqueInterface {
 
   Future<void> setRoomName({required String roomId, required String name});
 
+  /// Group/channel photo (no bytes = take it off). Admins only.
+  Future<void> setRoomPhoto({required String roomId, required String mime, required List<int> data});
+
   Future<void> setRoomSwitch({required String roomId, required String key, required bool on_});
+
+  /// 보내는 이름 (tips 472 + 310): my next messages in this chat are sent
+  /// as `as_json` ("" = as myself).
+  void setSendAs({required String roomId, required String asJson});
+
+  /// 주제 (tip 527): messages I send into this chat from now on carry this
+  /// topic inside their encryption; None or "g" = 일반.
+  void setSendTopic({required String roomId, String? topic});
 
   /// Stores one on-device setting (empty value removes it).
   Future<void> setSetting({required String key, required String value});
@@ -341,6 +645,8 @@ abstract class BurumyDevice implements RustOpaqueInterface {
 
   /// The phone's time zone in minutes from UTC (for streak days).
   void setTzOffset({required int minutes});
+
+  Future<void> setWebPage({required String roomId, required bool on_});
 
   /// Every on-device setting stored by name.
   Future<Map<String, String>> settings();
@@ -363,6 +669,11 @@ abstract class BurumyDevice implements RustOpaqueInterface {
 
   Future<List<StoryRow>> stories();
 
+  /// Story link sticker: this phone reads the page's title and picture
+  /// (like a chat link card). The friends who see the story never contact
+  /// the website; the card travels inside the encrypted story.
+  Future<StoryLinkRow> storyLinkCard({required String url});
+
   Future<bool> streaksEnabled();
 
   Future<void> syncOnce();
@@ -373,6 +684,12 @@ abstract class BurumyDevice implements RustOpaqueInterface {
   /// Friends (user ids) who deleted a 1:1 chat for both; told once.
   Future<List<String>> takeEraseNotices();
 
+  /// Hidden signals that arrived since the last call.
+  List<SignalRow> takeSignals();
+
+  /// Drafts my other devices sent since the last call.
+  Future<List<SyncedDraftRow>> takeSyncedDrafts();
+
   Future<bool> thisDeviceVerified();
 
   Future<List<ChatMessage>> timeline({required String roomId, required int limit});
@@ -380,6 +697,24 @@ abstract class BurumyDevice implements RustOpaqueInterface {
   Future<BigInt> timer({required String roomId});
 
   List<String> typingUsers({required String roomId});
+
+  /// Moves (or, with until_ms = now, ends) my live location.
+  Future<void> updateLiveLocation({
+    required String roomId,
+    required String eventId,
+    required double lat,
+    required double lon,
+    double? accuracy,
+    required BigInt untilMs,
+  });
+
+  /// Encrypts and uploads bytes (a long post's photo); returns the file
+  /// reference JSON to place in the document.
+  Future<String> uploadEncrypted({required List<int> data});
+
+  /// Encrypts bytes on this phone and uploads them; returns the key and
+  /// address (JSON) to put inside an encrypted signal.
+  Future<String> uploadSecret({required List<int> bytes});
 
   String? userId();
 
@@ -390,6 +725,13 @@ abstract class BurumyDevice implements RustOpaqueInterface {
   Future<List<String>> visibleInvites();
 
   Future<void> vote({required String roomId, required String pollId, required List<String> choices});
+
+  Future<void> webPost({required String roomId, required String eventId, required String text, required BigInt ts, String? photoMime, Uint8List? photo});
+
+  /// Event ids of posts now on the web page, newest first.
+  Future<List<String>> webPosts({required String roomId});
+
+  Future<void> webUnpost({required String roomId, required String eventId});
 }
 
 /// A bubble waiting for me: who and when, never what.
@@ -588,7 +930,14 @@ class ChatMessage {
 
   /// First message of its thread ("스레드로 답장").
   final String? threadRoot;
+
+  /// 주제 (tip 527): topic id from inside the encrypted content; None = 일반.
+  final String? topic;
   final bool edited;
+
+  /// When it was last changed (ms), and the words as first sent.
+  final BigInt? editedAt;
+  final String? firstBody;
   final List<ReactionRow> reactions;
 
   /// Disappears at this time (ms), if the chat has a timer.
@@ -600,12 +949,18 @@ class ChatMessage {
   final bool forwarded;
   final LinkPreviewRow? preview;
   final VoiceRow? voice;
+
+  /// 움직이는 사진: play style and clip length.
+  final LiveRow? live;
   final PollRow? poll;
   final bool bubble;
   final CallRow? call;
 
   /// Words under a photo, video or file.
   final String? caption;
+
+  /// File size in bytes (photo, video, file, voice), when the sender wrote it.
+  final BigInt? size;
   final ChecklistRow? checklist;
   final MeetupRow? meetup;
 
@@ -614,6 +969,21 @@ class ChatMessage {
 
   /// FAQ, guide, links, formatted post, giveaway, form, check-in.
   final CardRow? card;
+
+  /// 부분 인용 (tip 399): the picked words; with `quote_name` and no
+  /// `reply_to` they were copied from another chat.
+  final String? quote;
+  final String? quoteName;
+
+  /// 설명 위로 (tip 452).
+  final bool captionAbove;
+
+  /// The file was swapped by an edit: download it from this event.
+  final String? mediaFrom;
+  final bool mediaChanged;
+
+  /// 보내는 이름 (tips 472 + 310): who it was sent as (JSON), if not me.
+  final String? postAs;
 
   const ChatMessage({
     required this.eventId,
@@ -625,7 +995,10 @@ class ChatMessage {
     required this.kind,
     this.replyTo,
     this.threadRoot,
+    this.topic,
     required this.edited,
+    this.editedAt,
+    this.firstBody,
     required this.reactions,
     this.expiresAt,
     required this.viewOnce,
@@ -633,14 +1006,22 @@ class ChatMessage {
     required this.forwarded,
     this.preview,
     this.voice,
+    this.live,
     this.poll,
     required this.bubble,
     this.call,
     this.caption,
+    this.size,
     this.checklist,
     this.meetup,
     this.contact,
     this.card,
+    this.quote,
+    this.quoteName,
+    required this.captionAbove,
+    this.mediaFrom,
+    required this.mediaChanged,
+    this.postAs,
   });
 
   @override
@@ -654,7 +1035,10 @@ class ChatMessage {
       kind.hashCode ^
       replyTo.hashCode ^
       threadRoot.hashCode ^
+      topic.hashCode ^
       edited.hashCode ^
+      editedAt.hashCode ^
+      firstBody.hashCode ^
       reactions.hashCode ^
       expiresAt.hashCode ^
       viewOnce.hashCode ^
@@ -662,14 +1046,22 @@ class ChatMessage {
       forwarded.hashCode ^
       preview.hashCode ^
       voice.hashCode ^
+      live.hashCode ^
       poll.hashCode ^
       bubble.hashCode ^
       call.hashCode ^
       caption.hashCode ^
+      size.hashCode ^
       checklist.hashCode ^
       meetup.hashCode ^
       contact.hashCode ^
-      card.hashCode;
+      card.hashCode ^
+      quote.hashCode ^
+      quoteName.hashCode ^
+      captionAbove.hashCode ^
+      mediaFrom.hashCode ^
+      mediaChanged.hashCode ^
+      postAs.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -685,7 +1077,10 @@ class ChatMessage {
           kind == other.kind &&
           replyTo == other.replyTo &&
           threadRoot == other.threadRoot &&
+          topic == other.topic &&
           edited == other.edited &&
+          editedAt == other.editedAt &&
+          firstBody == other.firstBody &&
           reactions == other.reactions &&
           expiresAt == other.expiresAt &&
           viewOnce == other.viewOnce &&
@@ -693,14 +1088,22 @@ class ChatMessage {
           forwarded == other.forwarded &&
           preview == other.preview &&
           voice == other.voice &&
+          live == other.live &&
           poll == other.poll &&
           bubble == other.bubble &&
           call == other.call &&
           caption == other.caption &&
+          size == other.size &&
           checklist == other.checklist &&
           meetup == other.meetup &&
           contact == other.contact &&
-          card == other.card;
+          card == other.card &&
+          quote == other.quote &&
+          quoteName == other.quoteName &&
+          captionAbove == other.captionAbove &&
+          mediaFrom == other.mediaFrom &&
+          mediaChanged == other.mediaChanged &&
+          postAs == other.postAs;
 }
 
 /// One row of the chat list.
@@ -817,6 +1220,84 @@ class ChecklistRow {
           othersAdd == other.othersAdd;
 }
 
+/// One chat inside a community.
+class CommunityChatRow {
+  final String roomId;
+  final String name;
+
+  /// "group" or "channel".
+  final String kind;
+
+  /// "in", "view" or "ask".
+  final String state;
+  final bool hidden;
+  final String by;
+  final BigInt members;
+
+  const CommunityChatRow({
+    required this.roomId,
+    required this.name,
+    required this.kind,
+    required this.state,
+    required this.hidden,
+    required this.by,
+    required this.members,
+  });
+
+  @override
+  int get hashCode => roomId.hashCode ^ name.hashCode ^ kind.hashCode ^ state.hashCode ^ hidden.hashCode ^ by.hashCode ^ members.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CommunityChatRow &&
+          runtimeType == other.runtimeType &&
+          roomId == other.roomId &&
+          name == other.name &&
+          kind == other.kind &&
+          state == other.state &&
+          hidden == other.hidden &&
+          by == other.by &&
+          members == other.members;
+}
+
+/// A community (several groups and channels together).
+class CommunityRow {
+  final String id;
+  final String name;
+  final String about;
+  final String role;
+  final bool addAll;
+  final BigInt members;
+  final List<CommunityChatRow> chats;
+
+  const CommunityRow({
+    required this.id,
+    required this.name,
+    required this.about,
+    required this.role,
+    required this.addAll,
+    required this.members,
+    required this.chats,
+  });
+
+  @override
+  int get hashCode => id.hashCode ^ name.hashCode ^ about.hashCode ^ role.hashCode ^ addAll.hashCode ^ members.hashCode ^ chats.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CommunityRow &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          name == other.name &&
+          about == other.about &&
+          role == other.role &&
+          addAll == other.addAll &&
+          members == other.members &&
+          chats == other.chats;
+}
+
 /// One device logged in to my account.
 class DeviceInfo {
   final String deviceId;
@@ -842,6 +1323,67 @@ class DeviceInfo {
           verified == other.verified;
 }
 
+/// A message from before I joined, sent by a member (지난 메시지 보내기).
+class EarlierRow {
+  final String sender;
+  final BigInt ts;
+
+  /// "text", "image", "video", "audio" or "file".
+  final String kind;
+
+  /// Text, or the words under a photo / video / file.
+  final String body;
+
+  /// File name (files only).
+  final String name;
+  final String mime;
+
+  /// There is a small picture to show first ([earlier_file] thumb).
+  final bool hasThumb;
+
+  const EarlierRow({
+    required this.sender,
+    required this.ts,
+    required this.kind,
+    required this.body,
+    required this.name,
+    required this.mime,
+    required this.hasThumb,
+  });
+
+  @override
+  int get hashCode => sender.hashCode ^ ts.hashCode ^ kind.hashCode ^ body.hashCode ^ name.hashCode ^ mime.hashCode ^ hasThumb.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is EarlierRow &&
+          runtimeType == other.runtimeType &&
+          sender == other.sender &&
+          ts == other.ts &&
+          kind == other.kind &&
+          body == other.body &&
+          name == other.name &&
+          mime == other.mime &&
+          hasThumb == other.hasThumb;
+}
+
+/// 이모지 상태 of one person.
+class EmojiStatusRow {
+  final String emoji;
+  final BigInt untilMs;
+
+  const EmojiStatusRow({required this.emoji, required this.untilMs});
+
+  @override
+  int get hashCode => emoji.hashCode ^ untilMs.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || other is EmojiStatusRow && runtimeType == other.runtimeType && emoji == other.emoji && untilMs == other.untilMs;
+}
+
+/// A like on a feed post (only in our 1:1 chat).
 class FeedLikeRow {
   final String postId;
   final String sender;
@@ -856,6 +1398,85 @@ class FeedLikeRow {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is FeedLikeRow && runtimeType == other.runtimeType && postId == other.postId && sender == other.sender && mine == other.mine;
+}
+
+/// One 전체 검색 hit: which chat, and the message.
+class FoundRow {
+  final String roomId;
+  final ChatMessage message;
+
+  const FoundRow({required this.roomId, required this.message});
+
+  @override
+  int get hashCode => roomId.hashCode ^ message.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || other is FoundRow && runtimeType == other.runtimeType && roomId == other.roomId && message == other.message;
+}
+
+/// 가입 심사 도우미 in a room: in or not, and its encryption devices
+/// (must be 0, so it can't get room keys).
+class GateHelperRow {
+  final bool joined;
+  final int devices;
+
+  const GateHelperRow({required this.joined, required this.devices});
+
+  @override
+  int get hashCode => joined.hashCode ^ devices.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || other is GateHelperRow && runtimeType == other.runtimeType && joined == other.joined && devices == other.devices;
+}
+
+/// One extra invite link (tip 253).
+class InviteLinkRow {
+  final String code;
+  final String name;
+
+  /// Ends at, ms since 1970 (0 = no end).
+  final BigInt until;
+
+  /// People limit (0 = none).
+  final BigInt max;
+  final BigInt uses;
+  final List<String> joined;
+  final String by;
+  final BigInt made;
+  final bool revoked;
+
+  const InviteLinkRow({
+    required this.code,
+    required this.name,
+    required this.until,
+    required this.max,
+    required this.uses,
+    required this.joined,
+    required this.by,
+    required this.made,
+    required this.revoked,
+  });
+
+  @override
+  int get hashCode =>
+      code.hashCode ^ name.hashCode ^ until.hashCode ^ max.hashCode ^ uses.hashCode ^ joined.hashCode ^ by.hashCode ^ made.hashCode ^ revoked.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is InviteLinkRow &&
+          runtimeType == other.runtimeType &&
+          code == other.code &&
+          name == other.name &&
+          until == other.until &&
+          max == other.max &&
+          uses == other.uses &&
+          joined == other.joined &&
+          by == other.by &&
+          made == other.made &&
+          revoked == other.revoked;
 }
 
 class InviteRow {
@@ -880,6 +1501,68 @@ class InviteRow {
           direct == other.direct;
 }
 
+/// Someone asking to come in.
+class JoinRequestRow {
+  final String userId;
+  final String name;
+
+  /// Answers to the room's join questions sent with the request.
+  final List<String> answers;
+
+  const JoinRequestRow({required this.userId, required this.name, required this.answers});
+
+  @override
+  int get hashCode => userId.hashCode ^ name.hashCode ^ answers.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is JoinRequestRow && runtimeType == other.runtimeType && userId == other.userId && name == other.name && answers == other.answers;
+}
+
+/// What a public link shows before coming in.
+class LinkPeekRow {
+  final String roomId;
+  final String name;
+  final String about;
+  final BigInt members;
+  final bool channel;
+  final bool approval;
+  final bool joined;
+
+  /// The room's public photo (empty = none).
+  final Uint8List photo;
+
+  const LinkPeekRow({
+    required this.roomId,
+    required this.name,
+    required this.about,
+    required this.members,
+    required this.channel,
+    required this.approval,
+    required this.joined,
+    required this.photo,
+  });
+
+  @override
+  int get hashCode =>
+      roomId.hashCode ^ name.hashCode ^ about.hashCode ^ members.hashCode ^ channel.hashCode ^ approval.hashCode ^ joined.hashCode ^ photo.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is LinkPeekRow &&
+          runtimeType == other.runtimeType &&
+          roomId == other.roomId &&
+          name == other.name &&
+          about == other.about &&
+          members == other.members &&
+          channel == other.channel &&
+          approval == other.approval &&
+          joined == other.joined &&
+          photo == other.photo;
+}
+
 /// Link card inside a text message (made by the sender's phone).
 class LinkPreviewRow {
   final String url;
@@ -888,10 +1571,14 @@ class LinkPreviewRow {
   final String? site;
   final bool hasImage;
 
-  const LinkPreviewRow({required this.url, required this.title, this.description, this.site, required this.hasImage});
+  /// Tip 400: card above the words / small side picture.
+  final bool above;
+  final bool small;
+
+  const LinkPreviewRow({required this.url, required this.title, this.description, this.site, required this.hasImage, required this.above, required this.small});
 
   @override
-  int get hashCode => url.hashCode ^ title.hashCode ^ description.hashCode ^ site.hashCode ^ hasImage.hashCode;
+  int get hashCode => url.hashCode ^ title.hashCode ^ description.hashCode ^ site.hashCode ^ hasImage.hashCode ^ above.hashCode ^ small.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -902,22 +1589,64 @@ class LinkPreviewRow {
           title == other.title &&
           description == other.description &&
           site == other.site &&
-          hasImage == other.hasImage;
+          hasImage == other.hasImage &&
+          above == other.above &&
+          small == other.small;
+}
+
+/// 움직이는 사진: "live" (once), "loop" or "bounce", and the clip length.
+class LiveRow {
+  final String style;
+  final BigInt durationMs;
+
+  const LiveRow({required this.style, required this.durationMs});
+
+  @override
+  int get hashCode => style.hashCode ^ durationMs.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || other is LiveRow && runtimeType == other.runtimeType && style == other.style && durationMs == other.durationMs;
 }
 
 class MeetupRow {
   final String title;
   final BigInt startsAt;
+
+  /// 0 = no end time.
+  final BigInt endsAt;
   final String? place;
   final bool cancelled;
   final List<String> yes;
   final List<String> no;
   final List<String> maybe;
 
-  const MeetupRow({required this.title, required this.startsAt, this.place, required this.cancelled, required this.yes, required this.no, required this.maybe});
+  /// Extra people each "yes" brings, in the same order as `yes`.
+  final Uint32List guests;
+
+  const MeetupRow({
+    required this.title,
+    required this.startsAt,
+    required this.endsAt,
+    this.place,
+    required this.cancelled,
+    required this.yes,
+    required this.no,
+    required this.maybe,
+    required this.guests,
+  });
 
   @override
-  int get hashCode => title.hashCode ^ startsAt.hashCode ^ place.hashCode ^ cancelled.hashCode ^ yes.hashCode ^ no.hashCode ^ maybe.hashCode;
+  int get hashCode =>
+      title.hashCode ^
+      startsAt.hashCode ^
+      endsAt.hashCode ^
+      place.hashCode ^
+      cancelled.hashCode ^
+      yes.hashCode ^
+      no.hashCode ^
+      maybe.hashCode ^
+      guests.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -926,11 +1655,13 @@ class MeetupRow {
           runtimeType == other.runtimeType &&
           title == other.title &&
           startsAt == other.startsAt &&
+          endsAt == other.endsAt &&
           place == other.place &&
           cancelled == other.cancelled &&
           yes == other.yes &&
           no == other.no &&
-          maybe == other.maybe;
+          maybe == other.maybe &&
+          guests == other.guests;
 }
 
 /// Someone in a chat.
@@ -941,14 +1672,18 @@ class MemberRow {
   /// "owner", "admin" or "member".
   final String role;
 
-  const MemberRow({required this.userId, required this.name, required this.role});
+  /// When they joined (or last renamed) here, ms; 0 = unknown.
+  final BigInt since;
+
+  const MemberRow({required this.userId, required this.name, required this.role, required this.since});
 
   @override
-  int get hashCode => userId.hashCode ^ name.hashCode ^ role.hashCode;
+  int get hashCode => userId.hashCode ^ name.hashCode ^ role.hashCode ^ since.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) || other is MemberRow && runtimeType == other.runtimeType && userId == other.userId && name == other.name && role == other.role;
+      identical(this, other) ||
+      other is MemberRow && runtimeType == other.runtimeType && userId == other.userId && name == other.name && role == other.role && since == other.since;
 }
 
 /// A phone notification made on this phone.
@@ -1025,16 +1760,58 @@ class PollAnswerRow {
 
   /// Open polls: who chose it (user ids).
   final List<String> who;
+  final bool hasPhoto;
 
-  const PollAnswerRow({required this.id, required this.text, required this.votes, required this.who});
+  /// Built-in sticker id ("" = none) and place "geo:lat,lon" ("" = none).
+  final String sticker;
+  final String geo;
+
+  /// A member added it (user id; "" = the maker's own).
+  final String addedBy;
+
+  const PollAnswerRow({
+    required this.id,
+    required this.text,
+    required this.votes,
+    required this.who,
+    required this.hasPhoto,
+    required this.sticker,
+    required this.geo,
+    required this.addedBy,
+  });
 
   @override
-  int get hashCode => id.hashCode ^ text.hashCode ^ votes.hashCode ^ who.hashCode;
+  int get hashCode => id.hashCode ^ text.hashCode ^ votes.hashCode ^ who.hashCode ^ hasPhoto.hashCode ^ sticker.hashCode ^ geo.hashCode ^ addedBy.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is PollAnswerRow && runtimeType == other.runtimeType && id == other.id && text == other.text && votes == other.votes && who == other.who;
+      other is PollAnswerRow &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          text == other.text &&
+          votes == other.votes &&
+          who == other.who &&
+          hasPhoto == other.hasPhoto &&
+          sticker == other.sticker &&
+          geo == other.geo &&
+          addedBy == other.addedBy;
+}
+
+/// A photo for a new poll: slot "q" = under the question, "<n>" = answer n.
+class PollPhotoIn {
+  final String slot;
+  final String mime;
+  final Uint8List data;
+
+  const PollPhotoIn({required this.slot, required this.mime, required this.data});
+
+  @override
+  int get hashCode => slot.hashCode ^ mime.hashCode ^ data.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || other is PollPhotoIn && runtimeType == other.runtimeType && slot == other.slot && mime == other.mime && data == other.data;
 }
 
 class PollRow {
@@ -1051,6 +1828,14 @@ class PollRow {
   final String explain;
   final PlatformInt64 closeAt;
 
+  /// Words under the question and whether a photo is attached.
+  final String description;
+  final bool hasPhoto;
+  final bool addOptions;
+  final bool changeVote;
+  final bool shuffle;
+  final bool hideResults;
+
   const PollRow({
     required this.question,
     required this.answers,
@@ -1062,6 +1847,12 @@ class PollRow {
     this.correct,
     required this.explain,
     required this.closeAt,
+    required this.description,
+    required this.hasPhoto,
+    required this.addOptions,
+    required this.changeVote,
+    required this.shuffle,
+    required this.hideResults,
   });
 
   @override
@@ -1075,7 +1866,13 @@ class PollRow {
       mine.hashCode ^
       correct.hashCode ^
       explain.hashCode ^
-      closeAt.hashCode;
+      closeAt.hashCode ^
+      description.hashCode ^
+      hasPhoto.hashCode ^
+      addOptions.hashCode ^
+      changeVote.hashCode ^
+      shuffle.hashCode ^
+      hideResults.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -1091,10 +1888,16 @@ class PollRow {
           mine == other.mine &&
           correct == other.correct &&
           explain == other.explain &&
-          closeAt == other.closeAt;
+          closeAt == other.closeAt &&
+          description == other.description &&
+          hasPhoto == other.hasPhoto &&
+          addOptions == other.addOptions &&
+          changeVote == other.changeVote &&
+          shuffle == other.shuffle &&
+          hideResults == other.hideResults;
 }
 
-/// A like on a feed post (only in our 1:1 chat).
+/// Someone's photo, about-me and birthday (card from our 1:1 chat, or public).
 class ProfileCardRow {
   final Uint8List? photo;
   final String bio;
@@ -1115,6 +1918,47 @@ class ProfileCardRow {
           bio == other.bio &&
           birthday == other.birthday &&
           private == other.private;
+}
+
+/// A public group or channel from the server's public list.
+class PublicRoomRow {
+  final String roomId;
+  final String address;
+  final String name;
+  final String about;
+  final BigInt members;
+  final bool channel;
+  final bool approval;
+  final bool joined;
+
+  const PublicRoomRow({
+    required this.roomId,
+    required this.address,
+    required this.name,
+    required this.about,
+    required this.members,
+    required this.channel,
+    required this.approval,
+    required this.joined,
+  });
+
+  @override
+  int get hashCode =>
+      roomId.hashCode ^ address.hashCode ^ name.hashCode ^ about.hashCode ^ members.hashCode ^ channel.hashCode ^ approval.hashCode ^ joined.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PublicRoomRow &&
+          runtimeType == other.runtimeType &&
+          roomId == other.roomId &&
+          address == other.address &&
+          name == other.name &&
+          about == other.about &&
+          members == other.members &&
+          channel == other.channel &&
+          approval == other.approval &&
+          joined == other.joined;
 }
 
 /// One emoji under a message.
@@ -1159,6 +2003,96 @@ class RingingRow {
           startedAt == other.startedAt;
 }
 
+/// A group's or channel's invite link.
+class RoomLinkRow {
+  /// "public", "private" or "none".
+  final String kind;
+
+  /// Address (public) or code (private).
+  final String code;
+  final bool approval;
+  final bool web;
+
+  const RoomLinkRow({required this.kind, required this.code, required this.approval, required this.web});
+
+  @override
+  int get hashCode => kind.hashCode ^ code.hashCode ^ approval.hashCode ^ web.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RoomLinkRow && runtimeType == other.runtimeType && kind == other.kind && code == other.code && approval == other.approval && web == other.web;
+}
+
+/// A hidden signal from another phone (see engine signal.rs).
+class SignalRow {
+  final String roomId;
+  final String eventId;
+  final String sender;
+  final String kind;
+
+  /// JSON text.
+  final String data;
+  final BigInt ts;
+
+  const SignalRow({required this.roomId, required this.eventId, required this.sender, required this.kind, required this.data, required this.ts});
+
+  @override
+  int get hashCode => roomId.hashCode ^ eventId.hashCode ^ sender.hashCode ^ kind.hashCode ^ data.hashCode ^ ts.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SignalRow &&
+          runtimeType == other.runtimeType &&
+          roomId == other.roomId &&
+          eventId == other.eventId &&
+          sender == other.sender &&
+          kind == other.kind &&
+          data == other.data &&
+          ts == other.ts;
+}
+
+/// A link sticker's card for a story (tip 467), read by MY phone only.
+class StoryLinkRow {
+  final String title;
+  final String site;
+  final String description;
+
+  /// The page picture as downloaded (empty = none); the app shrinks it.
+  final Uint8List image;
+
+  const StoryLinkRow({required this.title, required this.site, required this.description, required this.image});
+
+  @override
+  int get hashCode => title.hashCode ^ site.hashCode ^ description.hashCode ^ image.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is StoryLinkRow &&
+          runtimeType == other.runtimeType &&
+          title == other.title &&
+          site == other.site &&
+          description == other.description &&
+          image == other.image;
+}
+
+/// What post_stories sent: how many chats, and the new story ids.
+class StoryPostedRow {
+  final int sent;
+  final List<String> ids;
+
+  const StoryPostedRow({required this.sent, required this.ids});
+
+  @override
+  int get hashCode => sent.hashCode ^ ids.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || other is StoryPostedRow && runtimeType == other.runtimeType && sent == other.sent && ids == other.ids;
+}
+
 /// A story within its 24 hours (mine once, and each friend's).
 class StoryRow {
   final String storyId;
@@ -1174,6 +2108,21 @@ class StoryRow {
   /// A friend-feed post (kept until deleted) rather than a story.
   final bool feed;
 
+  /// Kept on the profile (tips 392 / 468 / 534): the app's pin JSON.
+  final String? pin;
+
+  /// When it leaves the story row (ms); 0 for a feed post.
+  final BigInt until;
+
+  /// Changed after posting (tip 393).
+  final bool edited;
+
+  /// A group's or channel's story (tip 428).
+  final bool group;
+
+  /// A member's story for one group only (4-app board).
+  final bool member;
+
   const StoryRow({
     required this.storyId,
     required this.roomId,
@@ -1185,6 +2134,11 @@ class StoryRow {
     this.caption,
     this.extra,
     required this.feed,
+    this.pin,
+    required this.until,
+    required this.edited,
+    required this.group,
+    required this.member,
   });
 
   @override
@@ -1198,7 +2152,12 @@ class StoryRow {
       kind.hashCode ^
       caption.hashCode ^
       extra.hashCode ^
-      feed.hashCode;
+      feed.hashCode ^
+      pin.hashCode ^
+      until.hashCode ^
+      edited.hashCode ^
+      group.hashCode ^
+      member.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -1214,7 +2173,28 @@ class StoryRow {
           kind == other.kind &&
           caption == other.caption &&
           extra == other.extra &&
-          feed == other.feed;
+          feed == other.feed &&
+          pin == other.pin &&
+          until == other.until &&
+          edited == other.edited &&
+          group == other.group &&
+          member == other.member;
+}
+
+/// 임시 글 이어쓰기: a draft from another of my devices (empty = cleared).
+class SyncedDraftRow {
+  final String roomId;
+  final String text;
+  final BigInt at;
+
+  const SyncedDraftRow({required this.roomId, required this.text, required this.at});
+
+  @override
+  int get hashCode => roomId.hashCode ^ text.hashCode ^ at.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || other is SyncedDraftRow && runtimeType == other.runtimeType && roomId == other.roomId && text == other.text && at == other.at;
 }
 
 /// Voice message length and loudness bars (0..1024).

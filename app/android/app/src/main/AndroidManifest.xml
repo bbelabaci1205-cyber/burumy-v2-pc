@@ -1,4 +1,7 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+    <!-- AI 편집기: Google's on-phone AI needs Android 8+; the app checks the
+         version before using it, so older phones still install. -->
+    <uses-sdk tools:overrideLibrary="com.google.mlkit.genai.prompt,com.google.mlkit.genai.common"/>
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
@@ -9,14 +12,20 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28"/>
     <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
     <application
         android:label="burumy"
+        android:allowBackup="false"
+        android:fullBackupContent="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <!-- 스티커 만들기: the on-phone cut-out model comes with the app install. -->
+        <meta-data android:name="com.google.mlkit.vision.DEPENDENCIES" android:value="subject_segment" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -34,6 +43,18 @@
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
               />
+            <!-- 다른 앱에서 부루미로 보내기 (tips 350 + 182): photos, videos,
+                 files and words from another app's share sheet. -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:mimeType="*/*"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND_MULTIPLE"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:mimeType="*/*"/>
+            </intent-filter>
         </activity>
         <!-- App icon "green" (Settings > Appearance > App icon). -->
         <activity-alias
@@ -76,6 +97,138 @@
             android:name=".IconMint"
             android:targetActivity=".MainActivity"
             android:icon="@mipmap/ic_launcher_mint"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+        <!-- App icon "buru" (Settings > Appearance > App icon; Burumy v1 art). -->
+        <activity-alias
+            android:name=".IconBuru"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_launcher_buru"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+        <!-- App icon "burumi" (Settings > Appearance > App icon; Burumy v1 art). -->
+        <activity-alias
+            android:name=".IconBurumi"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_launcher_burumi"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+        <!-- App icon "dugi" (Settings > Appearance > App icon; Burumy v1 art). -->
+        <activity-alias
+            android:name=".IconDugi"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_launcher_dugi"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+        <!-- App icon "duru" (Settings > Appearance > App icon; Burumy v1 art). -->
+        <activity-alias
+            android:name=".IconDuru"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_launcher_duru"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+        <!-- App icon "mongi" (Settings > Appearance > App icon; Burumy v1 art). -->
+        <activity-alias
+            android:name=".IconMongi"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_launcher_mongi"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+        <!-- App icon "rumi" (Settings > Appearance > App icon; Burumy v1 art). -->
+        <activity-alias
+            android:name=".IconRumi"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_launcher_rumi"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+        <!-- App icon "logo_burrow" (Settings > Appearance > App icon; Burumy v1 art). -->
+        <activity-alias
+            android:name=".IconLogo_burrow"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_launcher_logo_burrow"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+        <!-- App icon "logo_buzz" (Settings > Appearance > App icon; Burumy v1 art). -->
+        <activity-alias
+            android:name=".IconLogo_buzz"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_launcher_logo_buzz"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+        <!-- App icon "logo_closedeye" (Settings > Appearance > App icon; Burumy v1 art). -->
+        <activity-alias
+            android:name=".IconLogo_closedeye"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_launcher_logo_closedeye"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+        <!-- App icon "logo_lineb" (Settings > Appearance > App icon; Burumy v1 art). -->
+        <activity-alias
+            android:name=".IconLogo_lineb"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_launcher_logo_lineb"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+        <!-- App icon "logo_nest" (Settings > Appearance > App icon; Burumy v1 art). -->
+        <activity-alias
+            android:name=".IconLogo_nest"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_launcher_logo_nest"
             android:enabled="false"
             android:exported="true">
             <intent-filter>

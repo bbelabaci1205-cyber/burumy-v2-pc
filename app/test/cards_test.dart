@@ -28,7 +28,8 @@ Future<(AppState, FakeBackend, String)> start(WidgetTester t) async {
 Future<void> tap(WidgetTester t, String key) async {
   // Long editors build lazily: scroll back up when the row is not built.
   if (find.byKey(Key(key)).evaluate().isEmpty) {
-    final list = find.byWidgetPredicate((w) => w is Scrollable && w.axisDirection == AxisDirection.down).last;
+    final editor = find.byKey(const Key('card-editor-list')).evaluate().isNotEmpty;
+    final list = editor ? editorList() : find.byWidgetPredicate((w) => w is Scrollable && w.axisDirection == AxisDirection.down).last;
     await t.scrollUntilVisible(find.byKey(Key(key)), -200, scrollable: list);
     await t.pumpAndSettle();
   }
@@ -39,12 +40,32 @@ Future<void> tap(WidgetTester t, String key) async {
   await t.pumpAndSettle();
 }
 
+/// The editor page's own list (text fields have scrollables too).
+Finder editorList() => find.descendant(of: find.byKey(const Key('card-editor-list')), matching: find.byType(Scrollable)).first;
+
+/// Like [tap], but scrolls down first (rows further down a long editor).
+Future<void> tapBelow(WidgetTester t, String key) async {
+  if (find.byKey(Key(key)).evaluate().isEmpty) {
+    await t.scrollUntilVisible(find.byKey(Key(key)), 200, scrollable: editorList());
+    await t.pumpAndSettle();
+  }
+  await tap(t, key);
+}
+
+/// Types into a field that may be further down the editor.
+Future<void> typeBelow(WidgetTester t, String key, String text) async {
+  if (find.byKey(Key(key)).evaluate().isEmpty) {
+    await t.scrollUntilVisible(find.byKey(Key(key)), 200, scrollable: editorList());
+    await t.pumpAndSettle();
+  }
+  await t.enterText(find.byKey(Key(key)), text);
+  await t.pump();
+}
+
 Future<void> tool(WidgetTester t, String id) async {
   await tap(t, 'attach');
   // The tab bar scrolls sideways and builds tabs lazily.
-  final bar = find
-      .descendant(of: find.byKey(const Key('attach-sheet')), matching: find.byWidgetPredicate((w) => w is Scrollable && w.axisDirection == AxisDirection.right))
-      .last;
+  final bar = find.descendant(of: find.byKey(const Key('attach-sheet')), matching: find.byWidgetPredicate((w) => w is Scrollable && w.axisDirection == AxisDirection.right)).last;
   await t.dragUntilVisible(find.byKey(Key('attach-tab-$id')), bar, const Offset(-120, 0));
   await t.pumpAndSettle();
   await t.tap(find.byKey(Key('attach-tab-$id')));
@@ -262,9 +283,13 @@ void main() {
 
   testWidgets('formatted post and templates', (t) async {
     final (s, b, team) = await start(t);
-    // Formatted post is a channel tool.
+    // Long posts (2026-11-27) are for every chat, not only channels.
     await tap(t, 'attach');
-    expect(find.byKey(const Key('attach-tab-rich')), findsNothing);
+    final bar = find
+        .descendant(of: find.byKey(const Key('attach-sheet')), matching: find.byWidgetPredicate((w) => w is Scrollable && w.axisDirection == AxisDirection.right))
+        .last;
+    await t.dragUntilVisible(find.byKey(const Key('attach-tab-rich')), bar, const Offset(-120, 0));
+    expect(find.byKey(const Key('attach-tab-rich')), findsOneWidget);
     await t.tapAt(const Offset(200, 100));
     await t.pumpAndSettle();
 
@@ -275,31 +300,250 @@ void main() {
     expect(b.rooms[team]!.any((m) => m.body == '매주 공지입니다'), isFalse, reason: 'not sent by itself');
   });
 
-  testWidgets('rich editor builds blocks', (t) async {
-    t.view.physicalSize = const Size(393 * 3, 852 * 3);
-    t.view.devicePixelRatio = 3;
-    addTearDown(t.view.reset);
-    final b = FakeBackend();
-    final s = AppState(b, locale: const Locale('ko'));
-    await b.login(id: 'me', password: 'x');
-    final ch = await b.createGroup('소식', [], channel: true);
+  testWidgets('old formatted posts still show', (t) async {
+    final (s, b, team) = await start(t);
+    b.rooms[team]!.add(card('old-rich', 'rich', {
+      'title': '이번 주 소식',
+      'blocks': [
+        {'t': 'p', 'text': '안녕하세요'},
+        {'t': 'li', 'text': '첫째'},
+      ],
+    }));
     await s.refresh();
-    await t.pumpWidget(BurumyApp(state: s));
     await t.pumpAndSettle();
-    await t.tap(find.text('소식'));
-    await t.pumpAndSettle();
-    await tool(t, 'rich');
-    await t.enterText(find.byKey(const Key('rich-title')), '이번 주 소식');
-    await t.enterText(find.byKey(const Key('rich-text-0')), '안녕하세요');
-    await tap(t, 'rich-add-li');
-    await t.enterText(find.byKey(const Key('rich-text-1')), '첫째');
-    await tap(t, 'rich-add-link');
-    await t.enterText(find.byKey(const Key('rich-text-2')), '자세히');
-    await t.enterText(find.byKey(const Key('rich-url-2')), 'burumy.app');
-    await t.pump();
-    await tap(t, 'card-send');
-    final m = b.rooms[ch]!.lastWhere((m) => m.kind == 'card');
-    expect([for (final x in m.card!.listOf('blocks')) x['t']], ['p', 'li', 'link']);
     expect(find.text('이번 주 소식'), findsOneWidget);
+    expect(find.text('첫째'), findsOneWidget);
+  });
+
+  // Choice flow (TelegramTips 576 without a bot).
+  Map<String, Object?> movie({bool stats = true}) => {
+    'title': '오늘 뭐 볼까?',
+    'text': '',
+    'start': '',
+    'steps': [
+      {
+        'q': '기분은요?',
+        'choices': [
+          {'label': '신나게', 'to': 's1'},
+          {'label': '차분하게', 'to': 'r1'},
+        ],
+      },
+      {
+        'q': '누구랑?',
+        'choices': [
+          {'label': '친구', 'to': 'r0'},
+        ],
+      },
+    ],
+    'results': [
+      {
+        'title': '액션',
+        'text': '크게 봐요',
+        'link': {'label': '예고편', 'url': 'https://burumy.app/t'},
+      },
+      {'title': '다큐', 'text': '', 'link': null},
+    ],
+    'stats': stats,
+  };
+
+  test('flow checks: bad targets, loops, blank results', () {
+    final d = demoCheckCard('flow', {
+      ...movie(),
+      'steps': [
+        {
+          'q': '기분은요?',
+          'choices': [
+            {'label': '신나게', 'to': 's1'},
+            {'label': '없는 곳', 'to': 's7'},
+            {'label': '앞에 0', 'to': 'r01'},
+            {'label': '', 'to': 'r0'},
+          ],
+        },
+        {
+          'q': '누구랑?',
+          'choices': [
+            {'label': '친구', 'to': 'r0'},
+          ],
+        },
+      ],
+    }, now);
+    expect((d['steps'] as List).first['choices'], hasLength(1));
+    expect(
+      () => demoCheckCard('flow', {
+        ...movie(),
+        'steps': [
+          {
+            'q': 'a',
+            'choices': [
+              {'label': 'b', 'to': 's0'},
+            ],
+          },
+        ],
+      }, now),
+      throwsArgumentError,
+      reason: 'no way to any result',
+    );
+    expect(
+      () => demoCheckCard('flow', {
+        ...movie(),
+        'results': [
+          {'title': ' '},
+        ],
+      }, now),
+      throwsArgumentError,
+    );
+    expect(
+      flowReachesResult([
+        ['s1'],
+        ['r0'],
+      ]),
+      isTrue,
+    );
+    expect(
+      flowReachesResult([
+        ['s1'],
+        ['s0'],
+      ]),
+      isFalse,
+    );
+  });
+
+  testWidgets('flow: maker builds questions, choices, a result link and numbers', (t) async {
+    final (_, b, team) = await start(t);
+    await tool(t, 'flow');
+    await typeBelow(t, 'flow-title', '오늘 뭐 볼까?');
+    await typeBelow(t, 'flow-q-0', '기분은요?');
+    await typeBelow(t, 'flow-choice-0-0', '신나게');
+    await typeBelow(t, 'flow-choice-0-1', '차분하게');
+    await t.pump();
+    // Second question; the first one's choices still go to result 1.
+    await tap(t, 'flow-add-q');
+    await typeBelow(t, 'flow-q-1', '누구랑?');
+    await typeBelow(t, 'flow-choice-1-0', '친구');
+    await t.pump();
+    await tap(t, 'flow-next-0-0');
+    await tap(t, 'flow-to-s1');
+    await tapBelow(t, 'flow-add-r');
+    await typeBelow(t, 'flow-r-title-0', '액션');
+    await typeBelow(t, 'flow-r-label-0', '예고편');
+    await typeBelow(t, 'flow-r-url-0', 'burumy.app/t');
+    await typeBelow(t, 'flow-r-title-1', '다큐');
+    await t.pump();
+    await tap(t, 'flow-next-0-1');
+    await tap(t, 'flow-to-r1');
+    await tap(t, 'card-send');
+    final m = b.rooms[team]!.lastWhere((m) => m.kind == 'card');
+    expect(m.card!.kind, 'flow');
+    final steps = m.card!.listOf('steps');
+    expect([for (final c in steps[0]['choices'] as List) c['to']], ['s1', 'r1']);
+    expect([for (final c in steps[1]['choices'] as List) c['to']], ['r0'], reason: 'blank second choice is left out');
+    expect(m.card!.listOf('results')[0]['link'], {'label': '예고편', 'url': 'https://burumy.app/t'});
+    expect(m.card!.data['stats'], true);
+    // Removing question 2 sends its pointers to the first result.
+    expect(find.text('오늘 뭐 볼까?'), findsOneWidget);
+    expect(find.byKey(const Key('flow-stats-open')), findsOneWidget, reason: 'the maker sees numbers');
+    await expectLater(() => b.cardAnswers(team, m.id), throwsStateError, reason: 'no names to list');
+  });
+
+  testWidgets('flow editor: no path to a result keeps send off', (t) async {
+    final (_, _, _) = await start(t);
+    await tool(t, 'flow');
+    await typeBelow(t, 'flow-title', 't');
+    await typeBelow(t, 'flow-q-0', 'q');
+    await typeBelow(t, 'flow-choice-0-0', 'a');
+    await t.pump();
+    await tap(t, 'flow-add-q');
+    await typeBelow(t, 'flow-q-1', 'q2');
+    await typeBelow(t, 'flow-choice-1-0', 'b');
+    await typeBelow(t, 'flow-r-title-0', 'r');
+    await t.pump();
+    await tap(t, 'flow-next-0-0');
+    await tap(t, 'flow-to-s1');
+    await tap(t, 'flow-next-0-1');
+    await tap(t, 'flow-to-s1');
+    await tap(t, 'flow-next-1-0');
+    await tap(t, 'flow-to-s0');
+    await t.scrollUntilVisible(find.byKey(const Key('card-error')), -300, scrollable: editorList());
+    expect(find.byKey(const Key('card-error'), skipOffstage: false), findsOneWidget);
+    expect(find.text('어떤 선택으로도 결과에 닿지 않아요. 선택지가 어디로 가는지 확인해 주세요.', skipOffstage: false), findsOneWidget);
+    // Removing question 2 points its choices at a result again.
+    await tapBelow(t, 'flow-remove-q-1');
+    await t.scrollUntilVisible(find.byKey(const Key('flow-title')), -300, scrollable: editorList());
+    await t.drag(find.byKey(const Key('flow-title')), const Offset(0, 600));
+    await t.pumpAndSettle();
+    expect(find.byKey(const Key('flow-title')), findsOneWidget);
+    expect(find.byKey(const Key('card-error'), skipOffstage: false), findsNothing);
+  });
+
+  testWidgets('flow: member taps through, goes back, reaches a result, tries again, reverts', (t) async {
+    final (_, b, team) = await start(t);
+    b.rooms[team]!.add(card('w', 'flow', movie()));
+    await t.tap(find.byKey(const Key('back')).last);
+    await t.pumpAndSettle();
+    await t.tap(find.text('우리 팀'));
+    await t.pumpAndSettle();
+    expect(find.text('시작하기'), findsOneWidget);
+    await tap(t, 'flow-start');
+    expect(find.text('기분은요?'), findsOneWidget);
+    expect(find.text('질문 1'), findsOneWidget);
+    await tap(t, 'flow-choice-0');
+    expect(find.text('누구랑?'), findsOneWidget);
+    expect(find.text('질문 2'), findsOneWidget);
+    await tap(t, 'flow-back');
+    expect(find.text('기분은요?'), findsOneWidget);
+    await tap(t, 'flow-choice-0');
+    await tap(t, 'flow-choice-0');
+    expect(find.byKey(const Key('flow-result')), findsOneWidget);
+    expect(find.text('액션'), findsOneWidget);
+    // Only the result number went to the maker, under a code, not my ID.
+    final c = b.rooms[team]!.firstWhere((m) => m.id == 'w').card!;
+    expect(c.mine, 'r0');
+    expect(c.counts, {'r0': 1});
+    expect(b.cardBooks['w']!.keys.single, isNot(contains('me')));
+    expect(find.byKey(const Key('flow-stats-open')), findsNothing, reason: 'members see no stats page');
+    await tap(t, 'flow-link-0');
+    expect(find.text('https://burumy.app/t'), findsOneWidget, reason: 'the real address first');
+    await t.tap(find.text('취소').last);
+    await t.pumpAndSettle();
+    await tap(t, 'flow-again');
+    expect(find.text('기분은요?'), findsOneWidget);
+    await tap(t, 'flow-choice-1');
+    expect(find.text('다큐'), findsOneWidget);
+    expect(b.rooms[team]!.firstWhere((m) => m.id == 'w').card!.counts, {'r1': 1}, reason: 'one person counts once');
+    // Long press: back to the start (Telegram's Revert).
+    await t.longPress(find.text('다큐'));
+    await t.pumpAndSettle();
+    await tap(t, 'menu-flow-revert');
+    expect(find.byKey(const Key('flow-start')), findsOneWidget);
+    expect(find.text('1명이 결과를 받았어요'), findsOneWidget);
+  });
+
+  testWidgets('flow: numbers off sends nothing; maker stats page shows counts only', (t) async {
+    final (_, b, team) = await start(t);
+    b.rooms[team]!.add(card('q', 'flow', movie(stats: false)));
+    b.rooms[team]!.add(
+      Msg(
+        id: 'mine',
+        sender: '@me:test',
+        body: '🧩 내 카드',
+        time: DateTime.now(),
+        mine: true,
+        kind: 'card',
+        card: CardInfo(kind: 'flow', data: {...movie(), 'title': '내 카드'}, counts: const {'r0': 3, 'r1': 1}),
+      ),
+    );
+    await t.tap(find.byKey(const Key('back')).last);
+    await t.pumpAndSettle();
+    await t.tap(find.text('우리 팀'));
+    await t.pumpAndSettle();
+    await tap(t, 'flow-stats-open');
+    expect(find.text('3 · 75%'), findsOneWidget);
+    expect(find.text('1 · 25%'), findsOneWidget);
+    expect(find.text('4명이 결과를 받았어요\n\n결과마다 몇 명인지만 보여요. 누가 어떤 결과를 받았는지는 아무도 몰라요.'), findsOneWidget);
+    await t.tap(find.byKey(const Key('back')).last);
+    await t.pumpAndSettle();
+    await tap(t, 'flow-start');
+    await tap(t, 'flow-choice-1');
+    expect(b.rooms[team]!.firstWhere((m) => m.id == 'q').card!.mine, isNull, reason: 'numbers off: nothing leaves the phone');
   });
 }

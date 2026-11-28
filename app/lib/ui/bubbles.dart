@@ -20,11 +20,11 @@ import 'chat_page.dart' show ChatPageMime, voiceTime;
 import 'common.dart';
 import 'glass.dart';
 import 'ios_route.dart';
-import 'stories.dart' show StoriesBar;
 
-/// Our own water drop (Eric 2026-11-26): clear liquid glass tinted with
-/// the app colour, a bright rim, a shine and a soft wobble like iPhone
-/// liquid glass. Nothing inside is ever drawn. Still when 절전 is on, when
+/// Our own water drop (Eric 2026-11-26): filled with the app colour
+/// (green, or blue with the blue 내 색상 — Eric picked '꽉 찬' over the
+/// pastel glass so it reads even at 18 pt), a bright rim, a white shine
+/// and a soft wobble like iPhone liquid glass. Nothing inside is ever drawn. Still when 절전 is on, when
 /// the phone asks for less motion, and in tests.
 class SoapBubble extends StatefulWidget {
   const SoapBubble({super.key, required this.color, this.size = 56, this.letter, this.phase = 0});
@@ -79,7 +79,7 @@ class _SoapBubbleState extends State<SoapBubble> with SingleTickerProviderStateM
             : Center(
                 child: Text(
                   widget.letter!,
-                  style: TextStyle(fontSize: size * 0.34, color: widget.color, fontWeight: FontWeight.w500),
+                  style: TextStyle(fontSize: size * 0.34, color: const Color(0xFFFFFFFF), fontWeight: FontWeight.w500),
                 ),
               ),
       ),
@@ -115,17 +115,17 @@ class _BubblePainter extends CustomPainter {
     canvas.drawPath(
       path.shift(Offset(0, r * 0.08)),
       Paint()
-        ..color = color.withValues(alpha: 0.18)
+        ..color = color.withValues(alpha: 0.35)
         ..maskFilter = MaskFilter.blur(BlurStyle.normal, r * 0.18),
     );
-    // Body: almost clear in the middle, the app colour gathering at the rim.
+    // Body: the app colour all through, a little lighter where the light hits.
     canvas.drawPath(
       path,
       Paint()
         ..shader = RadialGradient(
           center: const Alignment(-0.25, -0.3),
           radius: 1.05,
-          colors: [white.withValues(alpha: 0.10), color.withValues(alpha: 0.12), color.withValues(alpha: 0.30), color.withValues(alpha: 0.62)],
+          colors: [Color.lerp(color, white, 0.4)!, color.withValues(alpha: 0.92), color, color],
           stops: const [0.0, 0.45, 0.8, 1.0],
         ).createShader(rect),
     );
@@ -144,11 +144,11 @@ class _BubblePainter extends CustomPainter {
       path,
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = math.max(1.2, r * 0.055)
+        ..strokeWidth = math.max(1.2, r * 0.06)
         ..shader = LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [white.withValues(alpha: 0.95), white.withValues(alpha: 0.15), color.withValues(alpha: 0.75)],
+          colors: [white.withValues(alpha: 0.95), white.withValues(alpha: 0.15), color],
           stops: const [0.0, 0.5, 1.0],
         ).createShader(rect),
     );
@@ -168,64 +168,6 @@ class _BubblePainter extends CustomPainter {
 }
 
 String bubbleName(List<ChatPreview> chats, BubbleRef b) => chats.where((c) => c.roomId == b.roomId).firstOrNull?.name ?? displayId(b.from);
-
-/// Waiting bubbles on top of the chat list (the same ones the home-screen
-/// widget shows).
-class BubbleStrip extends StatelessWidget {
-  const BubbleStrip({super.key, required this.bubbles, this.caption = false});
-  final List<BubbleRef> bubbles;
-
-  /// Drop size: as big as a story ring.
-  static const drop = 64.0;
-
-  /// '비눗방울 N개' above (off: Eric 2026-11-26 "글을 빼죠").
-  final bool caption;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = L.of(context);
-    final p = paletteOf(context);
-    final chats = AppScope.of(context).chats;
-    return Padding(
-      key: const Key('bubble-strip'),
-      padding: EdgeInsets.fromLTRB(Tokens.space[2], 0, Tokens.space[2], Tokens.space[1]),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (caption) ...[
-            Text(l.bubblesWaiting(bubbles.length), style: Tokens.caption.style.copyWith(color: p.secondaryLabel)),
-            SizedBox(height: Tokens.space[1]),
-          ],
-          SizedBox(
-            height: BubbleStrip.drop + Tokens.space[1],
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              // No bounce: past the end the whole strip slides (to the side menu).
-              physics: const ClampingScrollPhysics(),
-              itemCount: bubbles.length,
-              separatorBuilder: (_, _) => SizedBox(width: Tokens.space[0]),
-              itemBuilder: (c, i) {
-                final b = bubbles[i];
-                final name = bubbleName(chats, b);
-                return GestureDetector(
-                  key: Key('bubble-${b.id}'),
-                  onTap: () => popBubble(context, b.roomId, b.id, name),
-                  child: Center(
-                    child: SizedBox(
-                      // Same slot as a story ring, so both rows line up.
-                      width: StoriesBar.ring + Tokens.space[0],
-                      child: SoapBubble(color: p.accent, size: BubbleStrip.drop - (i % 3) * 4.0, letter: name.characters.first, phase: i * 0.37),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 Future<void> popBubble(BuildContext context, String roomId, String id, String name) async {
   final s = AppScope.of(context);
@@ -289,6 +231,7 @@ class _BubblePopPageState extends State<BubblePopPage> {
         border: null,
       ),
       child: CaptureBlock(
+        what: 'bubble',
         child: SafeArea(
           child: FutureBuilder<(Msg?, List<int>)>(
             future: opened,

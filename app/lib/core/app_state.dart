@@ -9,22 +9,95 @@ import 'package:flutter/widgets.dart';
 
 import '../brand/brand.dart';
 import 'automod.dart';
+import 'group_tools.dart';
+import 'chat_mute.dart';
+import 'keyword_replies.dart';
+import 'login_safety.dart';
+import 'accounts.dart';
 import 'backend.dart';
+import 'archive_rules.dart';
+import 'data_usage.dart';
+import 'channel_dm.dart';
+import 'downloads.dart';
+import 'open_docs.dart';
+import 'draft_sync.dart';
 import 'error_log.dart';
+import 'gifs.dart';
+import 'custom_emoji.dart';
+import 'effects.dart';
 import 'features.dart';
+import 'memories.dart';
+import 'own_way.dart';
+import 'my_photos.dart';
+import 'id_key.dart';
 import '../l10n/app_localizations.dart';
 import 'rules.dart';
+import 'room_rules.dart';
+import 'room_texts.dart';
+import 'topics.dart';
+import 'suggest_post.dart';
+import 'phone.dart';
+import 'room_theme.dart';
+import 'looks.dart';
+import 'safety.dart';
+import 'trust.dart';
+
+/// That account is already signed in on this phone.
+class AccountAlreadyHere implements Exception {
+  const AccountAlreadyHere();
+}
 
 class AppState extends ChangeNotifier {
   AppState(this.backend, {this.family = BrandFamily.green, this.locale});
 
   final Backend backend;
+
+  /// Several accounts on this phone (null in tests that use one backend).
+  Accounts? accounts;
   BrandFamily family;
 
   /// null = follow the phone's language.
   Locale? locale;
 
   List<ChatPreview> chats = const [];
+
+  /// 커뮤니티 I am in (see [Community]).
+  List<Community> communities = const [];
+
+  /// The community a chat belongs to (that I can see), if any.
+  Community? communityOf(String roomId) {
+    for (final c in communities) {
+      if (c.visible.any((x) => x.roomId == roomId)) return c;
+    }
+    return null;
+  }
+
+  /// "한 대화로 보기" for this community (this phone only).
+  bool communityAsOne(String id) => on('community_one:$id');
+
+  /// 사칭 막기: official badges and '확인 중' / '가짜' labels (public list).
+  TrustList trust = TrustList.empty;
+
+  /// What to show next to [user] whose name is [name] right now.
+  Trust trustOf(String user, String name) => trust.of(user, name);
+
+  /// Asks for the latest list (the backend keeps it for a few minutes).
+  Future<void> refreshTrust() async {
+    try {
+      final t = await backend.trustList();
+      if (t.version != trust.version ||
+          t.badges.length != trust.badges.length ||
+          t.flags.length != trust.flags.length ||
+          t.hidden.length != trust.hidden.length ||
+          t.guard != trust.guard) {
+        trust = t;
+        notifyListeners();
+      }
+    } catch (_) {}
+  }
+
+  /// I accepted a first message from someone who isn't my friend.
+  bool acceptedStranger(String roomId) => settings['stranger_ok:$roomId'] == '1';
 
   /// My 1:1 contacts' user ids (folders: 연락처 / 비연락처).
   Set<String> friendIds = const {};
@@ -37,7 +110,60 @@ class AppState extends ChangeNotifier {
 
   /// Friend-feed posts, newest first (shown only while [Features.feed] is on).
   List<Story> feed = const [];
+
+  /// 1년 전 오늘 (core/memories.dart): saved pictures from this day in
+  /// earlier years, picked on this phone.
+  List<MemoryDay> memories = const [];
+
+  /// Stories kept on someone's profile (mine included), any age.
+  List<Story> keptStories = const [];
   List<FeedLike> feedLikes = const [];
+
+  /// This device's id and my account privacy settings (tip 311).
+  String thisDeviceId = '';
+  Map<String, dynamic> accountPrivacy = const {};
+
+  /// "이 기기로 통화 받기" is off for this device.
+  bool get callsOffHere => Features.loginSafety && thisDeviceId.isNotEmpty && LoginSafety.callsOff(accountPrivacy, thisDeviceId);
+
+  /// 새 로그인 경고: my devices that signed in since I last looked.
+  List<DeviceRow> newLogins = const [];
+  DateTime _devicesAt = DateTime(2000);
+
+  /// Asks for my device list now and then (cheap; this phone only).
+  Future<void> checkNewLogins({bool now = false}) async {
+    if (!Features.loginSafety || !loggedIn) return;
+    final t = DateTime.now();
+    if (!now && t.difference(_devicesAt) < LoginSafety.every) return;
+    _devicesAt = t;
+    try {
+      final all = await backend.devices();
+      thisDeviceId = all.where((d) => d.thisDevice).firstOrNull?.id ?? thisDeviceId;
+      try {
+        accountPrivacy = await backend.accountPrivacy();
+      } catch (_) {}
+      final fresh = await LoginSafety.newDevices(this, all);
+      final ids = {for (final d in fresh) d.id};
+      if (ids.length != newLogins.length || !newLogins.every((d) => ids.contains(d.id))) {
+        newLogins = fresh;
+        notifyListeners();
+      }
+    } catch (_) {}
+  }
+
+  /// The card was answered (yes: known now; no: that device was logged out).
+  Future<void> answerNewLogin(String deviceId, {required bool mine}) async {
+    if (mine) await LoginSafety.confirm(this, deviceId);
+    newLogins = [
+      for (final d in newLogins)
+        if (d.id != deviceId) d,
+    ];
+    notifyListeners();
+  }
+
+  /// 1:1 chats from strangers that were just tucked into 보관함 (the list
+  /// plays a short animation for them).
+  final tuckedNow = ValueNotifier<int>(0);
 
   /// Friends (user ids) who deleted a 1:1 chat for both, not yet dismissed.
   List<String> erasedBy = const [];
@@ -60,6 +186,10 @@ class AppState extends ChangeNotifier {
 
   /// Phone builds: a local alert at [at] (birthdays). Nothing goes out.
   static Future<void> Function(int id, DateTime at, String title)? remindAt;
+
+  /// Phone builds: the plain "open the app" reminder a day before the
+  /// 미접속 자동 삭제 runs out. Nothing goes out.
+  static Future<void> Function(DateTime at)? idleReminder;
 
   /// The app is not on screen (notifications are shown then).
   bool inBackground = false;
@@ -101,8 +231,30 @@ class AppState extends ChangeNotifier {
   /// delete); the screen looks the same for all three.
   Future<bool> unlock(String password) async {
     final role = await backend.unlock(password);
-    if (role == null) return false;
-    await backend.startSession(role);
+    final a = accounts;
+    if (role == null) {
+      // The wrong-try limit erased this account's chats (the count starts
+      // again at 0): the other accounts' chats go too.
+      if (a != null && a.side.isNotEmpty && await backend.lockFails() == 0) await a.eraseOthers();
+      return false;
+    }
+    if (role == 'account') {
+      // Fourth password: the chosen accounts leave this phone; what is left
+      // opens as usual (another account may now be on screen).
+      if (a != null) {
+        await a.eraseChosen();
+        if (!identical(a.state, this)) {
+          a.state.locked = false;
+          await a.state.backend.startSession('normal');
+          await a.state.afterLogin();
+          return true;
+        }
+      }
+      await backend.startSession('normal');
+    } else {
+      await backend.startSession(role);
+      if (a != null && role != 'normal') await a.startSessionOthers(role);
+    }
     locked = false;
     await afterLogin();
     unawaited(backend.runDueLeaves().then((_) {}, onError: (_) {}));
@@ -139,6 +291,16 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> setOn(String key, bool v) => setPref(key, v ? '1' : '0');
+
+  /// "연락처에서 삭제" (v1): the 1:1 chat stays, the person leaves the
+  /// contacts list until I open a chat with them again.
+  Set<String> get removedContacts => pref('removed_contacts', '').split(',').where((x) => x.isNotEmpty).toSet();
+
+  Future<void> removeContact(String userId, {bool removed = true}) {
+    final all = removedContacts;
+    removed ? all.add(userId) : all.remove(userId);
+    return setPref('removed_contacts', all.join(','));
+  }
 
   /// Battery left in % (null = unknown). Read once a minute while open.
   int? battery;
@@ -199,9 +361,41 @@ class AppState extends ChangeNotifier {
     if (secs > 0 && !known.contains(id)) {
       try {
         await backend.setTimer(id, secs);
+        timers[id] = secs;
       } catch (_) {}
     }
     return id;
+  }
+
+  /// 자동 삭제 time per chat (seconds), for the "1w" mark on chat photos
+  /// (Telegram tip 364). Read at most once a minute; set at once when I
+  /// change it here.
+  final timers = <String, int>{};
+  DateTime? _timersAt;
+
+  Future<void> loadTimers() async {
+    final now = DateTime.now();
+    if (_timersAt != null && now.difference(_timersAt!) < const Duration(minutes: 1)) return;
+    _timersAt = now;
+    var changed = false;
+    for (final c in chats) {
+      if (c.isChannel) continue;
+      try {
+        final t = await backend.timer(c.roomId);
+        if (timers[c.roomId] != t) {
+          timers[c.roomId] = t;
+          changed = true;
+        }
+      } catch (_) {}
+    }
+    if (changed) notifyListeners();
+  }
+
+  /// Sets a chat's timer and its list mark together.
+  Future<void> setChatTimer(String roomId, int seconds) async {
+    await backend.setTimer(roomId, seconds);
+    timers[roomId] = seconds;
+    notifyListeners();
   }
 
   /// My "saved messages" chat, once made (first save, or opened in Settings).
@@ -217,7 +411,8 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  /// Saved messages first in the list, under its own name.
+  /// Saved messages under its own name, in its place by time like any
+  /// other chat (Eric 2026-11-26: not stuck on top; only pins stay up).
   List<ChatPreview> _savedFirst(List<ChatPreview> list) {
     final id = savedRoomId;
     final c = id == null ? null : list.where((x) => x.roomId == id).firstOrNull;
@@ -233,7 +428,7 @@ class AppState extends ChangeNotifier {
       archived: c.archived,
       muted: c.muted,
     );
-    return [named, ...list.where((x) => x.roomId != id)];
+    return [for (final x in list) x.roomId == id ? named : x];
   }
 
   Future<String> openSaved() async {
@@ -255,21 +450,143 @@ class AppState extends ChangeNotifier {
 
   Future<void> register(String id, String password, String? invite) async {
     await backend.register(id: id, password: password, invite: invite);
+    await _noteAccount();
     await afterLogin();
   }
 
   Future<void> login(String id, String password) async {
     await backend.login(id: id, password: password);
+    await _noteAccount();
     await afterLogin();
+  }
+
+  /// QR로 PC 연결 (PC side): signs in once my phone vouched for the QR
+  /// made from [secret]. False = not yet.
+  Future<bool> loginWithPcCode(String secret) async {
+    if (!await backend.takePcLogin(secret)) return false;
+    await _noteAccount();
+    await afterLogin();
+    return true;
+  }
+
+  Future<void> _noteAccount() async {
+    final a = accounts;
+    if (a != null && !await a.noteLogin()) throw const AccountAlreadyHere();
   }
 
   Future<void> afterLogin() async {
     await _loadSettings();
+    unawaited(_idleTouch());
     notifyListeners();
     await refresh();
     startLive();
+    // The trust service learns my current name (badge check, rename date).
+    unawaited(() async {
+      try {
+        await backend.trustSeen(await backend.myName(), photo: photoPrint(await backend.myPhoto()));
+      } catch (_) {}
+    }());
     final p = startPush;
     if (p != null) unawaited(p(this).catchError((_) {}));
+  }
+
+  /// The app was opened: 미접속 자동 삭제 counts again from now.
+  Future<void> _idleTouch() async {
+    try {
+      await Safety.touch();
+      final at = await Safety.idleReminderAt();
+      if (at != null) await idleReminder?.call(at);
+    } catch (_) {}
+  }
+
+  /// Extra handlers for hidden notes, by kind (later features add theirs).
+  late final signalHandlers = <String, Future<void> Function(Signal s)>{
+    // 환영 인사 + 규칙 (encrypted pack from an admin's phone).
+    RoomTexts.kind: (s) => RoomTexts.onSignal(this, s),
+    // 주제 (tip 527): the encrypted topic list from an admin's phone.
+    Topics.kind: (s) => Topics.onSignal(this, s),
+    // 대화방 테마 양쪽 적용 (1:1, encrypted).
+    RoomTheme.kind: (s) => RoomTheme.onSignal(this, s),
+    // 이름·프로필 꾸미기 from a 1:1 chat (encrypted).
+    PersonLook.signalKind: (s) async {
+      final v = s.data['v'];
+      if (v is! String || v.length > 80) return;
+      await setPref(PersonLook.prefOf(s.sender), v);
+    },
+    // 로그인·기기 안전: voice rule, calls / days wiped for both (1:1).
+    if (Features.loginSafety) ...LoginSafety.handlers(this),
+    // 메시지 효과 / 큰 이모지 같이 보기 (tips 451 · 355).
+    if (Features.funFx) ...{
+      MsgFx.kind: (s) => MsgFx.onSignal(this, s),
+      MsgFx.tapKind: (s) => MsgFx.onTapSignal(this, s),
+      // 직접 만든 이모지 그림 + 그룹 이모지 묶음 (tips 354 · 430).
+      CustomEmojis.kind: (s) => CustomEmojis.onSignal(this, s),
+      CustomEmojis.packKind: (s) => CustomEmojis.onPack(this, s),
+      // GIF 위 글씨·그림 (tip 558).
+      Gifs.layerKind: (s) => Gifs.onLayer(this, s),
+    },
+    // 우리식 기능: 캡처 알림, 친구 피드 댓글.
+    if (Features.ownWay) ...OwnWay.handlers(this),
+  };
+
+  /// Hidden notes from other phones (remote wipe requests and the like).
+  Future<void> handleSignals() async {
+    final List<Signal> got;
+    try {
+      got = backend.takeSignals();
+    } catch (_) {
+      return;
+    }
+    for (final s in got) {
+      try {
+        if (s.kind == Safety.wipeKind) {
+          await _onWipeSignal(s);
+        } else {
+          await signalHandlers[s.kind]?.call(s);
+        }
+      } catch (e, st) {
+        ErrorLog.add(e, st);
+      }
+    }
+  }
+
+  Future<void> _onWipeSignal(Signal s) async {
+    final votes = <String, int>{};
+    try {
+      (jsonDecode(pref(Safety.votesKey, '{}')) as Map).forEach((k, v) => votes['$k'] = (v as num).toInt());
+    } catch (_) {}
+    final what = Safety.judge(settings, s, votes);
+    if (what == null) return;
+    await setPref(Safety.votesKey, what == 'wipe' ? '' : jsonEncode(votes));
+    if (what == 'wipe') await emergencyWipe();
+  }
+
+  /// 원격 비상 삭제 / 미접속 자동 삭제: the plan's last message to my trusted
+  /// friends, then every chat on this phone is erased.
+  Future<void> emergencyWipe() async {
+    final msg = pref(Safety.lastMsgKey, '').trim();
+    if (msg.isNotEmpty) {
+      for (final f in Safety.friends(settings)) {
+        final room = chats.where((c) => c.isDirect && c.peer == f).firstOrNull;
+        if (room == null) continue;
+        try {
+          await backend.sendText(room.roomId, msg);
+        } catch (_) {}
+      }
+    }
+    try {
+      await backend.eraseEverything();
+    } catch (e, st) {
+      ErrorLog.add(e, st);
+    }
+    // Every account on this phone goes, like too many wrong tries.
+    await accounts?.eraseOthers();
+    try {
+      chats = await backend.chats();
+    } catch (_) {
+      chats = const [];
+    }
+    await checkLock();
   }
 
   /// Group and channel invitations waiting for a tap.
@@ -293,6 +610,7 @@ class AppState extends ChangeNotifier {
     stopLive();
     await backend.logout();
     chats = const [];
+    communities = const [];
     bubbles = const [];
     ringing = const [];
     invites = const [];
@@ -300,6 +618,7 @@ class AppState extends ChangeNotifier {
     savedRoomId = null;
     publishBubbles?.call(const [], const []);
     notifyListeners();
+    await accounts?.afterLogout();
   }
 
   /// Messages set to go later (on this phone; sent when the app is open at
@@ -314,10 +633,31 @@ class AppState extends ChangeNotifier {
 
   Future<void> setScheduled(List<Map<String, dynamic>> v) => setPref('scheduled', v.isEmpty ? '' : jsonEncode(v));
 
-  Future<void> schedule(String roomId, String text, DateTime at, {bool quiet = false}) => setScheduled([
+  /// [repeat]: '' once, 'day', 'week' or 'month' (v1 반복 보내기).
+  Future<void> schedule(String roomId, String text, DateTime at, {bool quiet = false, String repeat = ''}) => setScheduled([
     ...scheduled,
-    {'id': '${DateTime.now().microsecondsSinceEpoch}', 'room': roomId, 'text': text, 'at': at.millisecondsSinceEpoch, 'quiet': quiet},
+    {
+      'id': '${DateTime.now().microsecondsSinceEpoch}',
+      'room': roomId,
+      'text': text,
+      'at': at.millisecondsSinceEpoch,
+      'quiet': quiet,
+      if (repeat.isNotEmpty) 'repeat': repeat,
+    },
   ]);
+
+  /// The next time a repeating message goes, after [now].
+  static DateTime nextRepeat(DateTime at, String repeat, DateTime now) {
+    var t = at;
+    do {
+      t = switch (repeat) {
+        'day' => DateTime(t.year, t.month, t.day + 1, t.hour, t.minute),
+        'week' => DateTime(t.year, t.month, t.day + 7, t.hour, t.minute),
+        _ => DateTime(t.year, t.month + 1, t.day, t.hour, t.minute),
+      };
+    } while (!t.isAfter(now));
+    return t;
+  }
 
   /// Sends what is due; failures stay queued.
   Future<void> sendDue() async {
@@ -329,12 +669,20 @@ class AppState extends ChangeNotifier {
     for (final m in due) {
       try {
         final room = m['room'] as String, text = m['text'] as String;
-        if (m['quiet'] == true) {
+        if (m['gif'] is Map) {
+          // 내 GIF 예약 보내기 (tip 558).
+          await Gifs.sendScheduled(this, room, m);
+        } else if (m['quiet'] == true) {
           await backend.sendTextQuietly(room, text);
         } else {
           await backend.sendText(room, text);
         }
         left.removeWhere((x) => x['id'] == m['id']);
+        final r = m['repeat'] as String? ?? '';
+        if (r.isNotEmpty) {
+          final next = nextRepeat(DateTime.fromMillisecondsSinceEpoch(m['at'] as int), r, DateTime.now());
+          left.add({...m, 'at': next.millisecondsSinceEpoch});
+        }
       } catch (_) {}
     }
     await setScheduled(left);
@@ -342,23 +690,280 @@ class AppState extends ChangeNotifier {
 
   Future<Set<String>> _contactIds() async {
     try {
-      return {for (final p in await backend.contacts()) p.userId};
+      final asking = requestPeers;
+      return {
+        for (final p in await backend.contacts())
+          if (!asking.contains(p.userId)) p.userId,
+      };
     } catch (_) {
       return const {};
     }
+  }
+
+  // ------------------------------------------------ 메시지 요청 (v1)
+  // A 1:1 chat started by someone who isn't my contact waits in 메시지 요청
+  // until I accept it or reply. They can't see whether I read it. Kept in
+  // my own settings as dm_request:<room> = their ID.
+
+  static const _requestKey = 'dm_request:';
+
+  // ------------------------------------------------ 실시간 위치 (v1)
+  // My live shares: live_loc:<room> = "<message ID>|<end ms>". While the
+  // app runs, the point moves once a minute; then it stops by itself.
+
+  static const _liveKey = 'live_loc:';
+  Timer? _liveLocTimer;
+
+  /// Tests and the web demo swap this (no GPS there).
+  Future<GeoFix> Function() whereAmI = Phone.location;
+
+  /// Rooms where I'm sharing my live location now, with the end time.
+  Map<String, (String, DateTime)> get liveShares {
+    final out = <String, (String, DateTime)>{};
+    for (final e in settings.entries) {
+      if (!e.key.startsWith(_liveKey)) continue;
+      final p = e.value.split('|');
+      final end = p.length == 2 ? int.tryParse(p[1]) : null;
+      if (end == null || end <= backend.clock.millisecondsSinceEpoch) continue;
+      out[e.key.substring(_liveKey.length)] = (p[0], DateTime.fromMillisecondsSinceEpoch(end));
+    }
+    return out;
+  }
+
+  Future<void> startLiveLocation(String roomId, Duration length) async {
+    final f = await whereAmI();
+    final until = backend.clock.add(length);
+    final id = await backend.sendLiveLocation(roomId, f.lat, f.lon, f.accuracy, until);
+    await setPref('$_liveKey$roomId', '$id|${until.millisecondsSinceEpoch}');
+    _keepLiveMoving();
+  }
+
+  Future<void> stopLiveLocation(String roomId) async {
+    final s = liveShares[roomId];
+    await setPref('$_liveKey$roomId', '');
+    if (liveShares.isEmpty) {
+      _liveLocTimer?.cancel();
+      _liveLocTimer = null;
+    }
+    if (s == null) return;
+    try {
+      final f = await whereAmI();
+      await backend.updateLiveLocation(roomId, s.$1, f.lat, f.lon, f.accuracy, backend.clock);
+    } catch (_) {}
+  }
+
+  /// One step: move every live share; drop the ones that ended.
+  Future<void> moveLiveLocations() async {
+    final shares = liveShares;
+    for (final e in settings.entries.toList()) {
+      if (e.key.startsWith(_liveKey) && e.value.isNotEmpty && !shares.containsKey(e.key.substring(_liveKey.length))) await setPref(e.key, '');
+    }
+    if (shares.isEmpty) {
+      _liveLocTimer?.cancel();
+      _liveLocTimer = null;
+      return;
+    }
+    GeoFix f;
+    try {
+      f = await whereAmI();
+    } catch (_) {
+      return;
+    }
+    for (final e in shares.entries) {
+      try {
+        await backend.updateLiveLocation(e.key, e.value.$1, f.lat, f.lon, f.accuracy, e.value.$2);
+      } catch (_) {}
+    }
+  }
+
+  void _keepLiveMoving() {
+    if (_liveLocTimer != null || liveShares.isEmpty) return;
+    _liveLocTimer = Timer.periodic(const Duration(minutes: 1), (_) => unawaited(moveLiveLocations()));
+  }
+
+  /// Is this chat still a message request?
+  bool isRequest(String roomId) => (settings['$_requestKey$roomId'] ?? '').isNotEmpty;
+
+  /// People whose chats are still requests.
+  Set<String> get requestPeers => {
+    for (final e in settings.entries)
+      if (e.key.startsWith(_requestKey) && e.value.isNotEmpty) e.value,
+  };
+
+  /// Chats waiting in 메시지 요청.
+  List<ChatPreview> get requests => [
+    for (final c in chats)
+      if (c.isDirect && isRequest(c.roomId)) c,
+  ];
+
+  /// Accept: the chat moves to my list and they become a contact.
+  Future<void> acceptRequest(String roomId) async {
+    if (!isRequest(roomId)) return;
+    await setPref('$_requestKey$roomId', '');
+    friendIds = await _contactIds();
+    notifyListeners();
+  }
+
+  /// Delete (and block if asked): I leave the chat; they aren't told why.
+  Future<void> declineRequest(String roomId, {bool block = false}) async {
+    final who = settings['$_requestKey$roomId'] ?? '';
+    if (block && who.isNotEmpty) {
+      try {
+        await backend.block(who, true);
+      } catch (_) {}
+    }
+    try {
+      await backend.leave(roomId);
+    } catch (_) {}
+    await setPref('$_requestKey$roomId', '');
+    await refresh();
   }
 
   /// Settings > Chats > Away reply: one reply per 1:1 chat at most every
   /// 6 hours, only for messages that came after it was switched on.
   /// Admin tools > Auto-moderation: this phone removes rule-breaking
   /// messages in the rooms where it was switched on.
+  /// 고정 기간 that ran out: unpinned by whoever may pin there.
+  Future<void> unpinExpired() async {
+    for (final c in chats) {
+      try {
+        final cfg = await backend.roomConfig(c.roomId);
+        final done = RoomRules.expiredPins(cfg, backend.clock);
+        if (done.isEmpty) continue;
+        for (final id in done) {
+          await backend.pin(c.roomId, id, false);
+        }
+        var left = <String, dynamic>{...cfg};
+        for (final id in done) {
+          left = {...left, 'pin_until': RoomRules.withPinUntil(left, id, null)};
+        }
+        final m = left['pin_until'] as Map;
+        await backend.setRoomConfig(c.roomId, 'pin_until', m.isEmpty ? null : m);
+      } catch (_) {}
+    }
+  }
+
+  /// Alerts off for [d] (null = until I turn them back on).
+  Future<void> muteChat(String roomId, Duration? d) async {
+    await backend.setChatMuted(roomId, true);
+    await setPref(muteUntilKey(roomId), d == null ? '' : '${backend.clock.add(d).millisecondsSinceEpoch}');
+    await setPref(quietKey(roomId), '');
+    await refresh();
+  }
+
+  /// Alerts on again (also clears a sound-only mute).
+  Future<void> unmuteChat(String roomId) async {
+    await backend.setChatMuted(roomId, false);
+    await setPref(muteUntilKey(roomId), '');
+    await setPref(quietKey(roomId), '');
+    await refresh();
+  }
+
+  /// "소리 끄기": alerts still come, silently.
+  Future<void> setChatQuiet(String roomId, bool on) => setPref(quietKey(roomId), on ? '1' : '');
+
+  /// Timed mutes whose time is over: alerts come back on their own.
+  Future<void> liftTimedMutes() async {
+    for (final id in expiredMutes(settings, backend.clock)) {
+      try {
+        await backend.setChatMuted(id, false);
+      } catch (_) {}
+      settings = {...settings}..remove(muteUntilKey(id));
+      await backend.setSetting(muteUntilKey(id), '');
+    }
+  }
+
+  /// 기간 메시지 금지 that ran out: an admin's phone lets them talk again.
+  Future<void> liftMutes() async {
+    for (final c in chats.where((c) => !c.isDirect)) {
+      try {
+        final cfg = await backend.roomConfig(c.roomId);
+        final done = RoomRules.expiredMutes(cfg, backend.clock);
+        if (done.isEmpty) continue;
+        final role = await backend.myRole(c.roomId);
+        if (!RoomRules.can(cfg, role, backend.userId ?? '', 'mute')) continue;
+        var left = cfg;
+        for (final u in done) {
+          await backend.setMemberLevel(c.roomId, u, 0);
+          left = {...left, 'mutes': RoomRules.withMute(left, u, null)};
+        }
+        final m = left['mutes'] as Map;
+        await backend.setRoomConfig(c.roomId, 'mutes', m.isEmpty ? null : m);
+      } catch (_) {}
+    }
+  }
+
   Future<void> runAutoMod() async {
     for (final c in chats) {
+      if (!c.isDirect && !c.isChannel) {
+        try {
+          await antiSpamRoom(c.roomId);
+        } catch (_) {}
+      }
       if (!on('automod_on:${c.roomId}')) continue;
       try {
         await autoModRoom(c.roomId);
       } catch (_) {}
     }
+  }
+
+  /// 익명 관리자 (tip 94): each group's anonymous times, so the chat list
+  /// never names them (in the last-message line or "입력 중").
+  Map<String, Map<String, dynamic>> anonCfgs = {};
+
+  Future<void> loadAnon() async {
+    final next = <String, Map<String, dynamic>>{};
+    for (final c in chats.where((c) => !c.isDirect && !c.isChannel)) {
+      try {
+        final cfg = await backend.roomConfig(c.roomId);
+        if (cfg['anon'] is! Map) continue;
+        next[c.roomId] = {'anon': cfg['anon']};
+      } catch (_) {}
+    }
+    anonCfgs = next;
+  }
+
+  /// 강력 스팸 차단 (tip 365): when the room has it on and I'm an admin who
+  /// may delete, my phone removes spam (the server can't read messages).
+  /// Three removals of one person in a day: they can't write for a day.
+  /// Returns how many messages were removed.
+  Future<int> antiSpamRoom(String roomId) async {
+    final cfg = await backend.roomConfig(roomId);
+    if (!AntiSpam.on(cfg)) return 0;
+    final me = backend.userId ?? '';
+    final role = await backend.myRole(roomId);
+    if (!RoomRules.can(cfg, role, me, 'delete')) return 0;
+    final msgs = await backend.timeline(roomId, limit: 200);
+    final members = await backend.members(roomId);
+    final admins = {
+      for (final m in members)
+        if (m.role == 'owner' || m.role == 'admin') m.userId,
+    };
+    final now = backend.clock;
+    final bad = AntiSpam.find(msgs, admins: admins, trusted: AntiSpam.trusted(cfg), joined: {for (final m in members) m.userId: m.since}, now: now);
+    var n = 0;
+    var mutes = cfg;
+    for (final (m, _) in bad) {
+      if (!_modDone.add(m.id)) continue;
+      await backend.deleteMessage(roomId, m.id);
+      final name = members.where((x) => x.userId == m.sender).firstOrNull?.name ?? m.sender;
+      await setPref('mod_log:$roomId', withLogEntry(settings, roomId, ModEntry(now, 'spam', name, AntiSpam.detail(m))));
+      n++;
+      // Strikes: removals of this person in the last day (this phone's log).
+      final day = now.subtract(const Duration(days: 1));
+      final strikes = modLogOf(settings, roomId).where((e) => e.kind == 'spam' && e.time.isAfter(day) && AntiSpam.splitDetail(e.detail).$1 == m.sender).length;
+      if (strikes >= AntiSpam.strikes && RoomRules.muteUntil(mutes, m.sender) == null && RoomRules.can(cfg, role, me, 'mute')) {
+        try {
+          await backend.setMemberLevel(roomId, m.sender, -1);
+          mutes = {...mutes, 'mutes': RoomRules.withMute(mutes, m.sender, now.add(const Duration(days: 1)))};
+          await backend.setRoomConfig(roomId, 'mutes', mutes['mutes']);
+          await setPref('spam_muted:$roomId:${m.sender}', '1');
+          await logMod(roomId, 'muted', name);
+        } catch (_) {}
+      }
+    }
+    if (n > 0) notifyListeners();
+    return n;
   }
 
   final _modDone = <String>{};
@@ -407,9 +1012,58 @@ class AppState extends ChangeNotifier {
     return n;
   }
 
+  /// 키워드 자동 답장: my phone answers member messages with a set word, in
+  /// rooms where I'm an admin. Only messages that came after the rules were
+  /// last saved or checked.
+  Future<void> sendKeywordReplies() async {
+    if (backend.sessionRole != 'normal') return;
+    for (final c in chats) {
+      final rules = keywordRules(settings, c.roomId);
+      if (rules.isEmpty || c.last == null || c.last!.mine) continue;
+      final seenKey = 'keyword_seen:${c.roomId}';
+      final since = DateTime.fromMillisecondsSinceEpoch(int.tryParse(pref(seenKey, '0')) ?? 0);
+      if (!c.last!.time.isAfter(since)) continue;
+      try {
+        final role = await backend.myRole(c.roomId);
+        if (role != 'owner' && role != 'admin') continue;
+        final msgs = await backend.timeline(c.roomId, limit: 50);
+        final todo = keywordAnswers(msgs, rules, since, const {});
+        await setPref(seenKey, '${msgs.isEmpty ? since.millisecondsSinceEpoch : msgs.last.time.millisecondsSinceEpoch}');
+        for (final (m, r) in todo.take(5)) {
+          await backend.reply(c.roomId, m.id, r.answer);
+        }
+      } catch (_) {}
+    }
+  }
+
   /// Adds a line to this phone's admin log for a room.
   Future<void> logMod(String roomId, String kind, String name, [String detail = '']) =>
       setPref('mod_log:$roomId', withLogEntry(settings, roomId, ModEntry(DateTime.now(), kind, name, detail)));
+
+  /// 이름 색 (v1): groups I joined after picking get my colour too.
+  Future<void> applyNameColor() async {
+    final c = pref('name_color', '');
+    // 이름·프로필 꾸미기 (tips 402 + 409): 1:1 chats get my whole look as a
+    // hidden end-to-end encrypted note (groups read it from my member event).
+    for (final d in chats.where((x) => x.isDirect && !x.isBot)) {
+      final key = 'my_look_sent:${d.roomId}';
+      final sent = pref(key, '');
+      if (sent == c || (c.isEmpty && sent.isEmpty)) continue;
+      try {
+        await backend.sendSignal(d.roomId, PersonLook.signalKind, {'v': c});
+        await setPref(key, c);
+      } catch (_) {}
+    }
+    for (final g in chats.where((x) => !x.isDirect && !x.isChannel)) {
+      final key = 'name_color_set:${g.roomId}';
+      if (pref(key, '') == c) continue;
+      if (c.isEmpty && pref(key, '').isEmpty) continue;
+      try {
+        await backend.setMyRoomLook(g.roomId, color: c);
+        await setPref(key, c);
+      } catch (_) {}
+    }
+  }
 
   Future<void> sendAwayReplies() async {
     if (!on('away_on') || backend.sessionRole != 'normal') return;
@@ -459,8 +1113,11 @@ class AppState extends ChangeNotifier {
   }
 
   /// Saves my profile here and shares it by my 공개 범위 choices.
-  Future<void> saveMyProfile({List<int>? photo, bool removePhoto = false, String? bio, String? birthday}) async {
+  Future<void> saveMyProfile({List<int>? photo, bool removePhoto = false, String? bio, String? birthday, DateTime? now}) async {
     await _loadMyProfile();
+    // 예전 사진 (tip 58): the photo being replaced stays on this phone.
+    final was = myOwnPhoto;
+    if (was != null && (removePhoto || (photo != null && photo.isNotEmpty))) await MyPhotos.keep(this, was, now: now);
     if (removePhoto) await setPref('me_photo', '');
     if (photo != null && photo.isNotEmpty) await setPref('me_photo', base64Encode(photo));
     if (bio != null) await setPref('me_bio', bio.trim());
@@ -472,16 +1129,23 @@ class AppState extends ChangeNotifier {
   /// [only] just to new friends.
   Future<void> publishProfile({List<String> only = const []}) async {
     await _loadMyProfile();
+    // 공개 사진 (tip 374): people my 프로필 사진 setting leaves out see it.
+    // 'nobody' + 공개 사진 = everyone (friends too) gets the 공개 사진;
+    // 'contacts' = friends get the real one, the public profile the 공개 사진.
+    final who = pref('who_photo', 'everyone');
+    final pub = Features.profile && who != 'everyone' ? MyPhotos.publicPhoto(this) : null;
+    final real = pub != null && who == 'nobody' ? pub : (myOwnPhoto ?? const <int>[]);
     await backend.shareProfile(
-      mime: 'image/png',
-      photo: myOwnPhoto ?? const [],
+      mime: MyPhotos.mimeOf(real),
+      photo: real,
       bio: pref('me_bio', ''),
       birthday: pref('me_birthday', ''),
-      whoPhoto: pref('who_photo', 'everyone'),
+      whoPhoto: pub != null && who == 'nobody' ? 'everyone' : who,
       whoBio: pref('who_bio', 'everyone'),
       whoBirthday: pref('who_birthday', 'contacts'),
       only: only,
     );
+    if (pub != null && who == 'contacts' && only.isEmpty) await backend.setMyPhoto(MyPhotos.mimeOf(pub), pub);
     final done = {...pref('profile_sent', '').split(',').where((x) => x.isNotEmpty), ...only};
     if (only.isEmpty)
       done.addAll([
@@ -505,6 +1169,42 @@ class AppState extends ChangeNotifier {
       return;
     }
     await publishProfile(only: fresh);
+  }
+
+  final _roomPhotos = <String, Uint8List?>{};
+  final _roomPhotoAsked = <String, DateTime>{};
+
+  /// A group/channel photo as bytes (kept, so no flicker); asks for it now
+  /// and then. Null = none (yet).
+  Uint8List? roomPhoto(String roomId, {bool fresh = false}) {
+    final asked = _roomPhotoAsked[roomId];
+    if (fresh || asked == null || DateTime.now().difference(asked) > const Duration(minutes: 10)) {
+      _roomPhotoAsked[roomId] = DateTime.now();
+      unawaited(_loadRoomPhoto(roomId));
+    }
+    return _roomPhotos[roomId];
+  }
+
+  Future<void> _loadRoomPhoto(String roomId) async {
+    try {
+      final ph = await backend.roomPhoto(roomId);
+      final old = _roomPhotos[roomId];
+      final now = ph == null || ph.isEmpty ? null : ph;
+      if (old?.length == now?.length && (old == null) == (now == null)) {
+        _roomPhotos[roomId] = now;
+        return;
+      }
+      _roomPhotos[roomId] = now;
+      notifyListeners();
+    } catch (_) {}
+  }
+
+  /// Admins: sets (or with null, takes off) the room photo.
+  Future<void> setRoomPhoto(String roomId, Uint8List? bytes, {String mime = 'image/jpeg'}) async {
+    await backend.setRoomPhoto(roomId, mime, bytes);
+    _roomPhotos[roomId] = bytes == null || bytes.isEmpty ? null : bytes;
+    _roomPhotoAsked[roomId] = DateTime.now();
+    notifyListeners();
   }
 
   final _cards = <String, ProfileCard>{};
@@ -560,24 +1260,65 @@ class AppState extends ChangeNotifier {
     } catch (_) {}
   }
 
+  /// Downloaded copies past their keep time go once per app start.
+  bool _keepChecked = false;
+
+  /// Last message id per chat (데이터 사용량: messages that arrived).
+  final _lastIds = <String, String>{};
+
+  void _noteArrived() {
+    final first = _lastIds.isEmpty;
+    for (final c in chats) {
+      final m = c.last;
+      if (m == null) continue;
+      final before = _lastIds[c.roomId];
+      _lastIds[c.roomId] = m.id;
+      if (first || before == m.id || m.mine || m.kind != 'text') continue;
+      DataUsage.note('messages', sent: false, bytes: utf8.encode(m.body ?? '').length);
+    }
+  }
+
   Future<void> refresh() async {
+    startDataUsage(this);
+    if (!_keepChecked) {
+      _keepChecked = true;
+      unawaited(Downloads.instance.applyKeep(this).then((_) {}, onError: (_) {}));
+    }
     try {
       await sendDue();
     } catch (_) {}
+    await refreshTrust();
     try {
       final all = await backend.invitations();
       final friends = await _contactIds();
       friendIds = friends;
       final keep = <Invite>[];
       for (final i in all) {
-        final ok = allowedFrom(settings, i.direct ? 'who_messages' : 'who_invites', i.inviter, friends);
+        // Accounts the operator marked '가짜' can't start chats with me.
+        final ok =
+            allowedFrom(settings, i.direct ? 'who_messages' : 'who_invites', i.inviter, friends) &&
+            !(trust.flags[i.inviter] == 'fake' && !friends.contains(i.inviter));
         try {
           if (!ok) {
             // Privacy: people I don't allow can't add me or start a chat.
-            await backend.decline(i.roomId);
+            // A group/channel invitation says why (no words, a fixed mark),
+            // so its admins can send me the link instead (tip 385).
+            final onlyContacts = !i.direct && !allowedFrom(settings, 'who_invites', i.inviter, friends);
+            await (onlyContacts ? backend.declineBlocked(i.roomId) : backend.decline(i.roomId));
           } else if (i.direct) {
-            // Someone started a 1:1 chat: open it on its own.
+            // 아이디 키: a stranger's first chat without the right key waits
+            // unseen (nothing tells them; switching the key off lets it in).
+            if (!IdKey.lets(myKey: pref(IdKey.pref, ''), reason: i.name, from: i.inviter, me: backend.userId ?? '', friend: friends.contains(i.inviter))) {
+              continue;
+            }
+            // Someone started a 1:1 chat: open it on its own. A stranger's
+            // goes to 메시지 요청 first (설정 > 개인정보, on by default).
+            if (!friends.contains(i.inviter) && on('message_requests', fallback: true)) await setPref('$_requestKey${i.roomId}', i.inviter);
             await backend.join(i.roomId);
+            // 모르는 사람 자동 보관 (tip 343): into 보관함, muted.
+            if (await LoginSafety.tuckStranger(this, i, friends)) tuckedNow.value++;
+          } else if (Features.channelTips && await ChannelDm.takeInvite(this, i)) {
+            // 526: a subscriber's message room for a channel I run.
           } else {
             keep.add(i);
           }
@@ -593,9 +1334,30 @@ class AppState extends ChangeNotifier {
       savedRoomId ??= await backend.savedRoom();
     } catch (_) {}
     // "읽지 않음으로 표시" (this phone only): shows as one unread until opened.
+    await liftTimedMutes();
     chats = [for (final c in _savedFirst(await backend.chats())) c.unread == 0 && on('marked_unread:${c.roomId}') ? c.withUnread(1) : c];
+    _noteArrived();
+    // 보관함 설정 (tip 187): unmuted archived chats come back on news.
+    try {
+      if (await liftArchived()) {
+        chats = [for (final c in _savedFirst(await backend.chats())) c.unread == 0 && on('marked_unread:${c.roomId}') ? c.withUnread(1) : c];
+      }
+    } catch (_) {}
+    if (Features.channelTips) await ChannelDm.scan(this);
+    // 우리식 기능: ❤ and 1년 전 오늘, counted on this phone.
+    if (Features.ownWay) await OwnWay.afterRefresh(this);
+    try {
+      communities = await backend.communities();
+    } catch (_) {
+      communities = const [];
+    }
+    unawaited(loadTimers());
     try {
       await sendAwayReplies();
+    } catch (_) {}
+    _keepLiveMoving();
+    try {
+      await applyNameColor();
     } catch (_) {}
     try {
       await _cardToNewFriends();
@@ -603,6 +1365,39 @@ class AppState extends ChangeNotifier {
       ErrorLog.add(e, st);
     }
     await runAutoMod();
+    await loadAnon();
+    try {
+      await sendKeywordReplies();
+    } catch (_) {}
+    await liftMutes();
+    await unpinExpired();
+    await handleSignals();
+    // 임시 글 이어쓰기 (tip 241): drafts from my other devices.
+    await takeOtherDrafts();
+    if (Features.loginSafety) {
+      await checkNewLogins();
+      try {
+        await LoginSafety.tellVoiceRule(this);
+      } catch (_) {}
+    }
+    // Admin phones: welcome + rules to people who just joined (encrypted).
+    try {
+      await RoomTexts.run(this);
+    } catch (e, st) {
+      ErrorLog.add(e, st);
+    }
+    // ... and the topic list (주제, tip 527).
+    try {
+      await Topics.run(this);
+    } catch (e, st) {
+      ErrorLog.add(e, st);
+    }
+    // 글 제안 (tip 531): accepted posts whose time has come.
+    try {
+      await SuggestPost.run(this);
+    } catch (e, st) {
+      ErrorLog.add(e, st);
+    }
     try {
       bubbles = await backend.pendingBubbles();
     } catch (_) {
@@ -612,7 +1407,12 @@ class AppState extends ChangeNotifier {
       final all = await backend.stories();
       stories = [
         for (final x in all)
-          if (!x.feed) x,
+          if (x.inRow) x,
+      ];
+      // Kept on profiles past their hours (tips 392 / 468 / 534).
+      keptStories = [
+        for (final x in all)
+          if (x.kept && !x.feed) x,
       ];
       feed = [
         for (final x in all.reversed)
@@ -632,7 +1432,9 @@ class AppState extends ChangeNotifier {
       ringing = [];
       for (final r in all) {
         if (allowedFrom(settings, 'who_calls', r.from, friends)) {
-          ringing.add(r);
+          // 기기별 통화 끄기 (tip 311): this device stays quiet, my other
+          // devices still ring.
+          if (!callsOffHere) ringing.add(r);
         } else {
           // Privacy: calls from people I don't allow are turned down quietly.
           unawaited(backend.hangupCall(r.roomId, r.callId, 'busy').catchError((_) {}));
@@ -673,11 +1475,22 @@ class AppState extends ChangeNotifier {
   void stopLive() {
     _live = false;
     _generation++;
+    // Open documents and the small video window hold decrypted bytes:
+    // they go on lock, account switch and logout (tip 473, 334).
+    OpenDocs.instance.clear();
+    for (final f in List.of(onStop)) {
+      f();
+    }
   }
+
+  /// Screens outside core (the small video window) that must close with
+  /// the session.
+  static final onStop = <void Function()>[];
 
   @override
   void dispose() {
     _batteryTimer?.cancel();
+    _liveLocTimer?.cancel();
     stopLive();
     super.dispose();
   }

@@ -7,6 +7,10 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/scheduler.dart';
 
+import '../core/app_state.dart';
+import '../core/chat_badge.dart';
+import '../core/features.dart';
+import '../core/share_in.dart';
 import '../l10n/app_localizations.dart';
 import 'call_page.dart';
 import 'calls_page.dart';
@@ -16,7 +20,9 @@ import 'contacts_page.dart';
 import 'glass.dart';
 import 'in_app_notice.dart';
 import 'ios_route.dart';
+import 'accounts_ui.dart';
 import 'settings_page.dart';
+import 'share_in.dart';
 import 'wide.dart';
 
 class HomeTabs extends StatefulWidget {
@@ -32,8 +38,40 @@ class HomeTabs extends StatefulWidget {
   State<HomeTabs> createState() => _HomeTabsState();
 }
 
-class _HomeTabsState extends State<HomeTabs> {
+class _HomeTabsState extends State<HomeTabs> with WidgetsBindingObserver {
   int index = 2;
+
+  @override
+  void initState() {
+    super.initState();
+    // 다른 앱에서 보내기 (tips 350 + 182): picked up when the app opens or
+    // comes back, and only once the app is unlocked (this screen is behind
+    // the lock).
+    WidgetsBinding.instance.addObserver(this);
+    ShareInbox.waiting.addListener(shared);
+    if (Features.shareLinks) unawaited(ShareInbox.check());
+    WidgetsBinding.instance.addPostFrameCallback((_) => shared());
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState st) {
+    if (st == AppLifecycleState.resumed && Features.shareLinks) unawaited(ShareInbox.check());
+  }
+
+  void shared() {
+    final items = ShareInbox.waiting.value;
+    if (items == null || !mounted) return;
+    ShareInbox.waiting.value = null;
+    if (!Features.shareLinks) {
+      for (final i in items) {
+        unawaited(i.drop());
+      }
+      return;
+    }
+    final c = keys[index].currentContext ?? context;
+    unawaited(openShareIn(c, items));
+  }
+
   final keys = List.generate(4, (_) => GlobalKey<NavigatorState>());
   late final depth = List.generate(4, (_) => ValueNotifier<int>(0));
 
@@ -42,6 +80,8 @@ class _HomeTabsState extends State<HomeTabs> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    ShareInbox.waiting.removeListener(shared);
     for (final d in depth) {
       d.dispose();
     }
@@ -63,7 +103,13 @@ class _HomeTabsState extends State<HomeTabs> {
     final tabs = [
       GlassTab(CupertinoIcons.person_crop_circle, CupertinoIcons.person_crop_circle_fill, l.tabContacts, key: const Key('tab-contacts')),
       GlassTab(CupertinoIcons.phone, CupertinoIcons.phone_fill, l.tabCalls, key: const Key('tab-calls')),
-      GlassTab(CupertinoIcons.chat_bubble_2, CupertinoIcons.chat_bubble_2_fill, l.tabChats, key: const Key('tab-chats')),
+      GlassTab(
+        CupertinoIcons.chat_bubble_2,
+        CupertinoIcons.chat_bubble_2_fill,
+        l.tabChats,
+        key: const Key('tab-chats'),
+        badge: badgeCount(AppScope.of(context).chats, AppScope.of(context).settings),
+      ),
       GlassTab(CupertinoIcons.gear, CupertinoIcons.gear_solid, l.tabSettings, key: const Key('tab-settings')),
     ];
     const pages = [ContactsPage(), CallsPage(), ChatListPage(), SettingsPage()];
@@ -99,7 +145,7 @@ class _HomeTabsState extends State<HomeTabs> {
                   child: AnimatedOpacity(
                     opacity: depth[index].value > 1 || HomeTabs.hideBar.value ? 0 : 1,
                     duration: const Duration(milliseconds: 180),
-                    child: FloatingTabBar(tabs: tabs, index: index, onTap: tap),
+                    child: FloatingTabBar(tabs: tabs, index: index, onTap: tap, onHold: (i) => i == 3 ? showAccountsMenu(context) : null),
                   ),
                 ),
               ),

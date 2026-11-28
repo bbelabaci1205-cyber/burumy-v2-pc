@@ -8,7 +8,7 @@ use burumy_engine::lock::{password_ok, LockFile, Role};
 pub struct LockOutcome {
     /// Save this (wrong tries are counted inside).
     pub file: String,
-    /// "normal", "hide", "delete" or None (wrong password).
+    /// "normal", "hide", "delete", "account" or None (wrong password).
     pub role: Option<String>,
     pub fails: u32,
     /// The wrong-try limit was reached: erase every chat now.
@@ -20,6 +20,7 @@ pub(crate) fn role_name(r: Role) -> String {
         Role::Normal => "normal",
         Role::Hide => "hide",
         Role::Delete => "delete",
+        Role::Account => "account",
     }
     .into()
 }
@@ -28,6 +29,7 @@ pub(crate) fn role_from(name: &str) -> Role {
     match name {
         "hide" => Role::Hide,
         "delete" => Role::Delete,
+        "account" => Role::Account,
         _ => Role::Normal,
     }
 }
@@ -56,11 +58,10 @@ pub fn lock_set_extra(file: String, normal: String, role: String, pw: Option<Str
     Ok(f.to_json())
 }
 
-/// (hide set, delete set) — needs the normal password.
+/// [hide set, delete set, account set] — needs the normal password.
 pub fn lock_extras(file: String, normal: String) -> Result<Vec<bool>> {
     let mut f = LockFile::from_json(&file)?;
-    let (h, d) = f.extras(&normal)?;
-    Ok(vec![h, d])
+    Ok(f.extras(&normal)?.to_vec())
 }
 
 pub fn lock_change_normal(file: String, old: String, new: String) -> Result<String> {

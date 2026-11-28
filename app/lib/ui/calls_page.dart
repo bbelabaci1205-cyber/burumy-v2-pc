@@ -5,12 +5,15 @@ import 'package:flutter/cupertino.dart';
 
 import '../core/app_state.dart';
 import '../core/backend.dart';
+import '../core/features.dart';
+import '../core/login_safety.dart';
 import '../design/tokens.dart';
 import '../l10n/app_localizations.dart';
 import 'call_page.dart';
 import 'common.dart';
 import 'ios.dart';
 import 'glass.dart';
+import 'login_safety_ui.dart';
 import 'wide.dart';
 
 class CallsPage extends StatefulWidget {
@@ -22,6 +25,11 @@ class CallsPage extends StatefulWidget {
 class _CallsPageState extends State<CallsPage> {
   bool missedOnly = false;
   List<CallLogItem>? log;
+
+  /// 통화 기록 지우기 (tip 247): picking calls, and calls waiting 5 s.
+  bool editing = false;
+  final picked = <String>{};
+  Set<String> waiting = const {};
   AppState? _app;
 
   @override
@@ -52,16 +60,92 @@ class _CallsPageState extends State<CallsPage> {
 
   static bool isMissed(CallLogItem c) => !c.mine && (c.call.state == 'missed' || c.call.state == 'busy');
 
+  /// The ••• button: pick calls, or clear them all.
+  Future<void> more() async {
+    final l = L.of(context);
+    final pick = await showCupertinoModalPopup<String>(
+      context: context,
+      useRootNavigator: !Wide.on,
+      builder: (c) => IosActionSheet(
+        actions: [
+          CupertinoActionSheetAction(key: const Key('calls-select'), onPressed: () => Navigator.pop(c, 'select'), child: Text(l.callsSelect)),
+          CupertinoActionSheetAction(
+            key: const Key('calls-clear'),
+            isDestructiveAction: true,
+            onPressed: () => Navigator.pop(c, 'clear'),
+            child: Text(l.callsClearAll),
+          ),
+        ],
+        cancelButton: CupertinoActionSheetAction(onPressed: () => Navigator.pop(c), child: Text(l.cancel)),
+      ),
+    );
+    if (!mounted || pick == null) return;
+    if (pick == 'select') setState(() => editing = true);
+    if (pick == 'clear') await forget(shownNow());
+  }
+
+  List<CallLogItem> shownNow() {
+    final hidden = LoginSafety.hiddenCalls(_app!);
+    final all = [
+      for (final c in log ?? const <CallLogItem>[])
+        if (!hidden.contains(c.call.id) && !waiting.contains(c.call.id)) c,
+    ];
+    return missedOnly ? all.where(isMissed).toList() : all;
+  }
+
+  /// Asks "for me / for both" (both only when every call is from a 1:1
+  /// chat), hides them at once, deletes after the 5-second undo.
+  Future<void> forget(List<CallLogItem> calls) async {
+    if (calls.isEmpty) return;
+    final l = L.of(context);
+    final app = _app!;
+    final direct = calls.every((c) => app.chats.where((x) => x.roomId == c.roomId).firstOrNull?.isDirect ?? false);
+    final one = {for (final c in calls) c.roomId}.length == 1;
+    final name = one ? app.chats.where((x) => x.roomId == calls.first.roomId).firstOrNull?.name : null;
+    final both = await askDeleteFor(context, title: l.callsDeleteAsk(calls.length), direct: direct, peerName: name);
+    if (both == null || !mounted) return;
+    final ids = {for (final c in calls) c.call.id};
+    setState(() {
+      waiting = {...waiting, ...ids};
+      editing = false;
+      picked.clear();
+    });
+    showUndoCountdown(
+      context,
+      (n) => l.callsDeleteIn(n),
+      () async {
+        await LoginSafety.forgetCalls(app, calls, both: both);
+        if (mounted) setState(() => waiting = waiting.difference(ids));
+        await load();
+      },
+      onUndo: () {
+        if (mounted) setState(() => waiting = waiting.difference(ids));
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
     final p = paletteOf(context);
-    final all = log ?? const <CallLogItem>[];
-    final shown = missedOnly ? all.where(isMissed).toList() : all;
+    final shown = shownNow();
+    final edit = Features.loginSafety;
     return CupertinoPageScaffold(
       backgroundColor: p.list,
       navigationBar: GlassTopBar(
-        leading: [GlassCircle(child: GlassCircle.icon(context, CupertinoIcons.ellipsis))],
+        leading: [
+          if (edit && editing)
+            GlassCircle(
+              key: const Key('calls-done'),
+              onTap: () => setState(() {
+                editing = false;
+                picked.clear();
+              }),
+              child: GlassCircle.icon(context, CupertinoIcons.check_mark),
+            )
+          else
+            GlassCircle(key: const Key('calls-more'), onTap: edit ? more : null, child: GlassCircle.icon(context, CupertinoIcons.ellipsis)),
+        ],
         middle: SizedBox(
           width: 180,
           child: IosSegmented<bool>(
@@ -83,22 +167,65 @@ class _CallsPageState extends State<CallsPage> {
           ? const SizedBox()
           : shown.isEmpty
           ? EmptyState(text: missedOnly ? l.callsEmptyMissed : l.callsEmpty)
-          : ListView.separated(
-              padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top + GlassTopBar.height + Tokens.space[1], bottom: FloatingTabBar.room(context)),
-              itemCount: shown.length,
-              separatorBuilder: (_, _) => Padding(
-                padding: EdgeInsets.only(left: 44 + Tokens.space[3] * 2),
-                child: Container(height: 1, color: p.separator),
-              ),
-              itemBuilder: (c, i) => _CallRow(item: shown[i]),
+          : Stack(
+              children: [
+                ListView.separated(
+                  padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top + GlassTopBar.height + Tokens.space[1], bottom: FloatingTabBar.room(context)),
+                  itemCount: shown.length,
+                  separatorBuilder: (_, _) => Padding(
+                    padding: EdgeInsets.only(left: 44 + Tokens.space[3] * 2),
+                    child: Container(height: 1, color: p.separator),
+                  ),
+                  itemBuilder: (c, i) => _CallRow(
+                    item: shown[i],
+                    picking: editing,
+                    picked: picked.contains(shown[i].call.id),
+                    onPick: () => setState(() => picked.contains(shown[i].call.id) ? picked.remove(shown[i].call.id) : picked.add(shown[i].call.id)),
+                  ),
+                ),
+                // Picked calls: one red button above the tab bar.
+                if (editing)
+                  Positioned(
+                    left: Tokens.space[3],
+                    right: Tokens.space[3],
+                    bottom: FloatingTabBar.room(context) + Tokens.space[1],
+                    child: GestureDetector(
+                      key: const Key('calls-delete'),
+                      onTap: picked.isEmpty
+                          ? null
+                          : () => forget([
+                              for (final c in shown)
+                                if (picked.contains(c.call.id)) c,
+                            ]),
+                      child: AnimatedOpacity(
+                        duration: const Duration(milliseconds: 160),
+                        opacity: picked.isEmpty ? 0.4 : 1,
+                        child: LiquidGlass(
+                          radius: Tokens.capsule,
+                          child: Container(
+                            height: Tokens.closeButton,
+                            alignment: Alignment.center,
+                            child: Text(
+                              l.callsDeleteN(picked.length),
+                              style: Tokens.body.style.copyWith(color: Palette.tileRed, fontWeight: Tokens.semi),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
     );
   }
 }
 
 class _CallRow extends StatelessWidget {
-  const _CallRow({required this.item});
+  const _CallRow({required this.item, this.picking = false, this.picked = false, this.onPick});
   final CallLogItem item;
+  final bool picking;
+  final bool picked;
+  final VoidCallback? onPick;
 
   @override
   Widget build(BuildContext context) {
@@ -117,11 +244,27 @@ class _CallRow extends StatelessWidget {
     return GestureDetector(
       key: Key('call-row-${c.id}'),
       behavior: HitTestBehavior.opaque,
-      onTap: () => startCall(context, item.roomId, name, video: c.video),
+      onTap: picking ? onPick : () => startCall(context, item.roomId, name, video: c.video),
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: Tokens.space[3], vertical: Tokens.space[1] + 2),
         child: Row(
           children: [
+            // iOS edit circle (Telegram calls "편집").
+            AnimatedSize(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOutCubic,
+              child: picking
+                  ? Padding(
+                      padding: EdgeInsets.only(right: Tokens.space[2]),
+                      child: Icon(
+                        picked ? CupertinoIcons.check_mark_circled_solid : CupertinoIcons.circle,
+                        key: Key('call-pick-${c.id}'),
+                        size: 24,
+                        color: picked ? p.accent : p.chevron,
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
             Avatar(name: name, size: 44),
             SizedBox(width: Tokens.space[3]),
             Expanded(

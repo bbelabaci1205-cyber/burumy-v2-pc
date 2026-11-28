@@ -3,6 +3,7 @@
 // buttons, a top bar with a small centred title, and the floating tab bar.
 import 'dart:ui' show ImageFilter;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/cupertino.dart';
 
 import '../design/tokens.dart';
@@ -28,10 +29,17 @@ class Glass {
 /// thin edge instead of a heavy shadow, a bright highlight along the top and
 /// only a faint shadow underneath. Used by every glass control.
 class LiquidGlass extends StatelessWidget {
-  const LiquidGlass({super.key, required this.radius, required this.child, this.shadow = true});
+  const LiquidGlass({super.key, required this.radius, required this.child, this.shadow = true, this.rim = true, this.flat = false});
   final double radius;
   final Widget child;
   final bool shadow;
+
+  /// The hairline edge; off for fields that iOS draws without one (search).
+  final bool rim;
+
+  /// No blur and no shadow: the browser draws both soft and hazy, so the
+  /// web keeps only the fill and the thin edge (Eric 2026-11-26).
+  final bool flat;
 
   @override
   Widget build(BuildContext context) {
@@ -40,17 +48,20 @@ class LiquidGlass extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: r,
-        boxShadow: shadow ? [BoxShadow(color: Color(p.dark ? 0x2E000000 : 0x0D000000), blurRadius: 10, offset: const Offset(0, 2))] : null,
+        boxShadow: shadow && !flat ? [BoxShadow(color: Color(p.dark ? 0x2E000000 : 0x0D000000), blurRadius: 10, offset: const Offset(0, 2))] : null,
       ),
       child: ClipRRect(
         borderRadius: r,
         child: BackdropFilter(
+          // Browsers draw a grey ring where the blur meets the clip, so an
+          // edgeless field skips the blur on the web (Eric 2026-11-26).
+          enabled: !flat && (rim || !kIsWeb),
           filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
           child: CustomPaint(
-            foregroundPainter: _Rim(radius, p.dark),
+            foregroundPainter: rim ? _Rim(radius, p.dark) : null,
             child: DecoratedBox(
               decoration: BoxDecoration(
-                color: glassFill(p),
+                color: flat ? (p.dark ? const Color(0xFF2C2C2E) : const Color(0xFFFFFFFF)) : glassFill(p),
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
@@ -128,9 +139,9 @@ class AccentCircle extends StatelessWidget {
 }
 
 class GlassCircle extends StatelessWidget {
-  const GlassCircle({super.key, required this.child, this.onTap, this.size = 44});
+  const GlassCircle({super.key, required this.child, this.onTap, this.onLongPress, this.size = 44});
   final Widget child;
-  final VoidCallback? onTap;
+  final VoidCallback? onTap, onLongPress;
   final double size;
 
   /// The usual icon look inside a [GlassCircle].
@@ -140,9 +151,12 @@ class GlassCircle extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
+      onLongPress: onLongPress,
       behavior: HitTestBehavior.opaque,
       child: LiquidGlass(
         radius: size / 2,
+        // Web: the top-bar buttons are plain (no blur haze), Eric 2026-11-26.
+        flat: kIsWeb,
         child: SizedBox(
           width: size,
           height: size,
@@ -156,13 +170,17 @@ class GlassCircle extends StatelessWidget {
 /// Round glass back button for the left of a navigation bar (Telegram /
 /// iOS 26 look); a cross on full-screen sheets.
 class GlassBack extends StatelessWidget {
-  const GlassBack({super.key, this.close = false});
+  const GlassBack({super.key, this.close = false, this.onLongPress});
   final bool close;
+
+  /// Hold (Safari-style): the places I came through (chat pages).
+  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) => GlassCircle(
     key: const Key('back'),
     onTap: () => Navigator.of(context).maybePop(),
+    onLongPress: onLongPress,
     child: close ? GlassCircle.icon(context, CupertinoIcons.xmark) : GlassCircle.icon(context, CupertinoIcons.chevron_back, size: Tokens.backChevron),
   );
 }
@@ -259,7 +277,7 @@ class GlassTopBar extends StatefulWidget implements ObstructingPreferredSizeWidg
         ? null
         : Builder(
             builder: (c) => DefaultTextStyle(
-              style: Tokens.body.style.copyWith(color: paletteOf(c).label, fontWeight: FontWeight.w600),
+              style: Tokens.body.style.copyWith(color: paletteOf(c).label, fontWeight: Tokens.semi),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               child: middle,
@@ -320,7 +338,7 @@ class _GlassTopBarState extends State<GlassTopBar> {
     key: const Key('bar-title'),
     maxLines: 1,
     overflow: TextOverflow.ellipsis,
-    style: Tokens.body.style.copyWith(color: p.label, fontWeight: FontWeight.w600),
+    style: Tokens.body.style.copyWith(color: p.label, fontWeight: Tokens.semi),
   );
 
   @override
@@ -373,16 +391,22 @@ class _GlassTopBarState extends State<GlassTopBar> {
       ),
     );
     final flag = under;
+    // Web (Eric 2026-11-26): browsers draw the blur hazy, so the bar is a
+    // plain solid sheet there; the phone and PC apps keep the clear glass.
+    final solid = kIsWeb || Glass.level == 'solid';
     Widget frost(bool on) => IgnorePointer(
       child: AnimatedOpacity(
         opacity: on ? 1 : 0,
         duration: const Duration(milliseconds: 180),
         child: ClipRect(
           child: BackdropFilter(
+            enabled: !solid,
             filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
             child: DecoratedBox(
               decoration: BoxDecoration(
-                color: Glass.level == 'solid'
+                color: kIsWeb
+                    ? p.list
+                    : solid
                     ? (p.dark ? const Color(0xFF1C1C1E) : const Color(0xFFFCFCFE))
                     : Glass.level == 'clear'
                     ? (p.dark ? const Color(0xA61C1C1E) : const Color(0xB3FCFCFE))
@@ -409,19 +433,47 @@ class _GlassTopBarState extends State<GlassTopBar> {
 }
 
 class GlassTab {
-  const GlassTab(this.icon, this.activeIcon, this.label, {this.key});
+  const GlassTab(this.icon, this.activeIcon, this.label, {this.key, this.badge = 0});
   final IconData icon;
   final IconData activeIcon;
   final String label;
   final Key? key;
+
+  /// iOS tab badge: a red count on the icon (0 = none).
+  final int badge;
+}
+
+/// iOS badge (UITabBarItem): system red capsule, 18 pt tall, white
+/// 13 pt digits; over 999 shows "999+".
+class TabBadge extends StatelessWidget {
+  const TabBadge({super.key, required this.count});
+  final int count;
+
+  static const height = 18.0;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    height: height,
+    constraints: const BoxConstraints(minWidth: height),
+    padding: EdgeInsets.symmetric(horizontal: Tokens.space[0] + 1),
+    alignment: Alignment.center,
+    decoration: BoxDecoration(color: Palette.tileRed, borderRadius: BorderRadius.circular(height / 2)),
+    child: Text(
+      count > 999 ? '999+' : '$count',
+      style: Tokens.caption.style.copyWith(color: const Color(0xFFFFFFFF), fontSize: 13, height: 1, fontWeight: FontWeight.w500),
+    ),
+  );
 }
 
 /// Floating capsule tab bar; the chosen tab sits on a lifted pill.
 class FloatingTabBar extends StatelessWidget {
-  const FloatingTabBar({super.key, required this.tabs, required this.index, required this.onTap});
+  const FloatingTabBar({super.key, required this.tabs, required this.index, required this.onTap, this.onHold});
   final List<GlassTab> tabs;
   final int index;
   final ValueChanged<int> onTap;
+
+  /// Holding a tab (Settings: switch accounts, like Telegram).
+  final ValueChanged<int>? onHold;
 
   /// iOS 27 tab bar: 63 pt capsule, selected tab on a soft grey pill.
   static const height = 63.0;
@@ -458,6 +510,7 @@ class FloatingTabBar extends StatelessWidget {
                       key: tabs[i].key,
                       behavior: HitTestBehavior.opaque,
                       onTap: () => onTap(i),
+                      onLongPress: onHold == null ? null : () => onHold!(i),
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 220),
                         curve: Curves.easeOut,
@@ -465,7 +518,18 @@ class FloatingTabBar extends StatelessWidget {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(i == index ? tabs[i].activeIcon : tabs[i].icon, size: Tokens.tabIcon, color: i == index ? p.accent : p.label),
+                            Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                Icon(i == index ? tabs[i].activeIcon : tabs[i].icon, size: Tokens.tabIcon, color: i == index ? p.accent : p.label),
+                                if (tabs[i].badge > 0)
+                                  Positioned(
+                                    left: Tokens.tabIcon * 0.6,
+                                    top: -Tokens.space[0],
+                                    child: TabBadge(key: Key('tab-badge-$i'), count: tabs[i].badge),
+                                  ),
+                              ],
+                            ),
                             const SizedBox(height: 2),
                             Text(tabs[i].label, style: Tokens.tabLabel.style.copyWith(fontSize: 11, color: i == index ? p.accent : p.label)),
                           ],

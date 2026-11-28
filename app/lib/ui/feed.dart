@@ -14,9 +14,12 @@ import 'package:image_picker/image_picker.dart';
 
 import '../core/app_state.dart';
 import '../core/backend.dart';
+import '../core/feed_comments.dart';
+import '../core/features.dart';
 import '../design/tokens.dart';
 import '../l10n/app_localizations.dart';
 import 'common.dart';
+import 'feed_comments_ui.dart';
 import 'glass.dart';
 import 'ios_route.dart';
 import 'stories.dart';
@@ -309,6 +312,19 @@ class FeedCard extends StatelessWidget {
                         child: Icon(liked ? CupertinoIcons.heart_fill : CupertinoIcons.heart, color: liked ? Palette.tileRed : p.label, size: 26),
                       ),
                     ),
+                    // 댓글 (우리식): each friend sees only comments of people they know.
+                    // Instagram order: like, comment, then the private reply.
+                    if (Features.ownWay)
+                      CupertinoButton(
+                        key: Key('feed-comment-${x.id}'),
+                        padding: EdgeInsets.zero,
+                        minimumSize: const Size(Tokens.closeButton, Tokens.closeButton),
+                        onPressed: () => openFeedComments(context, x),
+                        child: Semantics(
+                          label: l.feedComment,
+                          child: Icon(CupertinoIcons.chat_bubble, color: p.label, size: 25),
+                        ),
+                      ),
                     CupertinoButton(
                       key: Key('feed-reply-${x.id}'),
                       padding: EdgeInsets.zero,
@@ -316,7 +332,7 @@ class FeedCard extends StatelessWidget {
                       onPressed: () => paneNav(context).push(IosPageRoute<void>(fullscreenDialog: true, builder: (_) => _FeedReply(post: x))),
                       child: Semantics(
                         label: l.feedReply,
-                        child: Icon(CupertinoIcons.chat_bubble, color: p.label, size: 25),
+                        child: Icon(Features.ownWay ? CupertinoIcons.paperplane : CupertinoIcons.chat_bubble, color: p.label, size: 25),
                       ),
                     ),
                   ] else
@@ -336,6 +352,20 @@ class FeedCard extends StatelessWidget {
                         ],
                       ),
                     ),
+                  // 댓글 on my own post: at the end of the likes line.
+                  if (Features.ownWay && x.mine) ...[
+                    const Spacer(),
+                    CupertinoButton(
+                      key: Key('feed-comment-${x.id}'),
+                      padding: EdgeInsets.zero,
+                      minimumSize: const Size(Tokens.closeButton, Tokens.closeButton),
+                      onPressed: () => openFeedComments(context, x),
+                      child: Semantics(
+                        label: l.feedComment,
+                        child: Icon(CupertinoIcons.chat_bubble, color: p.label, size: 25),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -344,6 +374,7 @@ class FeedCard extends StatelessWidget {
                 padding: EdgeInsets.fromLTRB(Tokens.space[4], Tokens.space[1], Tokens.space[4], 0),
                 child: Text(words, style: Tokens.body.style.copyWith(color: p.label)),
               ),
+            if (Features.ownWay) FeedCommentsPreview(post: x),
           ],
         ),
       ),
@@ -501,13 +532,15 @@ class _FeedComposerState extends State<FeedComposer> {
     setState(() => busy = true);
     try {
       final f = photo;
-      final n = await s.backend.postStory(
-        mime: f == null ? '' : storyMime(f.$1),
-        bytes: f?.$2 ?? const [],
-        caption: text.text,
-        only: audience.mode == 'all' ? const [] : audience.rooms,
-        hours: 0,
-      );
+      final only = audience.mode == 'all' ? const <String>[] : audience.rooms;
+      final sent = await s.backend.postStories(mime: f == null ? '' : storyMime(f.$1), bytes: f?.$2 ?? const [], caption: text.text, only: only, hours: 0);
+      final n = sent.sent;
+      // 댓글 (우리식): comments later go only to the friends this post went to.
+      if (Features.ownWay) {
+        for (final id in sent.ids) {
+          await s.setPref(FeedComments.audienceKey(id), only.isEmpty ? FeedComments.everyone : only.join(','));
+        }
+      }
       if (!mounted) return;
       nav.pop();
       showStoryToast(context, l.feedPosted(n));

@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: LicenseRef-Burumy-Proprietary
 // Example chats (Korean or English) for screenshots and the look-only demo.
+import 'dart:convert';
+
 import '../core/backend.dart';
+import '../core/doc.dart';
 import 'demo_backend.dart';
 import '../design/tokens.dart';
 import '../ui/common.dart' show Avatar;
@@ -52,7 +55,7 @@ FakeBackend demoSample(bool ko, List<int> photo) {
           mine: true,
           kind: 'text',
         ),
-        Msg(id: 'vo', sender: '@mina:test', body: 'p.png', time: now.subtract(const Duration(minutes: 2)), mine: false, kind: 'image', viewOnce: true),
+        Msg(id: 'vo', sender: '@mina:test', body: 'p.png', time: now.subtract(const Duration(minutes: 2)), mine: false, kind: 'image', viewOnce: true, expiresAt: now.add(const Duration(hours: 21))),
         Msg(
           id: 'vc',
           sender: '@me:test',
@@ -170,10 +173,22 @@ FakeBackend demoSample(bool ko, List<int> photo) {
       ),
     ),
   );
+  // Two pins (the bar steps through them) and the "고정했어요" line.
+  team.add(
+    Msg(
+      id: 'gp1',
+      sender: '@mina:test',
+      body: '📌 ${ko ? '오늘 회의 자료 공유할게요' : "I'll share today's meeting notes"}',
+      time: now.subtract(const Duration(hours: 10, minutes: 25)),
+      mine: false,
+      kind: 'card',
+      card: CardInfo(kind: 'pin', data: {'id': 'g1', 'text': ko ? '오늘 회의 자료 공유할게요' : "I'll share today's meeting notes", 'notify': true}),
+    ),
+  );
   team.sort((x, y) => x.time.compareTo(y.time));
   b.typing['!r1'] = ['@leo:test'];
   b.timers['!r0'] = 86400;
-  b.pins['!r1'] = ['g1'];
+  b.pins['!r1'] = ['g1', 'g2'];
   b.streaks['!r0'] = (12, false);
   b.streaks['!r2'] = (5, true);
   // Chat list order: family pinned on top, team muted with news waiting,
@@ -183,6 +198,7 @@ FakeBackend demoSample(bool ko, List<int> photo) {
   b.unreadCounts['!r1'] = 3;
   b.unreadCounts['!r2'] = 1;
   b.names['!old'] = ko ? '중고 거래' : 'Marketplace';
+  b.notContacts.addAll(['!r3', '!old']);
   b.rooms['!old'] = [
     Msg(
       id: 'o1',
@@ -203,7 +219,23 @@ FakeBackend demoSample(bool ko, List<int> photo) {
   b.channels.add('!c');
   b.peers['!c'] = '@burumy:test';
   b.owner = false;
+  final longPost = demoLongArticle(b, ko);
   b.rooms['!c'] = [
+    // Long posts (2026-11-27): older than the rest, so the screens that
+    // show the newest messages stay as they were.
+    for (final (i, data) in [
+      {'doc': demoStudyGuide(ko)},
+      longPost,
+    ].indexed)
+      Msg(
+        id: 'post$i',
+        sender: '@burumy:test',
+        body: articleBody(data),
+        time: now.subtract(Duration(days: 3 - i)),
+        mine: false,
+        kind: 'card',
+        card: CardInfo(kind: 'article', data: data),
+      ),
     Msg(
       id: 'n1',
       sender: '@burumy:test',
@@ -250,6 +282,51 @@ FakeBackend demoSample(bool ko, List<int> photo) {
       ),
       ('lottery', {'prize': ko ? '커피 쿠폰 2장' : '2 coffee coupons', 'winners': 2, 'ends_at': 0, 'note': '', 'announce': false}),
       ('checkin', {'text': ko ? '지진 소식이 있어요. 모두 괜찮아요?' : 'There was an earthquake. Is everyone OK?'}),
+      (
+        'flow',
+        {
+          'title': ko ? '오늘 밤 뭐 볼까요? 🍿' : 'What should you watch tonight? 🍿',
+          'text': ko ? '질문 3개에 답하면 딱 맞는 영화를 골라 드려요.' : "Answer three quick questions and we'll pick a movie.",
+          'start': ko ? '내 영화 찾기' : 'Find my movie',
+          'steps': [
+            {
+              'q': ko ? '오늘 기분은요?' : 'What are you in the mood for?',
+              'choices': [
+                {'label': ko ? '신나게' : 'Adventure', 'to': 's1'},
+                {'label': ko ? '웃고 싶어요' : 'Comedy', 'to': 's1'},
+                {'label': ko ? '두근두근' : 'Thriller', 'to': 's1'},
+                {'label': ko ? '차분하게' : 'Documentary', 'to': 'r2'},
+              ],
+            },
+            {
+              'q': ko ? '시간은 얼마나 있어요?' : 'How much time do you have?',
+              'choices': [
+                {'label': ko ? '90분 이하' : 'Under 90 min', 'to': 's2'},
+                {'label': ko ? '2시간쯤' : 'Around 2 hours', 'to': 's2'},
+                {'label': ko ? '긴 영화도 좋아요' : 'Make it an epic', 'to': 'r0'},
+              ],
+            },
+            {
+              'q': ko ? '누구랑 봐요?' : 'Who are you watching with?',
+              'choices': [
+                {'label': ko ? '혼자' : 'Just me', 'to': 'r0'},
+                {'label': ko ? '연인' : 'Date night', 'to': 'r1'},
+                {'label': ko ? '친구들' : 'Friends', 'to': 'r1'},
+              ],
+            },
+          ],
+          'results': [
+            {
+              'title': ko ? '우주 대서사 액션 🚀' : 'Space epic 🚀',
+              'text': ko ? '큰 화면으로 보면 더 멋진 영화예요.' : 'Best on the biggest screen you can find.',
+              'link': {'label': ko ? '예고편 보기' : 'Watch trailer', 'url': 'https://burumy.app/movies/epic'},
+            },
+            {'title': ko ? '로맨틱 코미디 💕' : 'Rom-com 💕', 'text': ko ? '같이 웃기 좋은 영화예요.' : 'Great to laugh together.', 'link': null},
+            {'title': ko ? '자연 다큐멘터리 🌿' : 'Nature documentary 🌿', 'text': ko ? '잔잔하게 쉬어 가요.' : 'Slow down and relax.', 'link': null},
+          ],
+          'stats': true,
+        },
+      ),
     ].indexed)
       Msg(
         id: 'card$i',
@@ -258,7 +335,16 @@ FakeBackend demoSample(bool ko, List<int> photo) {
         time: now.subtract(Duration(hours: 20 - i * 3)),
         mine: false,
         kind: 'card',
-        card: CardInfo(kind: kind, data: data, counts: kind == 'lottery' ? const {'in': 37} : (kind == 'checkin' ? const {'ok': 12, 'help': 1} : const {})),
+        card: CardInfo(
+          kind: kind,
+          data: data,
+          counts: switch (kind) {
+            'lottery' => const {'in': 37},
+            'checkin' => const {'ok': 12, 'help': 1},
+            'flow' => const {'r0': 58, 'r1': 41, 'r2': 23},
+            _ => const {},
+          },
+        ),
       ),
   ];
   b.files['img'] = photo;
@@ -366,6 +452,122 @@ FakeBackend demoSample(bool ko, List<int> photo) {
   b.receiveBubble('!r2', '@leo:test', 'image', b.files['img']!);
   b.previewImages['lk'] = b.files['img']!;
   b.readAt = now.subtract(const Duration(minutes: 5));
+  b.readWhen = now.subtract(const Duration(minutes: 3));
+  // Someone who takes invitations from contacts only turned one down.
+  b.contactsOnly.add('@sora:test');
+  b.blockedInvites['!r1'] = ['@sora:test'];
   b.bios['@mina:test'] = ko ? '사진 찍는 걸 좋아해요 📷' : 'I love taking photos 📷';
   return b;
+}
+
+/// A short formatted message (heading, table, formulas, list), like an
+/// on-device AI answer or a teacher's note.
+Map<String, Object?> demoStudyGuide(bool ko) => Doc(
+  title: ko ? '기말고사 2026 정리' : 'Final Exams 2026',
+  blocks: [
+    DocBlock('p', text: ko ? '~~거의~~ 시험에 필요한 모든 것.' : '~~Almost~~ everything you need for the exam.'),
+    DocBlock('h2', text: ko ? '시험 일정' : 'Exam schedule'),
+    DocBlock(
+      'table',
+      rows: ko
+          ? [
+              ['과목', '월', '화', '수'],
+              ['수학', '복습', '시험 1', '복습'],
+              ['시간', '12:00', '10:00', '13:30'],
+            ]
+          : [
+              ['Subject', 'Mon', 'Tue', 'Wed'],
+              ['Math', 'Review', 'Exam 1', 'Review'],
+              ['Time', '12:00', '10:00', '13:30'],
+            ],
+    ),
+    DocBlock('h2', text: ko ? '공식' : 'Formulas'),
+    DocBlock('p', text: ko ? '**피타고라스 정리:** 직각삼각형에서 \\(a^2 + b^2 = c^2\\)' : '**Pythagorean theorem:** in a right triangle \\(a^2 + b^2 = c^2\\)'),
+    DocBlock('math', text: r'x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}'),
+    DocBlock('h2', text: ko ? '정답' : 'Answer key'),
+    DocBlock('ol', items: ['D', 'A', 'B', 'C']),
+  ],
+).toJson();
+
+/// A long post sent as an encrypted file: only a preview is in the message.
+Map<String, Object?> demoLongArticle(FakeBackend b, bool ko) {
+  final doc = Doc(
+    title: ko ? '아랍에미리트 여행 가이드' : 'Exploring the UAE',
+    blocks: [
+      DocBlock(
+        'p',
+        text: ko
+            ? '미래 도시 같은 스카이라인부터 오래된 마을까지, 아랍에미리트는 새것과 옛것이 함께 있는 곳이에요.'
+            : 'From futuristic skylines to ancient settlements, the UAE mixes modern luxury and rich culture.',
+      ),
+      DocBlock('h1', text: ko ? '두바이: 미래의 도시' : 'Dubai: City of the Future'),
+      DocBlock('p', text: ko ? '두바이는 높은 빌딩, 큰 쇼핑몰, 바다 앞 산책로로 유명해요.' : 'Dubai is famous for towering skyscrapers, huge malls and waterfront walks.'),
+      DocBlock('h2', text: ko ? '꼭 해 볼 것' : 'Things to do'),
+      DocBlock(
+        'ul',
+        items: ko
+            ? ['**부르즈 할리파** 전망대 올라가기', '**두바이 몰** 구경하기', '사막 사파리 (낙타 타기)', '**마리나 비치**에서 쉬기']
+            : ['Visit the **Burj Khalifa**', 'Explore the **Dubai Mall**', 'Desert safari with camel rides', 'Relax on **Marina Beach**'],
+      ),
+      DocBlock(
+        'pull',
+        text: ko ? '셰이크 자이드 그랜드 모스크는 세계에서 가장 아름다운 건물 중 하나예요.' : 'The Sheikh Zayed Grand Mosque is one of the most beautiful buildings in the world.',
+      ),
+      DocBlock('h1', text: ko ? '아부다비: 문화의 도시' : 'Abu Dhabi: Culture and Grandeur'),
+      DocBlock('p', text: ko ? '수도 아부다비에는 박물관과 모스크, 테마파크가 모여 있어요.' : 'The capital brings together museums, mosques and theme parks.'),
+      DocBlock('h2', text: ko ? '가기 좋은 때' : 'Best times to visit'),
+      DocBlock(
+        'table',
+        rows: ko
+            ? [
+                ['시기', '날씨', '추천'],
+                ['11월–3월', '선선하고 맑음', '여행하기 가장 좋아요'],
+                ['4월–5월', '따뜻함', '관광하기 좋아요'],
+                ['6월–9월', '아주 더움', '실내 위주로'],
+                ['10월', '조금씩 선선', '사람이 적어요'],
+              ]
+            : [
+                ['Season', 'Weather', 'Tip'],
+                ['Nov–Mar', 'Pleasant and mild', 'Best time to travel'],
+                ['Apr–May', 'Warm', 'Good for sightseeing'],
+                ['Jun–Sep', 'Very hot', 'Indoor attractions'],
+                ['Oct', 'Cooling down', 'Fewer crowds'],
+              ],
+      ),
+      DocBlock('quote', text: ko ? '여름엔 한낮을 피해서 아침이나 저녁에 움직이세요.' : 'In summer, go out in the morning or evening.'),
+      DocBlock('code', lang: 'text', text: ko ? '공항 → 시내: 메트로 레드 라인 (약 30분)' : 'Airport → city: Metro Red Line (~30 min)'),
+      DocBlock('hr'),
+      DocBlock('h2', text: ko ? '마무리' : 'Final thoughts'),
+      DocBlock(
+        'p',
+        text:
+            (ko
+                ? '두바이의 **화려함**이든 아부다비의 **문화**든, 아랍에미리트는 잊지 못할 여행이 될 거예요. '
+                : 'Whether you seek **luxury** in Dubai or **culture** in Abu Dhabi, the UAE offers an unforgettable trip. ') *
+            6,
+      ),
+    ],
+  );
+  final raw = utf8.encode(jsonEncode(doc.toJson()));
+  const url = 'mxc://burumy.demo/long-post';
+  b.blobs[url] = raw;
+  return {
+    'file': {
+      'url': url,
+      'key': {
+        'kty': 'oct',
+        'key_ops': ['encrypt', 'decrypt'],
+        'alg': 'A256CTR',
+        'k': 'demo',
+        'ext': true,
+      },
+      'iv': 'demo',
+      'hashes': {'sha256': 'demo'},
+      'v': 'v2',
+    },
+    'preview': articlePreview(doc.toJson()),
+    'size': raw.length,
+    'chars': doc.chars,
+    'images': 0,
+  };
 }

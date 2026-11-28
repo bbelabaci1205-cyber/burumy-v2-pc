@@ -235,7 +235,7 @@ class _ChecklistBubbleState extends State<ChecklistBubble> {
         children: [
           Text(
             c.title,
-            style: Tokens.body.style.copyWith(color: fg, fontWeight: FontWeight.w600),
+            style: Tokens.body.style.copyWith(color: fg, fontWeight: Tokens.semi),
           ),
           Text(l.checklistDone(c.done, c.items.length), style: Tokens.caption.style.copyWith(color: fg.withValues(alpha: 0.7))),
           SizedBox(height: Tokens.space[1]),

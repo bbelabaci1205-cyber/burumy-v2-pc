@@ -53,6 +53,17 @@ void main() {
     expect(noticeAllowed(notice(), {'notify_direct:!r': '0'}, chat(), now), isFalse);
   });
 
+  test('groups: only when I am mentioned', () {
+    final now = DateTime(2026, 11, 24, 12);
+    const only = {'mentions_only_group': '1'};
+    Notice say(String body) => Notice(roomId: '!r', chat: 'g', sender: 'a', kind: 'text', body: body, time: now);
+    expect(noticeAllowed(say('hi all'), only, chat(direct: false), now, me: '@minji:test'), isFalse);
+    expect(noticeAllowed(say('@minji 내일 봐'), only, chat(direct: false), now, me: '@minji:test'), isTrue);
+    expect(noticeAllowed(say('@민지 내일 봐'), only, chat(direct: false), now, me: '@minji:test', myName: '민지'), isTrue);
+    expect(noticeAllowed(say('@모두 공지'), only, chat(direct: false), now, me: '@minji:test'), isTrue);
+    expect(noticeAllowed(say('hi'), only, chat(), now, me: '@minji:test'), isTrue, reason: '1:1 chats always notify');
+  });
+
   testWidgets('in-app banner for a new message in another chat, not the open one; sound plays', (t) async {
     t.view.physicalSize = const Size(393 * 3, 852 * 3);
     t.view.devicePixelRatio = 3;

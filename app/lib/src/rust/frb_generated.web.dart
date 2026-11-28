@@ -62,6 +62,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   LinkPreviewRow dco_decode_box_autoadd_link_preview_row(dynamic raw);
 
   @protected
+  LiveRow dco_decode_box_autoadd_live_row(dynamic raw);
+
+  @protected
   MeetupRow dco_decode_box_autoadd_meetup_row(dynamic raw);
 
   @protected
@@ -107,7 +110,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ChecklistRow dco_decode_checklist_row(dynamic raw);
 
   @protected
+  CommunityChatRow dco_decode_community_chat_row(dynamic raw);
+
+  @protected
+  CommunityRow dco_decode_community_row(dynamic raw);
+
+  @protected
   DeviceInfo dco_decode_device_info(dynamic raw);
+
+  @protected
+  EarlierRow dco_decode_earlier_row(dynamic raw);
+
+  @protected
+  EmojiStatusRow dco_decode_emoji_status_row(dynamic raw);
 
   @protected
   double dco_decode_f_64(dynamic raw);
@@ -116,13 +131,28 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   FeedLikeRow dco_decode_feed_like_row(dynamic raw);
 
   @protected
+  FoundRow dco_decode_found_row(dynamic raw);
+
+  @protected
+  GateHelperRow dco_decode_gate_helper_row(dynamic raw);
+
+  @protected
   int dco_decode_i_32(dynamic raw);
 
   @protected
   PlatformInt64 dco_decode_i_64(dynamic raw);
 
   @protected
+  InviteLinkRow dco_decode_invite_link_row(dynamic raw);
+
+  @protected
   InviteRow dco_decode_invite_row(dynamic raw);
+
+  @protected
+  JoinRequestRow dco_decode_join_request_row(dynamic raw);
+
+  @protected
+  LinkPeekRow dco_decode_link_peek_row(dynamic raw);
 
   @protected
   LinkPreviewRow dco_decode_link_preview_row(dynamic raw);
@@ -152,13 +182,31 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<ChecklistItemRow> dco_decode_list_checklist_item_row(dynamic raw);
 
   @protected
+  List<CommunityChatRow> dco_decode_list_community_chat_row(dynamic raw);
+
+  @protected
+  List<CommunityRow> dco_decode_list_community_row(dynamic raw);
+
+  @protected
   List<DeviceInfo> dco_decode_list_device_info(dynamic raw);
+
+  @protected
+  List<EarlierRow> dco_decode_list_earlier_row(dynamic raw);
 
   @protected
   List<FeedLikeRow> dco_decode_list_feed_like_row(dynamic raw);
 
   @protected
+  List<FoundRow> dco_decode_list_found_row(dynamic raw);
+
+  @protected
+  List<InviteLinkRow> dco_decode_list_invite_link_row(dynamic raw);
+
+  @protected
   List<InviteRow> dco_decode_list_invite_row(dynamic raw);
+
+  @protected
+  List<JoinRequestRow> dco_decode_list_join_request_row(dynamic raw);
 
   @protected
   List<List<String>> dco_decode_list_list_String(dynamic raw);
@@ -179,16 +227,28 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<PollAnswerRow> dco_decode_list_poll_answer_row(dynamic raw);
 
   @protected
+  List<PollPhotoIn> dco_decode_list_poll_photo_in(dynamic raw);
+
+  @protected
   List<int> dco_decode_list_prim_u_16_loose(dynamic raw);
 
   @protected
   Uint16List dco_decode_list_prim_u_16_strict(dynamic raw);
 
   @protected
+  Uint32List dco_decode_list_prim_u_32_strict(dynamic raw);
+
+  @protected
+  Uint64List dco_decode_list_prim_u_64_strict(dynamic raw);
+
+  @protected
   List<int> dco_decode_list_prim_u_8_loose(dynamic raw);
 
   @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
+
+  @protected
+  List<PublicRoomRow> dco_decode_list_public_room_row(dynamic raw);
 
   @protected
   List<ReactionRow> dco_decode_list_reaction_row(dynamic raw);
@@ -200,7 +260,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<RingingRow> dco_decode_list_ringing_row(dynamic raw);
 
   @protected
+  List<SignalRow> dco_decode_list_signal_row(dynamic raw);
+
+  @protected
   List<StoryRow> dco_decode_list_story_row(dynamic raw);
+
+  @protected
+  List<SyncedDraftRow> dco_decode_list_synced_draft_row(dynamic raw);
+
+  @protected
+  LiveRow dco_decode_live_row(dynamic raw);
 
   @protected
   LockOutcome dco_decode_lock_outcome(dynamic raw);
@@ -236,6 +305,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   LinkPreviewRow? dco_decode_opt_box_autoadd_link_preview_row(dynamic raw);
 
   @protected
+  LiveRow? dco_decode_opt_box_autoadd_live_row(dynamic raw);
+
+  @protected
   MeetupRow? dco_decode_opt_box_autoadd_meetup_row(dynamic raw);
 
   @protected
@@ -266,10 +338,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PollAnswerRow dco_decode_poll_answer_row(dynamic raw);
 
   @protected
+  PollPhotoIn dco_decode_poll_photo_in(dynamic raw);
+
+  @protected
   PollRow dco_decode_poll_row(dynamic raw);
 
   @protected
   ProfileCardRow dco_decode_profile_card_row(dynamic raw);
+
+  @protected
+  PublicRoomRow dco_decode_public_room_row(dynamic raw);
 
   @protected
   ReactionRow dco_decode_reaction_row(dynamic raw);
@@ -281,7 +359,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   RingingRow dco_decode_ringing_row(dynamic raw);
 
   @protected
+  RoomLinkRow dco_decode_room_link_row(dynamic raw);
+
+  @protected
+  SignalRow dco_decode_signal_row(dynamic raw);
+
+  @protected
+  StoryLinkRow dco_decode_story_link_row(dynamic raw);
+
+  @protected
+  StoryPostedRow dco_decode_story_posted_row(dynamic raw);
+
+  @protected
   StoryRow dco_decode_story_row(dynamic raw);
+
+  @protected
+  SyncedDraftRow dco_decode_synced_draft_row(dynamic raw);
 
   @protected
   int dco_decode_u_16(dynamic raw);
@@ -344,6 +437,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   LinkPreviewRow sse_decode_box_autoadd_link_preview_row(SseDeserializer deserializer);
 
   @protected
+  LiveRow sse_decode_box_autoadd_live_row(SseDeserializer deserializer);
+
+  @protected
   MeetupRow sse_decode_box_autoadd_meetup_row(SseDeserializer deserializer);
 
   @protected
@@ -389,7 +485,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ChecklistRow sse_decode_checklist_row(SseDeserializer deserializer);
 
   @protected
+  CommunityChatRow sse_decode_community_chat_row(SseDeserializer deserializer);
+
+  @protected
+  CommunityRow sse_decode_community_row(SseDeserializer deserializer);
+
+  @protected
   DeviceInfo sse_decode_device_info(SseDeserializer deserializer);
+
+  @protected
+  EarlierRow sse_decode_earlier_row(SseDeserializer deserializer);
+
+  @protected
+  EmojiStatusRow sse_decode_emoji_status_row(SseDeserializer deserializer);
 
   @protected
   double sse_decode_f_64(SseDeserializer deserializer);
@@ -398,13 +506,28 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   FeedLikeRow sse_decode_feed_like_row(SseDeserializer deserializer);
 
   @protected
+  FoundRow sse_decode_found_row(SseDeserializer deserializer);
+
+  @protected
+  GateHelperRow sse_decode_gate_helper_row(SseDeserializer deserializer);
+
+  @protected
   int sse_decode_i_32(SseDeserializer deserializer);
 
   @protected
   PlatformInt64 sse_decode_i_64(SseDeserializer deserializer);
 
   @protected
+  InviteLinkRow sse_decode_invite_link_row(SseDeserializer deserializer);
+
+  @protected
   InviteRow sse_decode_invite_row(SseDeserializer deserializer);
+
+  @protected
+  JoinRequestRow sse_decode_join_request_row(SseDeserializer deserializer);
+
+  @protected
+  LinkPeekRow sse_decode_link_peek_row(SseDeserializer deserializer);
 
   @protected
   LinkPreviewRow sse_decode_link_preview_row(SseDeserializer deserializer);
@@ -434,13 +557,31 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<ChecklistItemRow> sse_decode_list_checklist_item_row(SseDeserializer deserializer);
 
   @protected
+  List<CommunityChatRow> sse_decode_list_community_chat_row(SseDeserializer deserializer);
+
+  @protected
+  List<CommunityRow> sse_decode_list_community_row(SseDeserializer deserializer);
+
+  @protected
   List<DeviceInfo> sse_decode_list_device_info(SseDeserializer deserializer);
+
+  @protected
+  List<EarlierRow> sse_decode_list_earlier_row(SseDeserializer deserializer);
 
   @protected
   List<FeedLikeRow> sse_decode_list_feed_like_row(SseDeserializer deserializer);
 
   @protected
+  List<FoundRow> sse_decode_list_found_row(SseDeserializer deserializer);
+
+  @protected
+  List<InviteLinkRow> sse_decode_list_invite_link_row(SseDeserializer deserializer);
+
+  @protected
   List<InviteRow> sse_decode_list_invite_row(SseDeserializer deserializer);
+
+  @protected
+  List<JoinRequestRow> sse_decode_list_join_request_row(SseDeserializer deserializer);
 
   @protected
   List<List<String>> sse_decode_list_list_String(SseDeserializer deserializer);
@@ -461,16 +602,28 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<PollAnswerRow> sse_decode_list_poll_answer_row(SseDeserializer deserializer);
 
   @protected
+  List<PollPhotoIn> sse_decode_list_poll_photo_in(SseDeserializer deserializer);
+
+  @protected
   List<int> sse_decode_list_prim_u_16_loose(SseDeserializer deserializer);
 
   @protected
   Uint16List sse_decode_list_prim_u_16_strict(SseDeserializer deserializer);
 
   @protected
+  Uint32List sse_decode_list_prim_u_32_strict(SseDeserializer deserializer);
+
+  @protected
+  Uint64List sse_decode_list_prim_u_64_strict(SseDeserializer deserializer);
+
+  @protected
   List<int> sse_decode_list_prim_u_8_loose(SseDeserializer deserializer);
 
   @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
+
+  @protected
+  List<PublicRoomRow> sse_decode_list_public_room_row(SseDeserializer deserializer);
 
   @protected
   List<ReactionRow> sse_decode_list_reaction_row(SseDeserializer deserializer);
@@ -482,7 +635,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<RingingRow> sse_decode_list_ringing_row(SseDeserializer deserializer);
 
   @protected
+  List<SignalRow> sse_decode_list_signal_row(SseDeserializer deserializer);
+
+  @protected
   List<StoryRow> sse_decode_list_story_row(SseDeserializer deserializer);
+
+  @protected
+  List<SyncedDraftRow> sse_decode_list_synced_draft_row(SseDeserializer deserializer);
+
+  @protected
+  LiveRow sse_decode_live_row(SseDeserializer deserializer);
 
   @protected
   LockOutcome sse_decode_lock_outcome(SseDeserializer deserializer);
@@ -518,6 +680,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   LinkPreviewRow? sse_decode_opt_box_autoadd_link_preview_row(SseDeserializer deserializer);
 
   @protected
+  LiveRow? sse_decode_opt_box_autoadd_live_row(SseDeserializer deserializer);
+
+  @protected
   MeetupRow? sse_decode_opt_box_autoadd_meetup_row(SseDeserializer deserializer);
 
   @protected
@@ -548,10 +713,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PollAnswerRow sse_decode_poll_answer_row(SseDeserializer deserializer);
 
   @protected
+  PollPhotoIn sse_decode_poll_photo_in(SseDeserializer deserializer);
+
+  @protected
   PollRow sse_decode_poll_row(SseDeserializer deserializer);
 
   @protected
   ProfileCardRow sse_decode_profile_card_row(SseDeserializer deserializer);
+
+  @protected
+  PublicRoomRow sse_decode_public_room_row(SseDeserializer deserializer);
 
   @protected
   ReactionRow sse_decode_reaction_row(SseDeserializer deserializer);
@@ -563,7 +734,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   RingingRow sse_decode_ringing_row(SseDeserializer deserializer);
 
   @protected
+  RoomLinkRow sse_decode_room_link_row(SseDeserializer deserializer);
+
+  @protected
+  SignalRow sse_decode_signal_row(SseDeserializer deserializer);
+
+  @protected
+  StoryLinkRow sse_decode_story_link_row(SseDeserializer deserializer);
+
+  @protected
+  StoryPostedRow sse_decode_story_posted_row(SseDeserializer deserializer);
+
+  @protected
   StoryRow sse_decode_story_row(SseDeserializer deserializer);
+
+  @protected
+  SyncedDraftRow sse_decode_synced_draft_row(SseDeserializer deserializer);
 
   @protected
   int sse_decode_u_16(SseDeserializer deserializer);
@@ -626,6 +812,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_box_autoadd_link_preview_row(LinkPreviewRow self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_live_row(LiveRow self, SseSerializer serializer);
+
+  @protected
   void sse_encode_box_autoadd_meetup_row(MeetupRow self, SseSerializer serializer);
 
   @protected
@@ -671,7 +860,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_checklist_row(ChecklistRow self, SseSerializer serializer);
 
   @protected
+  void sse_encode_community_chat_row(CommunityChatRow self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_community_row(CommunityRow self, SseSerializer serializer);
+
+  @protected
   void sse_encode_device_info(DeviceInfo self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_earlier_row(EarlierRow self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_emoji_status_row(EmojiStatusRow self, SseSerializer serializer);
 
   @protected
   void sse_encode_f_64(double self, SseSerializer serializer);
@@ -680,13 +881,28 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_feed_like_row(FeedLikeRow self, SseSerializer serializer);
 
   @protected
+  void sse_encode_found_row(FoundRow self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_gate_helper_row(GateHelperRow self, SseSerializer serializer);
+
+  @protected
   void sse_encode_i_32(int self, SseSerializer serializer);
 
   @protected
   void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer);
 
   @protected
+  void sse_encode_invite_link_row(InviteLinkRow self, SseSerializer serializer);
+
+  @protected
   void sse_encode_invite_row(InviteRow self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_join_request_row(JoinRequestRow self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_link_peek_row(LinkPeekRow self, SseSerializer serializer);
 
   @protected
   void sse_encode_link_preview_row(LinkPreviewRow self, SseSerializer serializer);
@@ -716,13 +932,31 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_list_checklist_item_row(List<ChecklistItemRow> self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_community_chat_row(List<CommunityChatRow> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_community_row(List<CommunityRow> self, SseSerializer serializer);
+
+  @protected
   void sse_encode_list_device_info(List<DeviceInfo> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_earlier_row(List<EarlierRow> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_feed_like_row(List<FeedLikeRow> self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_found_row(List<FoundRow> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_invite_link_row(List<InviteLinkRow> self, SseSerializer serializer);
+
+  @protected
   void sse_encode_list_invite_row(List<InviteRow> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_join_request_row(List<JoinRequestRow> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_list_String(List<List<String>> self, SseSerializer serializer);
@@ -743,16 +977,28 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_list_poll_answer_row(List<PollAnswerRow> self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_poll_photo_in(List<PollPhotoIn> self, SseSerializer serializer);
+
+  @protected
   void sse_encode_list_prim_u_16_loose(List<int> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_prim_u_16_strict(Uint16List self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_prim_u_32_strict(Uint32List self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_prim_u_64_strict(Uint64List self, SseSerializer serializer);
+
+  @protected
   void sse_encode_list_prim_u_8_loose(List<int> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_prim_u_8_strict(Uint8List self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_public_room_row(List<PublicRoomRow> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_reaction_row(List<ReactionRow> self, SseSerializer serializer);
@@ -764,7 +1010,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_list_ringing_row(List<RingingRow> self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_signal_row(List<SignalRow> self, SseSerializer serializer);
+
+  @protected
   void sse_encode_list_story_row(List<StoryRow> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_synced_draft_row(List<SyncedDraftRow> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_live_row(LiveRow self, SseSerializer serializer);
 
   @protected
   void sse_encode_lock_outcome(LockOutcome self, SseSerializer serializer);
@@ -800,6 +1055,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_opt_box_autoadd_link_preview_row(LinkPreviewRow? self, SseSerializer serializer);
 
   @protected
+  void sse_encode_opt_box_autoadd_live_row(LiveRow? self, SseSerializer serializer);
+
+  @protected
   void sse_encode_opt_box_autoadd_meetup_row(MeetupRow? self, SseSerializer serializer);
 
   @protected
@@ -830,10 +1088,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_poll_answer_row(PollAnswerRow self, SseSerializer serializer);
 
   @protected
+  void sse_encode_poll_photo_in(PollPhotoIn self, SseSerializer serializer);
+
+  @protected
   void sse_encode_poll_row(PollRow self, SseSerializer serializer);
 
   @protected
   void sse_encode_profile_card_row(ProfileCardRow self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_public_room_row(PublicRoomRow self, SseSerializer serializer);
 
   @protected
   void sse_encode_reaction_row(ReactionRow self, SseSerializer serializer);
@@ -845,7 +1109,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_ringing_row(RingingRow self, SseSerializer serializer);
 
   @protected
+  void sse_encode_room_link_row(RoomLinkRow self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_signal_row(SignalRow self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_story_link_row(StoryLinkRow self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_story_posted_row(StoryPostedRow self, SseSerializer serializer);
+
+  @protected
   void sse_encode_story_row(StoryRow self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_synced_draft_row(SyncedDraftRow self, SseSerializer serializer);
 
   @protected
   void sse_encode_u_16(int self, SseSerializer serializer);

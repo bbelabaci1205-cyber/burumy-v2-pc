@@ -10,16 +10,30 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
+import '../core/custom_emoji.dart';
+import '../core/features.dart';
 import '../core/app_state.dart';
 import '../core/automod.dart';
+import '../core/keyword_replies.dart';
+import '../core/guard.dart';
+import '../core/group_tools.dart';
 import '../core/backend.dart';
 import '../design/tokens.dart';
 import '../l10n/app_localizations.dart';
 import 'common.dart';
+import 'custom_emoji_ui.dart';
+import 'formatting.dart';
 import 'glass.dart';
 import 'ios.dart';
 import 'ios_route.dart';
+import 'welcome.dart';
 import 'settings_kit.dart';
+import 'stories.dart' show showStoryToast;
+import '../core/topics.dart';
+import 'topics.dart' show TopicsPage;
+import 'room_rules_pages.dart';
+import '../core/room_rules.dart';
+import '../core/room_texts.dart';
 import 'wide.dart';
 
 /// Emoji admins can choose from for "some reactions".
@@ -81,6 +95,25 @@ class _ManageToolsPageState extends State<ManageToolsPage> {
     await load();
   }
 
+  /// 습격 잠금 (v1): many strangers rushing in through a link. On = every
+  /// new join through a link waits for an admin; off puts the link back the
+  /// way it was.
+  Future<void> setRaid(bool v) async {
+    final s = AppScope.read(context);
+    final b = s.backend;
+    final id = widget.roomId;
+    setState(() => cfg = {...cfg, 'raid': v});
+    if (v) {
+      final link = await b.roomLink(id).catchError((_) => const RoomLink());
+      await s.setPref('raid_prev:$id', link.approval ? '1' : '0');
+      if (!link.approval) await b.setLinkApproval(id, true).catchError((_) {});
+    } else if (s.pref('raid_prev:$id', '1') == '0') {
+      await b.setLinkApproval(id, false).catchError((_) {});
+    }
+    await b.setRoomConfig(id, 'raid', v ? true : null);
+    await s.logMod(id, 'setting', 'raid');
+  }
+
   Future<void> setFlag(String key, bool v) async {
     final s = AppScope.read(context);
     setState(() => cfg = {...cfg, key: v});
@@ -94,20 +127,20 @@ class _ManageToolsPageState extends State<ManageToolsPage> {
     final p = paletteOf(context);
     final s = AppScope.of(context);
     final id = widget.roomId;
-    final rules = (cfg['rules'] as String? ?? '').trim();
-    final welcome = (cfg['welcome'] as String? ?? '').trim();
+    final rulesOn = RoomTexts.rulesOn(cfg);
+    final welcomeOn = RoomTexts.welcomeOn(cfg);
     final old = (cfg['old_members'] as num?)?.toInt() ?? 0;
     return SettingsScaffold(
       title: l.manageTools,
       children: [
         HeaderCard(color: Palette.tileBlue, icon: CupertinoIcons.shield_lefthalf_fill, title: l.manageTools, body: l.manageToolsInfo),
-        group(context, header: l.toolsJoin, [
+        group(context, header: l.toolsJoin, footer: l.raidLockInfo, [
           NavRow(
             key: const Key('tool-rules'),
             color: Palette.tileOrange,
             icon: CupertinoIcons.doc_text_fill,
             title: l.roomRules,
-            value: rules.isEmpty ? l.stateOff : l.stateOn,
+            value: rulesOn ? l.stateOn : l.stateOff,
             onTap: () => open(RoomTextPage(roomId: id, configKey: 'rules')),
           ),
           NavRow(
@@ -115,8 +148,8 @@ class _ManageToolsPageState extends State<ManageToolsPage> {
             color: p.tileGreen,
             icon: CupertinoIcons.hand_raised_fill,
             title: l.welcomeMessage,
-            value: welcome.isEmpty ? l.stateOff : l.stateOn,
-            onTap: () => open(RoomTextPage(roomId: id, configKey: 'welcome')),
+            value: welcomeOn ? l.stateOn : l.stateOff,
+            onTap: () => open(WelcomeEditorPage(roomId: id, roomName: titleOf(s, id, ''), channel: widget.isChannel)),
           ),
           NavRow(
             key: const Key('tool-level'),
@@ -125,8 +158,72 @@ class _ManageToolsPageState extends State<ManageToolsPage> {
             title: l.roomLevel,
             onTap: () => open(LevelPage(roomId: id)),
           ),
+          IosTile(
+            leading: iconTile(Palette.tileRed, CupertinoIcons.lock_shield_fill),
+            title: Text(l.raidLock),
+            trailing: IosSwitch(key: const Key('tool-raid'), value: cfg['raid'] == true, activeTrackColor: p.accent, onChanged: setRaid),
+          ),
         ]),
+        if (!widget.isChannel)
+          group(context, header: l.toolsMembers, footer: l.noMemberDmInfo, [
+            NavRow(
+              key: const Key('tool-member-perms'),
+              color: p.tileGreen,
+              icon: CupertinoIcons.person_2_fill,
+              title: l.memberPerms,
+              value: Features.chatSafety
+                  ? '${RoomRules.memberPermsSplit.where((k) => RoomRules.memberMay(cfg, k)).length}/${RoomRules.memberPermsSplit.length}'
+                  : '${RoomRules.memberPerms.where((k) => RoomRules.memberMay(cfg, k)).length}/${RoomRules.memberPerms.length}',
+              onTap: () => open(memberPermsPage(s, id, cfg, l)),
+            ),
+            NavRow(
+              key: const Key('tool-slow'),
+              color: Palette.tileOrange,
+              icon: CupertinoIcons.timer,
+              title: l.slowMode,
+              value: slowLabel(l, RoomRules.slowSeconds(cfg)),
+              onTap: () => open(slowModePage(s, id, cfg, l)),
+            ),
+            NavRow(
+              key: const Key('tool-night'),
+              color: Palette.tileIndigo,
+              icon: CupertinoIcons.moon_fill,
+              title: l.roomNight,
+              value: nightLabel(l, RoomRules.nightValue(cfg)),
+              onTap: () => open(nightModePage(s, id, cfg, l)),
+            ),
+            // 그룹 이모지 묶음 (tip 430): picked emoji for everyone here.
+            if (Features.funFx)
+              NavRow(
+                key: const Key('tool-group-emoji'),
+                color: Palette.tileYellow,
+                icon: CupertinoIcons.smiley_fill,
+                title: l.cxGroupTitle,
+                value: '${CustomEmojis.pack(s, id).length}',
+                onTap: () => open(GroupEmojiPage(roomId: id, admin: true)),
+              ),
+            IosTile(
+              leading: iconTile(Palette.tileRed, CupertinoIcons.chat_bubble_2_fill),
+              title: Text(l.noMemberDm),
+              trailing: IosSwitch(
+                key: const Key('tool-no-member-dm'),
+                value: RoomRules.noMemberDm(cfg),
+                activeTrackColor: p.accent,
+                onChanged: (v) => setFlag('no_member_dm', v),
+              ),
+            ),
+          ]),
         group(context, header: l.toolsPosts, footer: widget.isChannel ? l.hideCountsInfo : l.hideCountsInfoGroup, [
+          // 주제 (tip 527): groups only, the list itself is encrypted.
+          if (!widget.isChannel)
+            NavRow(
+              key: const Key('tool-topics'),
+              color: Palette.tileBlue,
+              icon: CupertinoIcons.square_grid_2x2_fill,
+              title: l.topics,
+              value: Topics.fingerprintIn(cfg) != null && Topics.of(s, id, cfg).on ? l.stateOn : l.stateOff,
+              onTap: () => open(TopicsPage(roomId: id)),
+            ),
           NavRow(
             key: const Key('tool-reactions'),
             color: Palette.tilePink,
@@ -143,6 +240,15 @@ class _ManageToolsPageState extends State<ManageToolsPage> {
             value: s.on('automod_on:$id') ? l.stateOn : l.stateOff,
             onTap: () => open(AutoModPage(roomId: id)),
           ),
+          if (!widget.isChannel)
+            NavRow(
+              key: const Key('tool-keywords'),
+              color: Palette.tileTeal,
+              icon: CupertinoIcons.text_bubble_fill,
+              title: l.keywordReplies,
+              value: '${keywordRules(s.settings, id).length}',
+              onTap: () => open(KeywordRepliesPage(roomId: id)),
+            ),
           if (widget.isChannel)
             NavRow(
               key: const Key('tool-discussion'),
@@ -161,6 +267,49 @@ class _ManageToolsPageState extends State<ManageToolsPage> {
               activeTrackColor: p.accent,
               onChanged: (v) => setFlag('hide_counts', v),
             ),
+          ),
+        ]),
+        // 94: the owner's own 익명으로 남기 (admins get it from the owner).
+        if (!widget.isChannel && widget.role == 'owner')
+          AnonSwitchGroup(
+            key: ValueKey('anon-self-${AnonAdmins.isOn(cfg, s.backend.userId ?? '')}'),
+            roomId: id,
+            userId: s.backend.userId ?? '',
+            initial: AnonAdmins.isOn(cfg, s.backend.userId ?? ''),
+            self: true,
+          ),
+        group(context, header: l.toolsSafety, footer: l.toolsSafetyInfo, [
+          // 365: 강력 스팸 차단 (groups).
+          if (!widget.isChannel)
+            NavRow(
+              key: const Key('tool-antispam'),
+              color: Palette.tileIndigo,
+              icon: CupertinoIcons.shield_lefthalf_fill,
+              title: l.antiSpam,
+              value: AntiSpam.on(cfg) ? l.stateOn : l.stateOff,
+              onTap: () => open(AntiSpamPage(roomId: id)),
+            ),
+          NavRow(
+            key: const Key('tool-new-media'),
+            color: Palette.tileOrange,
+            icon: CupertinoIcons.person_badge_minus_fill,
+            title: l.newMediaTitle,
+            value: newMediaDays(cfg) == 0 ? l.stateOff : l.newMediaDays(newMediaDays(cfg)),
+            onTap: () => open(NewMediaPage(roomId: id, days: newMediaDays(cfg))),
+          ),
+          NavRow(
+            key: const Key('tool-late-edits'),
+            color: Palette.tileYellow,
+            icon: CupertinoIcons.pencil_ellipsis_rectangle,
+            title: l.lateEditTitle,
+            onTap: () => open(LateEditsPage(roomId: id)),
+          ),
+          NavRow(
+            key: const Key('tool-extortion'),
+            color: Palette.tileRed,
+            icon: CupertinoIcons.exclamationmark_bubble_fill,
+            title: l.extortionRow,
+            onTap: () => open(ExtortionReportPage(roomId: id)),
           ),
         ]),
         group(context, header: l.toolsStats, [
@@ -234,8 +383,9 @@ class _RoomTextPageState extends State<RoomTextPage> {
     ready = true;
     AppScope.read(context).backend.roomConfig(widget.roomId).then((c) {
       if (!mounted) return;
+      final t = RoomTexts.of(AppScope.read(context), widget.roomId, c);
       setState(() {
-        field.text = c[widget.configKey] as String? ?? '';
+        field.text = rules ? t.rules : t.welcome;
         agree = c['rules_agree'] == true;
       });
     }, onError: (_) {});
@@ -256,7 +406,8 @@ class _RoomTextPageState extends State<RoomTextPage> {
       error = null;
     });
     try {
-      await s.backend.setRoomConfig(widget.roomId, widget.configKey, text.isEmpty ? null : text);
+      // End-to-end encrypted (the room keeps only a fingerprint).
+      await RoomTexts.save(s, widget.roomId, rules: rules ? text : null, welcome: rules ? null : text);
       if (rules) await s.backend.setRoomConfig(widget.roomId, 'rules_agree', text.isNotEmpty && agree);
       await s.logMod(widget.roomId, 'setting', widget.configKey);
       if (mounted) Navigator.pop(context);
@@ -275,7 +426,7 @@ class _RoomTextPageState extends State<RoomTextPage> {
       title: rules ? l.roomRules : l.welcomeMessage,
       trailing: [GlassDone(key: const Key('room-text-save'), onTap: busy ? null : save)],
       children: [
-        group(context, footer: error ?? (rules ? l.roomRulesInfo : l.welcomeInfo), error: error != null, [
+        group(context, footer: error ?? '${rules ? l.roomRulesInfo : l.welcomeInfo}\n🔒 ${l.textsEncrypted}', error: error != null, [
           CupertinoTextField.borderless(
             key: const Key('room-text'),
             controller: field,
@@ -313,6 +464,17 @@ class _ReactionsPageState extends State<ReactionsPage> {
   List<String> chosen = const ['❤️', '👍', '😂', '😮', '😢', '🙏'];
   int max = 11;
   bool ready = false;
+  Timer? saveMax;
+
+  @override
+  void dispose() {
+    final t = saveMax;
+    if (t != null && t.isActive) {
+      t.cancel();
+      unawaited(put('reactions_max', max));
+    }
+    super.dispose();
+  }
 
   @override
   void didChangeDependencies() {
@@ -349,13 +511,6 @@ class _ReactionsPageState extends State<ReactionsPage> {
     unawaited(put('reactions_set', next));
   }
 
-  void step(int d) {
-    final v = (max + d).clamp(1, 11);
-    if (v == max) return;
-    setState(() => max = v);
-    unawaited(put('reactions_max', v));
-  }
-
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
@@ -363,7 +518,7 @@ class _ReactionsPageState extends State<ReactionsPage> {
     return SettingsScaffold(
       title: l.reactionsSetting,
       children: [
-        group(context, footer: l.reactionsInfo, [
+        group(context, footer: mode == 'none' ? l.reactionsNoneInfo : l.reactionsInfo, [
           for (final (v, label) in [('all', l.reactionsAll), ('some', l.reactionsSome), ('none', l.reactionsNone)])
             IosTile(
               key: Key('pick-$v'),
@@ -406,47 +561,106 @@ class _ReactionsPageState extends State<ReactionsPage> {
           ]),
         if (mode != 'none')
           group(context, footer: l.reactionsMaxInfo, [
-            IosTile(
-              title: Text(l.reactionsMax),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
+            // Telegram 450 (Eric 2026-11-27): an iOS slider 1 … 11 with the
+            // number above it, like 절전 모드.
+            Padding(
+              padding: EdgeInsets.fromLTRB(Tokens.space[3], Tokens.space[2], Tokens.space[3], Tokens.space[2]),
+              child: Column(
                 children: [
-                  _StepButton(key: const Key('react-max-minus'), icon: CupertinoIcons.minus, onTap: max > 1 ? () => step(-1) : null),
-                  SizedBox(
-                    width: 36,
-                    child: Text(
-                      '$max',
-                      key: const Key('react-max'),
-                      textAlign: TextAlign.center,
-                      style: Tokens.body.style.copyWith(color: p.label),
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(l.reactionsMax, style: Tokens.body.style.copyWith(color: p.label)),
+                      ),
+                      Text(
+                        '$max',
+                        key: const Key('react-max'),
+                        style: Tokens.body.style.copyWith(color: p.accent, fontWeight: Tokens.semi),
+                      ),
+                    ],
                   ),
-                  _StepButton(key: const Key('react-max-plus'), icon: CupertinoIcons.plus, onTap: max < 11 ? () => step(1) : null),
+                  Row(
+                    children: [
+                      Text('1', style: Tokens.caption.style.copyWith(color: p.secondaryLabel)),
+                      Expanded(
+                        child: CupertinoSlider(
+                          key: const Key('react-max-slider'),
+                          value: max.toDouble(),
+                          min: 1,
+                          max: 11,
+                          divisions: 10,
+                          activeColor: p.accent,
+                          onChanged: (v) {
+                            final n = v.round();
+                            if (n == max) return;
+                            HapticFeedback.selectionClick();
+                            setState(() => max = n);
+                            // Saved once the finger rests (one room event, not ten).
+                            saveMax?.cancel();
+                            saveMax = Timer(const Duration(milliseconds: 400), () => unawaited(put('reactions_max', n)));
+                          },
+                        ),
+                      ),
+                      Text('11', style: Tokens.caption.style.copyWith(color: p.secondaryLabel)),
+                    ],
+                  ),
                 ],
               ),
             ),
           ]),
+        if (mode != 'none' && Features.tipsD1)
+          group(context, header: l.reactionsPreview, [ReactionsPreview(emoji: mode == 'some' ? chosen : reactionPool, max: max)]),
       ],
     );
   }
 }
 
-/// iOS stepper half (−/+), grey capsule.
-class _StepButton extends StatelessWidget {
-  const _StepButton({super.key, required this.icon, this.onTap});
-  final IconData icon;
-  final VoidCallback? onTap;
+/// A sample channel post with as many reaction kinds as the limit lets
+/// through, so admins see what members will see (Telegram 450 has none).
+class ReactionsPreview extends StatelessWidget {
+  const ReactionsPreview({super.key, required this.emoji, required this.max});
+  final List<String> emoji;
+  final int max;
 
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
     final p = paletteOf(context);
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 44,
-        height: 32,
-        decoration: BoxDecoration(color: p.incoming, borderRadius: BorderRadius.circular(8)),
-        child: Icon(icon, size: 18, color: onTap == null ? p.secondaryLabel : p.label),
+    final shown = emoji.take(max).toList();
+    const counts = [128, 64, 41, 23, 17, 12, 9, 6, 4, 3, 2];
+    return Padding(
+      key: const Key('react-preview'),
+      padding: EdgeInsets.all(Tokens.space[3]),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: Tokens.space[3], vertical: Tokens.space[2]),
+            decoration: BoxDecoration(color: p.incoming, borderRadius: BorderRadius.circular(Tokens.radius[2] + 2)),
+            child: Text(l.reactionsPreviewPost, style: Tokens.body.style.copyWith(color: p.label)),
+          ),
+          SizedBox(height: Tokens.space[0]),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 180),
+            alignment: Alignment.topLeft,
+            child: Wrap(
+              spacing: Tokens.space[0],
+              runSpacing: Tokens.space[0],
+              children: [
+                for (var i = 0; i < shown.length; i++)
+                  Container(
+                    key: Key('react-preview-${shown[i]}'),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: i == 0 ? p.accent.withValues(alpha: 0.18) : p.incoming,
+                      borderRadius: BorderRadius.circular(Tokens.capsule),
+                    ),
+                    child: Text('${shown[i]} ${counts[i]}', style: Tokens.caption.style.copyWith(color: i == 0 ? p.accent : p.label)),
+                  ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -529,6 +743,95 @@ class _AutoModPageState extends State<AutoModPage> {
             ),
           ]),
         ],
+      ],
+    );
+  }
+}
+
+/// 키워드 자동 답장: "word → answer" pairs this phone answers with.
+class KeywordRepliesPage extends StatefulWidget {
+  const KeywordRepliesPage({super.key, required this.roomId});
+  final String roomId;
+
+  @override
+  State<KeywordRepliesPage> createState() => _KeywordRepliesPageState();
+}
+
+class _KeywordRepliesPageState extends State<KeywordRepliesPage> {
+  final word = TextEditingController(), answer = TextEditingController();
+
+  @override
+  void dispose() {
+    word.dispose();
+    answer.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    final p = paletteOf(context);
+    final s = AppScope.of(context);
+    final id = widget.roomId;
+    final rules = keywordRules(s.settings, id);
+    Future<void> save(List<KeywordRule> r) async {
+      // Only messages from now on are answered.
+      await s.setPref('keyword_seen:$id', '${DateTime.now().millisecondsSinceEpoch}');
+      await s.setPref(keywordKey(id), r.isEmpty ? '' : encodeKeywordRules(r));
+    }
+
+    void add() {
+      final w = word.text.trim(), a = answer.text.trim();
+      if (w.isEmpty || a.isEmpty || rules.length >= 30 || rules.any((r) => r.word == w)) return;
+      word.clear();
+      answer.clear();
+      unawaited(save([...rules, (word: w, answer: a)]));
+    }
+
+    Widget field(String key, TextEditingController c, String hint, int max) => CupertinoTextField.borderless(
+      key: Key(key),
+      controller: c,
+      placeholder: hint,
+      maxLength: max,
+      style: Tokens.body.style.copyWith(color: p.label),
+    );
+    return SettingsScaffold(
+      title: l.keywordReplies,
+      children: [
+        group(context, footer: l.keywordRepliesInfo, [
+          for (var i = 0; i < rules.length; i++)
+            IosTile(
+              key: Key('keyword-$i'),
+              title: Text(rules[i].word),
+              subtitle: Text(rules[i].answer, maxLines: 2, style: Tokens.caption.style),
+              trailing: GestureDetector(
+                key: Key('keyword-remove-$i'),
+                onTap: () => save([...rules]..removeAt(i)),
+                child: const Icon(CupertinoIcons.minus_circle_fill, color: Palette.tileRed, size: 22),
+              ),
+            ),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: Tokens.space[3], vertical: Tokens.space[1]),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    children: [
+                      field('keyword-word', word, l.keywordWordHint, 30),
+                      Container(height: 1 / MediaQuery.devicePixelRatioOf(context), color: p.separator),
+                      field('keyword-answer', answer, l.keywordAnswerHint, 300),
+                    ],
+                  ),
+                ),
+                GestureDetector(
+                  key: const Key('keyword-add'),
+                  onTap: add,
+                  child: Icon(CupertinoIcons.add_circled_solid, color: p.accent, size: 24),
+                ),
+              ],
+            ),
+          ),
+        ]),
       ],
     );
   }
@@ -676,8 +979,16 @@ class ModLogPage extends StatelessWidget {
     };
     String line(ModEntry e) => switch (e.kind) {
       'removed' => l.logRemoved(e.name, why(e.detail)),
+      'late_edit' => l.logLateEdit(e.name),
+      'wiped' => l.logWiped(e.name, int.tryParse(e.detail) ?? 0),
+      'extortion' => l.logExtortion(e.name),
       'banned' => l.logBanned(e.name),
       'unbanned' => l.logUnbanned(e.name),
+      'muted' => l.logMuted(e.name),
+      'unmuted' => l.logUnmuted(e.name),
+      'handover' => l.logHandover(e.name),
+      'spam' => l.logSpam(e.name),
+      'spam_ok' => l.logSpamOk(e.name),
       _ => l.logSetting(settingName(l, e.name)),
     };
     return SettingsScaffold(
@@ -692,7 +1003,14 @@ class ModLogPage extends StatelessWidget {
             for (final e in log)
               IosTile(
                 title: Text(line(e), maxLines: 2),
-                subtitle: Text(timeAgo(context, e.time), style: Tokens.caption.style),
+                subtitle: Text(
+                  e.kind == 'spam' && AntiSpam.splitDetail(e.detail).$2.isNotEmpty
+                      ? '${timeAgo(context, e.time)} · ${AntiSpam.splitDetail(e.detail).$2}'
+                      : timeAgo(context, e.time),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Tokens.caption.style,
+                ),
               ),
         ]),
       ],
@@ -707,6 +1025,16 @@ String settingName(L l, String key) => switch (key) {
   'hide_counts' => l.hideCounts,
   'discussion' => l.discussion,
   'old_members' => l.movingBoard,
+  'new_media_days' => l.newMediaTitle,
+  'member_perms' => l.memberPerms,
+  'perm_users' => l.permExceptions,
+  'slow' => l.slowMode,
+  'night' => l.roomNight,
+  'no_member_dm' => l.noMemberDm,
+  'raid' => l.raidLock,
+  'antispam' => l.antiSpam,
+  'own_tags' => l.ownTags,
+  'anon' => l.anonAdmin,
   _ => key,
 };
 
@@ -1085,4 +1413,360 @@ Future<void> deleteRoom(Backend b, String roomId) async {
     } catch (_) {}
   }
   await b.leave(roomId);
+}
+
+/// Admin: delete every message [userId] wrote here (as far back as the
+/// phone can load), then ban them. Returns how many were deleted.
+Future<int> wipeUser(Backend b, String roomId, String userId) async {
+  final msgs = await b.timeline(roomId, limit: 2000);
+  var n = 0;
+  for (final m in msgs.where((m) => m.sender == userId && m.kind != 'deleted')) {
+    try {
+      await b.deleteMessage(roomId, m.id);
+      n++;
+    } catch (_) {}
+  }
+  await b.setBanned(roomId, userId, true);
+  return n;
+}
+
+/// "새 멤버 사진·영상·링크 제한": off, or how many days after joining.
+class NewMediaPage extends StatefulWidget {
+  const NewMediaPage({super.key, required this.roomId, required this.days});
+  final String roomId;
+  final int days;
+
+  @override
+  State<NewMediaPage> createState() => _NewMediaPageState();
+}
+
+class _NewMediaPageState extends State<NewMediaPage> {
+  late int days = widget.days;
+
+  Future<void> pick(int d) async {
+    final s = AppScope.read(context);
+    setState(() => days = d);
+    await s.backend.setRoomConfig(widget.roomId, 'new_media_days', d);
+    await s.logMod(widget.roomId, 'setting', 'new_media_days');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    final p = paletteOf(context);
+    return SettingsScaffold(
+      title: l.newMediaTitle,
+      children: [
+        HeaderCard(color: Palette.tileOrange, icon: CupertinoIcons.person_badge_minus_fill, title: l.newMediaTitle, body: l.newMediaInfo),
+        group(context, footer: l.newMediaFooter, [
+          for (final d in const [0, 1, 3, 7, 14, 30])
+            IosTile(
+              key: Key('new-media-$d'),
+              title: Text(d == 0 ? l.stateOff : l.newMediaDays(d)),
+              trailing: days == d ? Icon(CupertinoIcons.checkmark_alt, color: p.accent, size: Tokens.listIcon) : null,
+              onTap: () => pick(d),
+            ),
+        ]),
+      ],
+    );
+  }
+}
+
+/// "늦게 수정된 글": messages changed more than an hour after sending (how
+/// pictures get hidden in old messages). Worked out on this phone.
+class LateEditsPage extends StatefulWidget {
+  const LateEditsPage({super.key, required this.roomId});
+  final String roomId;
+
+  @override
+  State<LateEditsPage> createState() => _LateEditsPageState();
+}
+
+class _LateEditsPageState extends State<LateEditsPage> {
+  List<Msg>? list;
+  Map<String, String> names = const {};
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (list == null) unawaited(load());
+  }
+
+  Future<void> load() async {
+    final b = AppScope.read(context).backend;
+    final msgs = await b.timeline(widget.roomId, limit: 1000);
+    final mem = await b.members(widget.roomId);
+    if (!mounted) return;
+    setState(() {
+      names = {for (final m in mem) m.userId: m.name};
+      list = lateEdits(msgs, {
+        for (final m in mem)
+          if (m.role != 'member') m.userId,
+      });
+    });
+  }
+
+  Future<void> remove(Msg m) async {
+    final s = AppScope.read(context);
+    await s.backend.deleteMessage(widget.roomId, m.id);
+    await s.logMod(widget.roomId, 'removed', names[m.sender] ?? m.sender, 'late_edit');
+    await load();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    final p = paletteOf(context);
+    final items = list ?? const <Msg>[];
+    return SettingsScaffold(
+      title: l.lateEditTitle,
+      children: [
+        HeaderCard(color: Palette.tileYellow, icon: CupertinoIcons.pencil_ellipsis_rectangle, title: l.lateEditTitle, body: l.lateEditInfo),
+        group(context, [
+          if (items.isEmpty)
+            IosTile(
+              title: Text(list == null ? '…' : l.lateEditEmpty, style: TextStyle(color: p.secondaryLabel)),
+            )
+          else
+            for (final m in items)
+              IosTile(
+                key: Key('late-${m.id}'),
+                padding: IosTile.plainPad.add(EdgeInsets.symmetric(vertical: Tokens.space[2])),
+                title: Text(names[m.sender] ?? m.sender),
+                subtitle: Text(
+                  l.lateEditLine(plainText(m.firstBody ?? ''), plainText(m.body ?? ''), timeAgo(context, m.time), timeAgo(context, m.editedAt!)),
+                  maxLines: 4,
+                  style: Tokens.caption.style.copyWith(color: p.secondaryLabel),
+                ),
+                trailing: CupertinoButton(
+                  key: Key('late-remove-${m.id}'),
+                  padding: EdgeInsets.zero,
+                  minimumSize: const Size(44, 44),
+                  onPressed: () => remove(m),
+                  child: Icon(CupertinoIcons.trash, color: Palette.tileRed, size: Tokens.listIcon),
+                ),
+              ),
+        ]),
+      ],
+    );
+  }
+}
+
+/// "협박받았어요": a blackmail report to our operators, with what to do.
+class ExtortionReportPage extends StatefulWidget {
+  const ExtortionReportPage({super.key, required this.roomId});
+  final String roomId;
+
+  @override
+  State<ExtortionReportPage> createState() => _ExtortionReportPageState();
+}
+
+class _ExtortionReportPageState extends State<ExtortionReportPage> {
+  final who = TextEditingController();
+  final words = TextEditingController();
+  bool sending = false;
+  bool sent = false;
+  bool failed = false;
+
+  @override
+  void dispose() {
+    who.dispose();
+    words.dispose();
+    super.dispose();
+  }
+
+  Future<void> send() async {
+    final s = AppScope.read(context);
+    final id = who.text.trim();
+    if (id.isEmpty || words.text.trim().isEmpty) return;
+    setState(() => sending = true);
+    final user = id.startsWith('@') ? id : '@$id';
+    try {
+      await s.backend.reportContent(widget.roomId, '', user, 'extortion', words.text.trim());
+      await s.logMod(widget.roomId, 'extortion', id);
+      if (mounted) setState(() => sent = true);
+    } catch (_) {
+      if (mounted) setState(() => failed = true);
+    } finally {
+      if (mounted) setState(() => sending = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    final p = paletteOf(context);
+    return SettingsScaffold(
+      title: l.extortionTitle,
+      children: [
+        HeaderCard(color: Palette.tileRed, icon: CupertinoIcons.exclamationmark_bubble_fill, title: l.extortionTitle, body: l.extortionInfo),
+        if (sent)
+          group(context, [
+            IosTile(
+              key: const Key('extortion-done'),
+              leading: Icon(CupertinoIcons.checkmark_seal_fill, color: p.accent),
+              title: Text(l.extortionDone),
+            ),
+          ])
+        else ...[
+          group(context, header: l.extortionWho, [
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: Tokens.space[3], vertical: Tokens.space[1]),
+              child: CupertinoTextField.borderless(key: const Key('extortion-who'), controller: who, placeholder: l.extortionWhoHint),
+            ),
+          ]),
+          group(context, header: l.extortionNote, [
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: Tokens.space[3], vertical: Tokens.space[1]),
+              child: CupertinoTextField.borderless(
+                key: const Key('extortion-words'),
+                controller: words,
+                minLines: 4,
+                maxLines: 10,
+                placeholder: l.extortionNoteHint,
+              ),
+            ),
+          ]),
+          if (failed)
+            Padding(
+              padding: EdgeInsets.fromLTRB(Tokens.space[3], 0, Tokens.space[3], Tokens.space[2]),
+              child: Text(l.reportFailed, style: Tokens.caption.style.copyWith(color: Palette.tileRed)),
+            ),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: Tokens.space[3]),
+            child: CupertinoButton.filled(key: const Key('extortion-send'), onPressed: sending ? null : send, child: Text(l.extortionSend)),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// 강력 스팸 차단 (Telegram tip 365): one switch for the whole group. The
+/// server can't read messages, so the phones of admins who may delete do
+/// the work: spam words, links and contact handles from newcomers, the
+/// same words posted again and again, mass mentions. Removed messages turn
+/// to dust in everyone's chat; each one is listed here with "스팸 아님".
+class AntiSpamPage extends StatefulWidget {
+  const AntiSpamPage({super.key, required this.roomId});
+  final String roomId;
+
+  @override
+  State<AntiSpamPage> createState() => _AntiSpamPageState();
+}
+
+class _AntiSpamPageState extends State<AntiSpamPage> {
+  Map<String, dynamic> cfg = const {};
+  bool ready = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!ready) {
+      ready = true;
+      unawaited(load());
+    }
+  }
+
+  Future<void> load() async {
+    final c = await AppScope.read(context).backend.roomConfig(widget.roomId).catchError((_) => <String, dynamic>{});
+    if (mounted) setState(() => cfg = c);
+  }
+
+  Future<void> setOn(bool v) async {
+    final s = AppScope.read(context);
+    setState(() => cfg = {...cfg, 'antispam': v});
+    try {
+      await s.backend.setRoomConfig(widget.roomId, 'antispam', v ? true : null);
+      await s.logMod(widget.roomId, 'setting', 'antispam');
+      // Check right away what is already in the chat.
+      if (v) unawaited(s.antiSpamRoom(widget.roomId).then((_) => mounted ? setState(() {}) : null).catchError((_) {}));
+    } catch (_) {
+      if (mounted) setState(() => cfg = {...cfg, 'antispam': !v});
+    }
+  }
+
+  /// "스팸 아님": this person is never checked again here (and a mute the
+  /// filter gave them is lifted).
+  Future<void> notSpam(ModEntry e) async {
+    final s = AppScope.read(context);
+    final b = s.backend;
+    final (user, _) = AntiSpam.splitDetail(e.detail);
+    try {
+      final fresh = await b.roomConfig(widget.roomId);
+      await b.setRoomConfig(widget.roomId, 'spam_ok', AntiSpam.withTrusted(fresh, user));
+      if (RoomRules.muteUntil(fresh, user) != null && s.pref('spam_muted:${widget.roomId}:$user', '') == '1') {
+        await b.setMemberLevel(widget.roomId, user, 0);
+        final m = RoomRules.withMute(fresh, user, null);
+        await b.setRoomConfig(widget.roomId, 'mutes', m.isEmpty ? null : m);
+        await s.setPref('spam_muted:${widget.roomId}:$user', '');
+      }
+      await s.logMod(widget.roomId, 'spam_ok', e.name, user);
+      await load();
+      if (mounted) showStoryToast(context, L.of(context).spamOkDone(e.name));
+    } catch (_) {
+      if (mounted) showStoryToast(context, L.of(context).saveFailed);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    final p = paletteOf(context);
+    final s = AppScope.of(context);
+    final on = AntiSpam.on(cfg);
+    final trusted = AntiSpam.trusted(cfg);
+    final removed = modLogOf(s.settings, widget.roomId).where((e) => e.kind == 'spam').toList();
+    return SettingsScaffold(
+      title: l.antiSpam,
+      children: [
+        HeaderCard(color: Palette.tileIndigo, icon: CupertinoIcons.shield_lefthalf_fill, title: l.antiSpam, body: l.antiSpamIntro),
+        group(context, footer: l.antiSpamInfo, [
+          IosTile(
+            title: Text(l.antiSpam),
+            trailing: IosSwitch(key: const Key('antispam-switch'), value: on, activeTrackColor: p.accent, onChanged: setOn),
+          ),
+        ]),
+        group(context, header: l.antiSpamChecks, [
+          for (final (icon, color, text) in [
+            (CupertinoIcons.textformat, Palette.tileRed, l.antiSpamCheckWords),
+            (CupertinoIcons.link, Palette.tileOrange, l.antiSpamCheckLinks),
+            (CupertinoIcons.doc_on_doc, Palette.tileTeal, l.antiSpamCheckRepeat),
+            (CupertinoIcons.at, Palette.tilePurple, l.antiSpamCheckMentions),
+            (CupertinoIcons.hand_raised_fill, Palette.tileGrey, l.antiSpamCheckStrikes),
+          ])
+            IosTile(leading: iconTile(color, icon), title: Text(text, maxLines: 3)),
+        ]),
+        group(context, header: l.antiSpamRemoved, footer: l.antiSpamRemovedInfo, [
+          if (removed.isEmpty)
+            IosTile(
+              title: Text(l.antiSpamNone, style: TextStyle(color: p.secondaryLabel)),
+            )
+          else
+            for (final (i, e) in removed.take(50).indexed)
+              IosTile(
+                key: Key('spam-row-$i'),
+                title: Text(e.name),
+                subtitle: Text(
+                  '${timeAgo(context, e.time)} · ${AntiSpam.splitDetail(e.detail).$2}',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Tokens.caption.style.copyWith(color: p.secondaryLabel),
+                ),
+                trailing: trusted.contains(AntiSpam.splitDetail(e.detail).$1)
+                    ? Text(l.spamOkMark, style: Tokens.caption.style.copyWith(color: p.secondaryLabel))
+                    : GestureDetector(
+                        key: Key('spam-ok-$i'),
+                        onTap: () => notSpam(e),
+                        child: Container(
+                          padding: EdgeInsets.symmetric(horizontal: Tokens.space[2], vertical: Tokens.space[0] + 2),
+                          decoration: BoxDecoration(color: p.accent.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(Tokens.capsule)),
+                          child: Text(l.spamOk, style: Tokens.caption.style.copyWith(color: p.accent)),
+                        ),
+                      ),
+              ),
+        ]),
+      ],
+    );
+  }
 }

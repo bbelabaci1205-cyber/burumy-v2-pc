@@ -296,7 +296,7 @@ class _VerifyPageState extends State<VerifyPage> {
                 children: [
                   Text(
                     l.verifyTitle,
-                    style: Tokens.body.style.copyWith(color: p.label, fontWeight: FontWeight.w600),
+                    style: Tokens.body.style.copyWith(color: p.label, fontWeight: Tokens.semi),
                   ),
                   if (!ended)
                     Positioned(

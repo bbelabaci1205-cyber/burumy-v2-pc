@@ -5,17 +5,44 @@
 // sit deeper in the page and win their own drags first.
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/physics.dart';
+
+import '../design/tokens.dart';
 
 class IosPageRoute<T> extends CupertinoPageRoute<T> {
-  IosPageRoute({required super.builder, super.settings, super.fullscreenDialog, super.maintainState, super.title});
+  IosPageRoute({required super.builder, super.settings, super.fullscreenDialog, super.maintainState, super.title, this.enterUp = false});
+
+  /// 다음 채널 (Telegram): this page comes up from below the first time it
+  /// opens, while the one before it leaves upward ([exitUp]). After that it
+  /// moves like any page (swipe back goes sideways).
+  final bool enterUp;
+
+  /// Set just before popping: this page leaves upward instead of sideways.
+  bool exitUp = false;
 
   AnimationController get _ctrl => controller!;
 
+  static const _upCurve = Curves.fastEaseInToSlowEaseOut;
+
   @override
   Widget buildTransitions(BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation, Widget child) {
-    final t = super.buildTransitions(context, animation, secondaryAnimation, child);
-    if (fullscreenDialog) return t;
-    return _SwipeBack(route: this, child: t);
+    if (fullscreenDialog) return super.buildTransitions(context, animation, secondaryAnimation, child);
+    // The same widgets every frame (only the numbers change), so the page
+    // keeps its state when the up move ends.
+    bool goingUp() => enterUp && animation.status == AnimationStatus.forward && !navigator!.userGestureInProgress;
+    bool leavingUp() => exitUp && animation.status == AnimationStatus.reverse;
+    final t = super.buildTransitions(context, goingUp() || leavingUp() ? kAlwaysCompleteAnimation : animation, secondaryAnimation, child);
+    return AnimatedBuilder(
+      animation: animation,
+      child: _SwipeBack(route: this, child: t),
+      builder: (context, c) {
+        final h = MediaQuery.sizeOf(context).height;
+        var dy = 0.0;
+        if (goingUp()) dy = (1 - _upCurve.transform(animation.value)) * h;
+        if (leavingUp()) dy = -_upCurve.transform(1 - animation.value) * h;
+        return Transform.translate(offset: Offset(0, dy), child: c);
+      },
+    );
   }
 }
 
@@ -72,25 +99,32 @@ class _SwipeBackState extends State<_SwipeBack> {
     widget.route._ctrl.value -= (d.primaryDelta ?? 0) / w;
   }
 
+  /// Telegram / iOS 26 rule: where the page would be [Tokens.backProject]
+  /// seconds after letting go decides; it closes past [Tokens.backFinish] pt
+  /// or half the width (whichever is less). Then a spring (damping 0.85,
+  /// about 0.3 s) carries it on at the finger's speed, without overshoot.
   void _end(DragEndDetails d) {
     if (!active) return;
     active = false;
     final c = widget.route._ctrl;
     final nav = widget.route.navigator!;
     final w = context.size?.width ?? 1;
-    final v = (d.primaryVelocity ?? 0) / w; // screen widths per second
-    final stay = v.abs() >= 1 ? v <= 0 : c.value > 0.5;
-    const curve = Curves.fastEaseInToSlowEaseOut;
-    const time = Duration(milliseconds: 350);
-    if (stay) {
-      c.animateTo(1, duration: time, curve: curve);
-    } else {
+    final v = (d.primaryVelocity ?? 0) / w; // widths per second, + = closing
+    final shown = 1 - c.value; // how far the page has been pulled aside
+    final projected = shown + v * Tokens.backProject;
+    final close = projected > (Tokens.backFinish / w).clamp(0.0, 0.5);
+    final omega = 2 * 3.141592653589793 / Tokens.backResponse;
+    final spring = SpringDescription.withDampingRatio(mass: 1, stiffness: omega * omega, ratio: Tokens.backDamping);
+    if (close) {
       nav.pop();
-      if (c.isAnimating) c.animateBack(0, duration: time, curve: curve);
+      c.animateBackWith(SpringSimulation(spring, c.value, 0, -v, tolerance: const Tolerance(distance: 0.001, velocity: 0.01)));
+    } else {
+      c.animateWith(SpringSimulation(spring, c.value, 1, -v, tolerance: const Tolerance(distance: 0.001, velocity: 0.01)));
     }
     if (c.isAnimating) {
       late AnimationStatusListener done;
-      done = (_) {
+      done = (st) {
+        if (st == AnimationStatus.forward || st == AnimationStatus.reverse) return;
         nav.didStopUserGesture();
         c.removeStatusListener(done);
       };

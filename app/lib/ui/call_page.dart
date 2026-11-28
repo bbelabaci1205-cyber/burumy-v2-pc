@@ -13,8 +13,11 @@ import '../core/call_session.dart';
 import '../core/sounds.dart';
 import '../design/tokens.dart';
 import '../l10n/app_localizations.dart';
+import 'call_note.dart';
+import 'glass.dart';
 import 'common.dart';
 import 'ios_route.dart';
+import 'video_note.dart';
 
 const _white = Color(0xFFFFFFFF);
 const _shade = Color(0x2EFFFFFF);
@@ -37,9 +40,16 @@ class _CallPageState extends State<CallPage> {
   CallSession get s => widget.session;
   Timer? closing;
 
+  /// 화면 잠금 during a video call.
+  bool locked = false;
+
+  /// I started this call (only then can I leave a message).
+  late final mine = s.phase == CallPhase.calling;
+
   @override
   void initState() {
     super.initState();
+    mine;
     s.addListener(changed);
     CallSession.waiting.addListener(waitingChanged);
     tone();
@@ -81,6 +91,13 @@ class _CallPageState extends State<CallPage> {
     if (!mounted) return;
     tone();
     setState(() {});
+    // Nobody answered my call: the screen stays with 남기기 / 다시 걸기.
+    if (leaveNote) return;
+    if (s.endedBy == CallEnd.ignored) {
+      closing ??= const _Never();
+      Navigator.of(context).maybePop();
+      return;
+    }
     if (s.phase == CallPhase.ended && closing == null) {
       closing = Timer(const Duration(milliseconds: 1500), () {
         if (!mounted) return;
@@ -105,6 +122,24 @@ class _CallPageState extends State<CallPage> {
     s.dispose();
     super.dispose();
   }
+
+  /// My call wasn't answered (no answer, declined or busy): offer to
+  /// leave a voice or video message, or call again (iPhone FaceTime style).
+  bool get leaveNote =>
+      mine && s.phase == CallPhase.ended && const [CallEnd.noAnswer, CallEnd.declined, CallEnd.busy].contains(s.endedBy) && CallSession.waiting.value == null;
+
+  Future<void> leave({required bool video}) async {
+    final nav = Navigator.of(context);
+    final sent = await nav.push<bool>(
+      IosPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => video ? VideoNotePage(roomId: s.roomId) : VoiceNotePage(roomId: s.roomId, title: s.title),
+      ),
+    );
+    if (sent == true && mounted) nav.maybePop();
+  }
+
+  void callAgain() => openInstead(CallSession.outgoing(s.backend, s.roomId, s.title, video: s.video));
 
   String status(L l) {
     switch (s.phase) {
@@ -177,14 +212,54 @@ class _CallPageState extends State<CallPage> {
                     Text(l.callE2ee, style: Tokens.caption.style.copyWith(color: _white.withValues(alpha: 0.6))),
                   ],
                 ),
+                if (s.phase == CallPhase.incoming) CallerInfo(roomId: s.roomId),
                 const Spacer(),
                 Padding(
                   padding: EdgeInsets.fromLTRB(Tokens.space[3], 0, Tokens.space[3], Tokens.space[4]),
-                  child: s.phase == CallPhase.incoming ? answerRow(l) : controls(l),
+                  child: s.phase == CallPhase.incoming ? answerRow(l) : (leaveNote ? noteRow(l) : (locked ? const SizedBox(height: 180) : controls(l))),
                 ),
               ],
             ),
           ),
+          // 화면 잠금 (video calls): the button top left; while locked every
+          // touch is caught except a long hold, so a cheek or a child's
+          // hand can't end the call or turn the camera off.
+          if (showVideo && !locked)
+            Positioned(
+              top: MediaQuery.paddingOf(context).top + Tokens.space[2],
+              left: Tokens.space[2],
+              child: GlassCircle(
+                key: const Key('call-lock'),
+                onTap: () => setState(() => locked = true),
+                child: Icon(CupertinoIcons.lock_fill, color: _white, size: 20, semanticLabel: l.callLock),
+              ),
+            ),
+          if (locked && s.phase != CallPhase.ended)
+            Positioned.fill(
+              child: GestureDetector(
+                key: const Key('call-locked'),
+                behavior: HitTestBehavior.opaque,
+                onLongPress: () => setState(() => locked = false),
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom + Tokens.space[5]),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: Tokens.space[3], vertical: Tokens.space[2]),
+                      decoration: BoxDecoration(color: const Color(0x99000000), borderRadius: BorderRadius.circular(Tokens.capsule)),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(CupertinoIcons.lock_fill, color: _white, size: 16),
+                          SizedBox(width: Tokens.space[1]),
+                          Text(l.callLocked, style: Tokens.body.style.copyWith(color: _white)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           if (showVideo && s.camera)
             Positioned(
               top: MediaQuery.paddingOf(context).top + Tokens.space[2],
@@ -209,6 +284,8 @@ class _CallPageState extends State<CallPage> {
     mainAxisAlignment: MainAxisAlignment.spaceAround,
     children: [
       RoundCallButton(key: const Key('call-decline'), icon: CupertinoIcons.phone_down_fill, label: l.callDecline, color: Palette.tileRed, onTap: s.decline),
+      // 무시: quiet on my side, the caller keeps hearing it ring.
+      RoundCallButton(key: const Key('call-ignore'), icon: CupertinoIcons.bell_slash_fill, label: l.callIgnore, onTap: s.ignore),
       RoundCallButton(
         key: const Key('call-accept'),
         icon: s.video ? CupertinoIcons.video_camera_solid : CupertinoIcons.phone_fill,
@@ -216,6 +293,34 @@ class _CallPageState extends State<CallPage> {
         color: paletteOf(context).tileGreen,
         onTap: s.accept,
       ),
+    ],
+  );
+
+  Widget noteRow(L l) => Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Text(
+        l.callNoteAsk,
+        textAlign: TextAlign.center,
+        style: Tokens.body.style.copyWith(color: _white.withValues(alpha: 0.75)),
+      ),
+      SizedBox(height: Tokens.space[3]),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          RoundCallButton(key: const Key('call-note-voice'), icon: CupertinoIcons.mic_fill, label: l.callNoteVoice, onTap: () => leave(video: false)),
+          RoundCallButton(key: const Key('call-note-video'), icon: CupertinoIcons.video_camera_solid, label: l.callNoteVideo, onTap: () => leave(video: true)),
+          RoundCallButton(
+            key: const Key('call-again'),
+            icon: s.video ? CupertinoIcons.video_camera_solid : CupertinoIcons.phone_fill,
+            label: l.callBack,
+            color: paletteOf(context).tileGreen,
+            onTap: callAgain,
+          ),
+        ],
+      ),
+      SizedBox(height: Tokens.space[4]),
+      RoundCallButton(key: const Key('call-note-close'), icon: CupertinoIcons.xmark, label: l.close, onTap: () => Navigator.of(context).maybePop()),
     ],
   );
 
@@ -480,6 +585,87 @@ class WaitingBanner extends StatelessWidget {
             children: [circle(const Key('waiting-answer'), CupertinoIcons.phone_fill, paletteOf(context).tileGreen, onAnswer)],
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// 모르는 사람 전화: when someone not in my contacts calls, the ringing
+/// screen says so, with how many groups we share (WhatsApp 2025 shows the
+/// same before you answer). Worked out on this phone from my own lists.
+class CallerInfo extends StatefulWidget {
+  const CallerInfo({super.key, required this.roomId});
+  final String roomId;
+
+  @override
+  State<CallerInfo> createState() => _CallerInfoState();
+}
+
+class _CallerInfoState extends State<CallerInfo> {
+  /// null = still looking, or a contact (nothing shown).
+  int? sharedGroups;
+  String peer = '';
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(look());
+  }
+
+  Future<void> look() async {
+    final st = AppScope.read(context);
+    final chat = st.chats.where((c) => c.roomId == widget.roomId).firstOrNull;
+    if (chat == null || !chat.isDirect || chat.peer.isEmpty) return;
+    final who = chat.peer;
+    try {
+      final contacts = await st.backend.contacts();
+      if (contacts.any((x) => x.userId == who)) return;
+    } catch (_) {
+      return;
+    }
+    var n = 0;
+    for (final c in st.chats.where((c) => !c.isDirect && !c.isChannel)) {
+      try {
+        if ((await st.backend.members(c.roomId)).any((x) => x.userId == who)) n++;
+      } catch (_) {}
+    }
+    if (mounted) {
+      setState(() {
+        sharedGroups = n;
+        peer = who;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final n = sharedGroups;
+    if (n == null) return const SizedBox.shrink();
+    final l = L.of(context);
+    return Padding(
+      key: const Key('caller-unknown'),
+      padding: EdgeInsets.only(top: Tokens.space[3]),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: Tokens.space[3], vertical: Tokens.space[2]),
+        decoration: BoxDecoration(color: _white.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(Tokens.radius[2])),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(CupertinoIcons.person_crop_circle_badge_exclam, color: _white, size: 18),
+                SizedBox(width: Tokens.space[1]),
+                Text(l.callUnknown, style: Tokens.body.style.copyWith(color: _white)),
+              ],
+            ),
+            const SizedBox(height: 2),
+            Text(
+              '${displayId(peer)} · ${n == 0 ? l.callNoCommon : l.callCommonGroups(n)}',
+              style: Tokens.caption.style.copyWith(color: _white.withValues(alpha: 0.75)),
+            ),
+          ],
+        ),
       ),
     );
   }

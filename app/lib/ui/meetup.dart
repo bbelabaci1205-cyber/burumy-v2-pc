@@ -1,16 +1,22 @@
 // SPDX-License-Identifier: LicenseRef-Burumy-Proprietary
 // Plans ("일정") and contact cards: the maker's screens and the bubbles.
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:intl/intl.dart';
 
 import '../core/app_state.dart';
 import '../core/backend.dart';
+import '../core/calendar_event.dart';
+import '../core/my_plans.dart';
 import '../design/tokens.dart';
 import '../l10n/app_localizations.dart';
 import 'chat_page.dart' show openChat;
 import 'common.dart';
 import 'ios.dart';
 import 'glass.dart';
+import 'stories.dart' show showStoryToast;
 
 class CreateMeetupPage extends StatefulWidget {
   const CreateMeetupPage({super.key, required this.roomId});
@@ -20,6 +26,8 @@ class CreateMeetupPage extends StatefulWidget {
   State<CreateMeetupPage> createState() => _CreateMeetupPageState();
 }
 
+/// "When" like the iPhone Calendar's new event: 시작 and 종료 rows that
+/// open a wheel right under them (one at a time).
 class _CreateMeetupPageState extends State<CreateMeetupPage> {
   final title = TextEditingController();
   final place = TextEditingController();
@@ -27,6 +35,11 @@ class _CreateMeetupPageState extends State<CreateMeetupPage> {
     final n = DateTime.now().add(const Duration(days: 1));
     return DateTime(n.year, n.month, n.day, 19);
   }();
+  DateTime? until;
+  bool hasEnd = false;
+
+  /// Which wheel is open: "start", "end" or null.
+  String? open = 'start';
   bool busy = false;
 
   bool get ready => title.text.trim().isNotEmpty && !busy;
@@ -41,19 +54,114 @@ class _CreateMeetupPageState extends State<CreateMeetupPage> {
   Future<void> create() async {
     if (!ready) return;
     setState(() => busy = true);
+    final s = AppScope.of(context);
+    final l = L.of(context);
     try {
-      await AppScope.of(context).backend.createMeetup(widget.roomId, title.text.trim(), when, place.text.trim());
+      final end = hasEnd ? until : null;
+      final id = await s.backend.createMeetup(widget.roomId, title.text.trim(), when, place.text.trim(), endsAt: end);
+      // My own plan goes into 내 일정 right away (with its reminder).
+      final plan = MeetupInfo(title: title.text.trim(), startsAt: when, endsAt: end, place: place.text.trim().isEmpty ? null : place.text.trim());
+      await MyPlans.update(s, roomId: widget.roomId, id: id, plan: plan, answer: 'mine', reminderTitle: l.meetupReminderTitle(plan.title));
       if (mounted) Navigator.pop(context, true);
     } finally {
       if (mounted) setState(() => busy = false);
     }
   }
 
+  void setStart(DateTime d) => setState(() {
+    final length = (until ?? when.add(const Duration(hours: 2))).difference(when);
+    when = d;
+    // Like Calendar: moving the start keeps the same length.
+    if (until != null) until = d.add(length.isNegative ? const Duration(hours: 1) : length);
+  });
+
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
     final p = paletteOf(context);
+    final s = AppScope.of(context);
+    final lang = Localizations.localeOf(context).languageCode;
     final field = Tokens.body.style.copyWith(color: p.label);
+    final end = until ?? when.add(const Duration(hours: 2));
+    // iOS Calendar: the label, then a date pill and a time pill.
+    Widget dateRow(String id, String label, DateTime d, {bool bad = false}) {
+      final on = open == id;
+      Widget pill(String text) => Container(
+        margin: const EdgeInsets.only(left: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(color: p.searchFill, borderRadius: BorderRadius.circular(Tokens.radius[1])),
+        child: Text(
+          text,
+          maxLines: 1,
+          style: Tokens.body.style.copyWith(
+            color: on ? p.accent : (bad ? Palette.tileRed : p.label),
+            decoration: bad ? TextDecoration.lineThrough : null,
+            decorationColor: Palette.tileRed,
+          ),
+        ),
+      );
+      return GestureDetector(
+        key: Key('meetup-$id-row'),
+        behavior: HitTestBehavior.opaque,
+        onTap: () => setState(() => open = on ? null : id),
+        child: Padding(
+          padding: const EdgeInsetsDirectional.only(start: 20, end: 12),
+          child: Row(
+            children: [
+              Text(label, maxLines: 1, style: Tokens.body.style.copyWith(color: p.label)),
+              SizedBox(width: Tokens.space[2]),
+              // Long dates (English, big text) shrink instead of spilling.
+              Expanded(
+                child: Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Row(mainAxisSize: MainAxisSize.min, children: [pill(DateFormat.MMMEd(lang).format(d)), pill(DateFormat.jm(lang).format(d))]),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    Widget wheel(String id, DateTime d, ValueChanged<DateTime> changed, DateTime min) => AnimatedSize(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      child: open != id
+          ? const SizedBox(width: double.infinity)
+          : SizedBox(
+              height: 216,
+              child: CupertinoDatePicker(
+                key: Key('meetup-$id-wheel'),
+                initialDateTime: d.isBefore(min) ? min : d,
+                minimumDate: min,
+                minuteInterval: 5,
+                use24hFormat: false,
+                onDateTimeChanged: changed,
+              ),
+            ),
+    );
+
+    final rows = <Widget>[
+      dateRow('start', l.meetupStarts, when),
+      if (open == 'start') wheel('start', when, setStart, _roundDown(DateTime.now())),
+      IosTile(
+        title: Text(l.meetupEndToggle),
+        trailing: IosSwitch(
+          key: const Key('meetup-end-switch'),
+          value: hasEnd,
+          onChanged: (v) => setState(() {
+            hasEnd = v;
+            until ??= when.add(const Duration(hours: 2));
+            open = v ? 'end' : (open == 'end' ? null : open);
+          }),
+        ),
+      ),
+      if (hasEnd) dateRow('end', l.meetupEnds, end, bad: !end.isAfter(when)),
+      if (hasEnd && open == 'end') wheel('end', end, (d) => setState(() => until = d), when.add(const Duration(minutes: 5))),
+    ];
     return CupertinoPageScaffold(
       backgroundColor: p.background,
       navigationBar: GlassTopBar.nav(
@@ -95,33 +203,42 @@ class _CreateMeetupPageState extends State<CreateMeetupPage> {
                 ),
               ],
             ),
+            IosSection(hasLeading: false, header: sectionHeader(context, l.meetupWhen), children: rows),
             IosSection(
               hasLeading: false,
-              header: sectionHeader(context, l.meetupWhen),
-              footer: sectionFooter(context, l.meetupInfo),
+              footer: sectionFooter(context, '${l.meetupRemindInfo}\n${l.meetupInfo}'),
               children: [
-                SizedBox(
-                  height: 200,
-                  child: CupertinoDatePicker(
-                    key: const Key('meetup-when'),
-                    initialDateTime: when,
-                    minimumDate: DateTime.now().subtract(const Duration(minutes: 1)),
-                    minuteInterval: 5,
-                    use24hFormat: false,
-                    onDateTimeChanged: (d) => when = d,
+                IosTile(
+                  title: Text(l.meetupRemind),
+                  trailing: IosSwitch(
+                    key: const Key('meetup-remind'),
+                    value: MyPlans.reminds(s),
+                    onChanged: (v) => MyPlans.setReminds(s, v, l.meetupReminderTitle).then((_) => mounted ? setState(() {}) : null),
                   ),
                 ),
               ],
             ),
+            SizedBox(height: Tokens.space[5]),
           ],
         ),
       ),
     );
   }
+
+  static DateTime _roundDown(DateTime d) => DateTime(d.year, d.month, d.day, d.hour, d.minute - d.minute % 5);
 }
 
-/// A plan in the chat: a calendar tile, time and place, and three answers.
-class MeetupBubble extends StatelessWidget {
+/// "11월 29일 (토) 오후 2:00 – 4:00" (the end's date only when it differs).
+String meetupTimeText(String lang, DateTime start, DateTime? end) {
+  final full = DateFormat.MMMEd(lang).add_jm();
+  if (end == null) return full.format(start);
+  final sameDay = end.year == start.year && end.month == start.month && end.day == start.day;
+  return '${full.format(start)} – ${sameDay ? DateFormat.jm(lang).format(end) : full.format(end)}';
+}
+
+/// A plan in the chat: a calendar tile, time and place, three answers,
+/// how many I bring, and 캘린더에 추가.
+class MeetupBubble extends StatefulWidget {
   const MeetupBubble({super.key, required this.roomId, required this.msg, required this.fg, required this.meta, required this.onChanged, this.showWho = false});
   final String roomId;
   final Msg msg;
@@ -131,26 +248,73 @@ class MeetupBubble extends StatelessWidget {
   final bool showWho;
 
   @override
+  State<MeetupBubble> createState() => _MeetupBubbleState();
+}
+
+class _MeetupBubbleState extends State<MeetupBubble> {
+  bool sending = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // The maker cancelled it: off 내 일정, no reminder.
+    final m = widget.msg.meetup!;
+    final s = AppScope.of(context);
+    if (m.cancelled && MyPlans.find(s, widget.msg.id) != null) unawaited(MyPlans.drop(s, widget.msg.id));
+  }
+
+  Future<void> send(String answer, int guests) async {
+    if (sending) return;
+    final s = AppScope.of(context);
+    final l = L.of(context);
+    final m = widget.msg.meetup!;
+    setState(() => sending = true);
+    try {
+      await s.backend.answerMeetup(widget.roomId, widget.msg.id, MeetupInfo.answerWith(answer, guests));
+      await MyPlans.update(
+        s,
+        roomId: widget.roomId,
+        id: widget.msg.id,
+        plan: m,
+        answer: answer.isEmpty && widget.msg.mine ? 'mine' : answer,
+        guests: guests,
+        reminderTitle: l.meetupReminderTitle(m.title),
+      );
+      await widget.onChanged();
+    } finally {
+      if (mounted) setState(() => sending = false);
+    }
+  }
+
+  Future<void> toCalendar() async {
+    final m = widget.msg.meetup!;
+    final l = L.of(context);
+    final ok = await CalendarEvent(title: m.title, start: m.startsAt, end: m.endsAt, place: m.place, id: widget.msg.id).add();
+    if (ok && kIsWeb && mounted) showStoryToast(context, l.meetupCalendarFile);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l = L.of(context);
     final p = paletteOf(context);
     final s = AppScope.of(context);
+    final msg = widget.msg;
+    final fg = widget.fg;
     final m = msg.meetup!;
     final lang = Localizations.localeOf(context).languageCode;
-    final past = m.startsAt.isBefore(DateTime.now());
+    final now = DateTime.now();
+    final past = (m.endsAt ?? m.startsAt).isBefore(now);
     final closed = m.cancelled || past;
-    final mineAnswer = m.answerOf(s.backend.userId);
-    Future<void> answer(String a) async {
-      await s.backend.answerMeetup(roomId, msg.id, mineAnswer == a ? '' : a);
-      await onChanged();
-    }
+    final me = s.backend.userId;
+    final mineAnswer = m.answerOf(me);
+    final bring = m.guestsOf(me);
 
     Widget choice(String id, String label, int n) {
       final on = mineAnswer == id;
       return Expanded(
         child: GestureDetector(
           key: Key('meetup-$id'),
-          onTap: closed ? null : () => answer(id),
+          onTap: closed ? null : () => send(on ? '' : id, 0),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 160),
             height: 34,
@@ -167,6 +331,22 @@ class MeetupBubble extends StatelessWidget {
       );
     }
 
+    Widget round(String key, IconData icon, VoidCallback? tap) => GestureDetector(
+      key: Key(key),
+      onTap: tap,
+      child: Container(
+        width: 28,
+        height: 28,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: fg.withValues(alpha: tap == null ? 0.06 : 0.14),
+        ),
+        child: Icon(icon, size: 16, color: fg.withValues(alpha: tap == null ? 0.35 : 1)),
+      ),
+    );
+
+    final small = Tokens.caption.style.copyWith(color: fg.withValues(alpha: 0.8));
     return ConstrainedBox(
       constraints: const BoxConstraints(minWidth: 250),
       child: Column(
@@ -177,7 +357,7 @@ class MeetupBubble extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // iOS Calendar-style tile: small red month, big day.
+              // iOS Calendar-style tile: small red weekday, big day.
               Container(
                 width: 46,
                 height: 50,
@@ -199,19 +379,13 @@ class MeetupBubble extends StatelessWidget {
                       m.title,
                       style: Tokens.body.style.copyWith(
                         color: fg,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: Tokens.semi,
                         decoration: m.cancelled ? TextDecoration.lineThrough : null,
                         decorationColor: fg,
                       ),
                     ),
-                    Text(DateFormat.MMMEd(lang).add_jm().format(m.startsAt), style: Tokens.caption.style.copyWith(color: fg.withValues(alpha: 0.8))),
-                    if (m.place != null)
-                      Text(
-                        '📍 ${m.place}',
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: Tokens.caption.style.copyWith(color: fg.withValues(alpha: 0.8)),
-                      ),
+                    Text(meetupTimeText(lang, m.startsAt, m.endsAt), key: const Key('meetup-time'), style: small),
+                    if (m.place != null) Text('📍 ${m.place}', maxLines: 2, overflow: TextOverflow.ellipsis, style: small),
                   ],
                 ),
               ),
@@ -226,35 +400,76 @@ class MeetupBubble extends StatelessWidget {
             )
           else ...[
             if (past) Text(l.meetupPast, style: Tokens.caption.style.copyWith(color: fg.withValues(alpha: 0.7))),
-            Row(children: [choice('yes', l.meetupYes, m.yes.length), choice('maybe', l.meetupMaybe, m.maybe.length), choice('no', l.meetupNo, m.no.length)]),
-            if (showWho && m.yes.isNotEmpty)
+            Row(children: [choice('yes', l.meetupYes, m.coming), choice('maybe', l.meetupMaybe, m.maybe.length), choice('no', l.meetupNo, m.no.length)]),
+            // 같이 오는 사람: only once I said I'm going.
+            AnimatedSize(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOutCubic,
+              child: mineAnswer != 'yes' || closed
+                  ? const SizedBox(width: double.infinity)
+                  : Padding(
+                      padding: const EdgeInsets.only(top: 6, left: 4, right: 2),
+                      child: Row(
+                        children: [
+                          Expanded(child: Text(l.meetupBring, style: small)),
+                          round('meetup-guest-minus', CupertinoIcons.minus, bring > 0 && !sending ? () => send('yes', bring - 1) : null),
+                          SizedBox(
+                            width: 34,
+                            child: Text(
+                              '+$bring',
+                              key: const Key('meetup-guests'),
+                              textAlign: TextAlign.center,
+                              style: Tokens.body.style.copyWith(color: fg, fontFeatures: const [FontFeature.tabularFigures()]),
+                            ),
+                          ),
+                          round('meetup-guest-plus', CupertinoIcons.plus, bring < MeetupInfo.maxGuests && !sending ? () => send('yes', bring + 1) : null),
+                        ],
+                      ),
+                    ),
+            ),
+            if (widget.showWho && m.yes.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
-                  '${l.meetupYes}: ${m.yes.map(displayId).join(', ')}',
+                  '${l.meetupYes}: ${m.yes.map((u) => (m.guests[u] ?? 0) > 0 ? l.meetupWithGuests(displayId(u), m.guests[u]!) : displayId(u)).join(', ')}',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: Tokens.caption.style.copyWith(color: fg.withValues(alpha: 0.7)),
                 ),
               ),
           ],
-          Row(
-            children: [
-              if (msg.mine && !closed)
-                GestureDetector(
-                  key: const Key('meetup-cancel'),
-                  onTap: () async {
-                    await s.backend.cancelMeetup(roomId, msg.id);
-                    await onChanged();
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 6),
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Row(
+              children: [
+                if (!closed)
+                  GestureDetector(
+                    key: const Key('meetup-calendar'),
+                    onTap: toCalendar,
+                    child: Row(
+                      children: [
+                        Icon(CupertinoIcons.calendar_badge_plus, size: 15, color: fg.withValues(alpha: 0.85)),
+                        const SizedBox(width: 3),
+                        Text(l.meetupAddCalendar, style: Tokens.caption.style.copyWith(color: fg.withValues(alpha: 0.85))),
+                      ],
+                    ),
+                  ),
+                if (msg.mine && !closed) ...[
+                  SizedBox(width: Tokens.space[3]),
+                  GestureDetector(
+                    key: const Key('meetup-cancel'),
+                    onTap: () async {
+                      await s.backend.cancelMeetup(widget.roomId, msg.id);
+                      await MyPlans.drop(s, msg.id);
+                      await widget.onChanged();
+                    },
                     child: Text(l.meetupCancel, style: Tokens.caption.style.copyWith(color: fg.withValues(alpha: 0.75))),
                   ),
-                ),
-              const Spacer(),
-              meta,
-            ],
+                ],
+                const Spacer(),
+                widget.meta,
+              ],
+            ),
           ),
         ],
       ),
@@ -357,7 +572,7 @@ class ContactBubble extends StatelessWidget {
                       name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Tokens.body.style.copyWith(color: fg, fontWeight: FontWeight.w600),
+                      style: Tokens.body.style.copyWith(color: fg, fontWeight: Tokens.semi),
                     ),
                     Text(displayId(uid), style: Tokens.caption.style.copyWith(color: fg.withValues(alpha: 0.75))),
                   ],

@@ -1,24 +1,35 @@
 // SPDX-License-Identifier: LicenseRef-Burumy-Proprietary
 // Settings tab (iPhone Settings look, Telegram layout): big profile at the
 // top, then cards that open the sub-pages in settings_pages.dart.
+import 'feedback_page.dart';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 
+import '../core/features.dart';
+import '../ui/emoji_status.dart' show StatusMark, openEmojiStatus;
 import '../brand/brand.dart';
 import '../core/app_state.dart';
 import '../design/tokens.dart';
 import '../l10n/app_localizations.dart';
+import 'accounts_ui.dart';
 import 'chat_page.dart';
 import 'common.dart';
+import 'trust_ui.dart';
 import 'ios.dart';
 import 'glass.dart';
 import 'profile_page.dart';
+import 'my_profile_page.dart' show MyProfileViewPage;
 import 'recovery_page.dart';
+import 'chat_links.dart' show chatLinksRow;
+import '../core/share_in.dart';
 import 'settings_kit.dart';
+import 'look_pages.dart' show powerLabel;
 import 'settings_more.dart';
 import 'settings_notify.dart';
 import 'settings_pages.dart';
 import 'folders_page.dart';
+import 'my_plans_page.dart';
 import 'ios_route.dart';
 import 'wide.dart';
 
@@ -125,18 +136,35 @@ class _SettingsPageState extends State<SettingsPage> {
         children: [
           GestureDetector(
             key: const Key('my-profile'),
-            onTap: editProfile,
+            // 내 프로필 (tip 445): first how others see me; 편집 stays top right.
+            onTap: Features.profile
+                ? () async {
+                    await Navigator.of(context).push(IosPageRoute(builder: (_) => const MyProfileViewPage()));
+                    await load();
+                  }
+                : editProfile,
             behavior: HitTestBehavior.opaque,
             child: Column(
               children: [
                 PhotoAvatar(name: name ?? '', bytes: photo, size: 94),
                 const SizedBox(height: 10),
-                Text(
-                  name ?? '',
-                  key: const Key('my-name'),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Tokens.screenTitle.style.copyWith(color: p.label),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        name ?? '',
+                        key: const Key('my-name'),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Tokens.screenTitle.style.copyWith(color: p.label),
+                      ),
+                    ),
+                    TrustMark(user: s.backend.userId ?? '', name: name ?? '', size: 22),
+                    // 이모지 상태 (tip 359): tap to set or change mine.
+                    if (Features.emojiStickers)
+                      StatusMark(key: const Key('my-status'), user: s.backend.userId ?? '', size: 22, onTap: () => openEmojiStatus(context)),
+                  ],
                 ),
                 const SizedBox(height: 2),
                 Text(displayId(s.backend.userId ?? ''), style: Tokens.body.style.copyWith(color: p.secondaryLabel)),
@@ -144,8 +172,24 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ),
           SizedBox(height: Tokens.space[2]),
+          // Other accounts on this phone + "계정 추가" (Telegram iOS).
+          const AccountsSection(),
           const SecurityCheckCard(),
-          group(context, [row('saved-row', p.tileGreen, CupertinoIcons.bookmark_fill, l.savedMessages, onTap: openSaved)]),
+          group(context, [
+            row('saved-row', p.tileGreen, CupertinoIcons.bookmark_fill, l.savedMessages, onTap: openSaved),
+            // 내 일정: plans from every chat, kept on this phone.
+            row('plans-row', Palette.tileRed, CupertinoIcons.calendar, l.myPlans, page: (_) => const MyPlansPage()),
+            // 대화 링크 (tip 438): links that open a chat with me, words ready.
+            if (Features.shareLinks) chatLinksRow(context),
+            // Look-only demo: what another app's share sheet would open.
+            if (Features.shareLinks && ShareInbox.demo != null)
+              IosTile(
+                key: const Key('share-in-demo'),
+                leading: iconTile(Palette.tileTeal, CupertinoIcons.square_arrow_down),
+                title: Text(l.shareInDemo),
+                onTap: () => ShareInbox.waiting.value = [...ShareInbox.demo!],
+              ),
+          ]),
           group(context, [
             row(
               'backup-row',
@@ -156,7 +200,11 @@ class _SettingsPageState extends State<SettingsPage> {
               onTap: () => showBackupSheet(context),
             ),
           ]),
-          group(context, [row('account-row', Palette.tileGrey, CupertinoIcons.person_crop_circle_fill, l.accountManage, page: (_) => const AccountPage())]),
+          group(context, [
+            row('account-row', Palette.tileGrey, CupertinoIcons.person_crop_circle_fill, l.accountManage, page: (_) => const AccountPage()),
+            // 사칭 막기: public figures, companies and big channels apply here.
+            row('badge-row', Palette.tileBlue, CupertinoIcons.checkmark_seal_fill, l.badgeRow, page: (_) => const BadgeApplyPage()),
+          ]),
           // Rulebook D-5 / 10-1: colours by meaning, never the same colour on
           // neighbouring rows of one card.
           group(context, [
@@ -166,7 +214,7 @@ class _SettingsPageState extends State<SettingsPage> {
               Palette.tileOrange,
               CupertinoIcons.battery_25,
               l.powerSaving,
-              value: powerOptions(l).where((o) => o.$1 == s.pref('power_below', '15')).firstOrNull?.$2,
+              value: powerLabel(l, s.powerBelow),
               page: (_) => const PowerSavingPage(),
             ),
             row(
@@ -191,6 +239,7 @@ class _SettingsPageState extends State<SettingsPage> {
           group(context, [
             row('faq-row', Palette.tileTeal, CupertinoIcons.question_circle_fill, l.faq, page: (_) => const FaqPage()),
             row('tour-row', Palette.tileYellow, CupertinoIcons.lightbulb_fill, l.featureTour, page: (_) => const FeatureTourPage()),
+            if (Features.tipsD1) row('feedback-row', Palette.tilePurple, CupertinoIcons.ant_fill, l.feedbackTitle, page: (_) => const FeedbackPage()),
             row('about-row', Palette.tileGrey, CupertinoIcons.info_circle_fill, l.aboutApp, page: (_) => const AboutPage()),
           ]),
           group(context, [

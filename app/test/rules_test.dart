@@ -45,8 +45,48 @@ void main() {
           path.contains('/src/rust/') ||
           path.endsWith('brand/brand.dart') ||
           path.endsWith('demo/sample.dart') ||
+          path.endsWith('demo/more_sample.dart') ||
+          path.endsWith('demo/live_sample.dart') ||
+          path.endsWith('demo/video_sample.dart') ||
+          path.endsWith('demo/photo_sample.dart') ||
+          path.endsWith('demo/fun_sample.dart') ||
+          path.endsWith('demo/rival_sample.dart') ||
+          path.endsWith('demo/translate_sample.dart') ||
+          path.endsWith('demo/share_sample.dart') ||
           // Date words the plan finder looks for, not screen text.
-          path.endsWith('core/plan_pick.dart'))
+          path.endsWith('core/plan_pick.dart') ||
+          // Sticker search words (what people type), not screen text.
+          path.endsWith('stickers/sticker_words.dart') ||
+          // Emoji search words (what people type), not screen text.
+          path.endsWith('core/emoji_words.dart') ||
+          // Look-alike rules (Korean letters, '공식' words) and demo names.
+          path.endsWith('core/trust.dart') ||
+          path.endsWith('demo/trust_sample.dart') ||
+          path.endsWith('demo/guard_sample.dart') ||
+          path.endsWith('demo/gate_sample.dart') ||
+          path.endsWith('demo/tips_d1_sample.dart') ||
+          path.endsWith('demo/reply_sample.dart') ||
+          // Demo samples: made-up chats shown only in the web preview.
+          (path.contains('/demo/') && path.endsWith('_sample.dart')) ||
+          // 인증 코드 찾기: the Korean words that mark a code message.
+          path.endsWith('core/codes.dart') ||
+          // 강력 스팸 차단: the Korean spam words the filter looks for.
+          path.endsWith('core/group_tools.dart') ||
+          // 날짜로 찾기: the Korean month word ("3월") typed in search.
+          path.endsWith('core/search.dart') ||
+          // Story weather: the city table keeps each city's Korean and English name.
+          path.endsWith('core/story_weather.dart') ||
+          // Message effects (tip 451): each effect's Korean name and the
+          // words that find it in the picker, beside the English ones.
+          path.endsWith('core/effects.dart') ||
+          // AI 편집기: words a style may not ask for, and the demo's fixed answers.
+          path.endsWith('core/ai_styles.dart') ||
+          path.endsWith('demo/demo_ai.dart') ||
+          path.endsWith('demo/community_sample.dart') ||
+          // 대화 가져오기: the words other apps write into their export files,
+          // and the demo's sample export.
+          path.endsWith('core/chat_import.dart') ||
+          path.endsWith('demo/import_sample.dart'))
         continue;
       final lines = f.readAsLinesSync();
       for (var i = 0; i < lines.length; i++) {

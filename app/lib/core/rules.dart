@@ -3,6 +3,7 @@
 // notifications to show. Settings live in my own account settings; nothing
 // here is sent anywhere.
 import 'backend.dart';
+import 'room_rules.dart';
 
 /// Who may do something to me ("everyone", "contacts" or "nobody"), with
 /// per-person exceptions kept as comma lists in `<key>_allow` / `<key>_deny`.
@@ -43,13 +44,19 @@ bool inFocus(Map<String, String> prefs, DateTime now) {
 }
 
 /// Whether a phone notification for [n] should be shown.
-bool noticeAllowed(Notice n, Map<String, String> prefs, ChatPreview? chat, DateTime now) {
+/// Groups can be set to notify only when I'm mentioned (@my name, @my ID,
+/// @모두) or replied to by name; pass [me]/[myName] for that check.
+bool noticeAllowed(Notice n, Map<String, String> prefs, ChatPreview? chat, DateTime now, {String me = '', String myName = ''}) {
   if (chat != null) {
     if (chat.muted) return false;
     if (prefs['list_hidden:${chat.roomId}'] == '1') return false;
+    // 메시지 요청 stay quiet until accepted.
+    if ((prefs['dm_request:${chat.roomId}'] ?? '').isNotEmpty) return false;
     final kind = chat.isDirect ? 'notify_direct' : (chat.isChannel ? 'notify_channel' : 'notify_group');
     if (prefs[kind] == '0') return false;
     if (prefs['$kind:${chat.roomId}'] == '0') return false;
+    final onlyMe = prefs['mentions_only:${chat.roomId}'] ?? prefs['mentions_only_group'];
+    if (!chat.isDirect && !chat.isChannel && onlyMe == '1' && n.kind != 'pin' && !RoomRules.mentionsMe(n.body ?? '', me, myName)) return false;
   }
   if (inFocus(prefs, now)) return false;
   return true;

@@ -8,6 +8,7 @@
 // - my story archive, on this phone only (never on the server).
 import 'dart:convert';
 import 'dart:io' show Directory, File;
+import 'dart:typed_data';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -21,21 +22,84 @@ import 'common.dart';
 import 'glass.dart';
 import 'ios.dart';
 import 'ios_route.dart';
+import 'story_stickers.dart';
 import 'story_video.dart';
 import 'wide.dart';
 
 // ---------------------------------------------------------------- live parts
 
-/// A poll, a question or a plan placed on a story. [at] is its centre as a
-/// part of the picture (0..1), [scale] its size.
+/// A poll, a question or a plan placed on a story; or one of the stickers
+/// from tip 467: weather, a place tag, a link. [at] is its centre as a part
+/// of the picture (0..1), [scale] its size.
 class StoryLive {
-  StoryLive({required this.kind, this.q = '', this.options = const [], this.when = '', this.place = '', this.at = const Offset(.5, .5), this.scale = 1});
-  final String kind; // poll, question, plan
-  String q; // the question, or the plan's title
+  StoryLive({
+    required this.kind,
+    this.q = '',
+    this.options = const [],
+    this.when = '',
+    this.place = '',
+    this.at = const Offset(.5, .5),
+    this.scale = 1,
+    this.look = 0,
+    this.sky = 'cloudy',
+    this.celsius = 0,
+    this.night = false,
+    this.moon = 0,
+    this.url = '',
+    this.title = '',
+    this.site = '',
+    this.img = '',
+    this.lat,
+    this.lon,
+    this.card = false,
+    this.file = '',
+    this.mime = '',
+    this.bytes,
+    this.room = '',
+    this.event = '',
+  });
+  final String kind; // poll, question, plan, weather, place, link, react, music, round, post
+  String q; // the question, the plan's title, a place's name, a link's own name
   List<String> options;
-  String when, place;
+  String when, place; // place: the plan's place, or the weather's city (shown)
   Offset at;
   double scale;
+
+  /// Sticker colours: weather 0 white, 1 dark, 2 clear; place / link
+  /// 0 white, 1 dark, 2 clear, 3 our colour.
+  int look;
+
+  // Weather (made when the sticker is added, never changed after sharing).
+  String sky;
+  double celsius, moon;
+  bool night;
+
+  // Link: the address, and the card my phone read (title, site, small picture).
+  String url, title, site, img;
+  bool card;
+
+  // Place: an optional point (blurred as the person chose).
+  double? lat, lon;
+
+  // Music (tip 395) or a round video (tip 408): the file, sealed with its
+  // own key inside the encrypted story; [bytes] = not uploaded yet (editor).
+  String file, mime;
+  Uint8List? bytes;
+
+  // A channel post shared to my story (tip 414): which post. [q] = the
+  // channel's name, [title] = the first words, [url] = its public link.
+  String room, event;
+
+  static const kinds = {'poll', 'question', 'plan', 'weather', 'place', 'link', 'react', 'music', 'round', 'post'};
+  static const stickers = {'weather', 'place', 'link'};
+
+  /// Parts that play or answer with one tap (tips 395 / 408 / 414).
+  static const media = {'react', 'music', 'round', 'post'};
+  bool get isSticker => stickers.contains(kind);
+  bool get isMedia => media.contains(kind);
+
+  /// Reaction sticker faces (tip 395).
+  static const reactions = ['❤️', '😂', '😮', '😢', '🔥', '👍'];
 
   Map<String, dynamic> toJson() => {
     'kind': kind,
@@ -46,17 +110,44 @@ class StoryLive {
     'x': double.parse(at.dx.toStringAsFixed(3)),
     'y': double.parse(at.dy.toStringAsFixed(3)),
     's': double.parse(scale.toStringAsFixed(2)),
+    if (isSticker && look != 0) 'look': look,
+    if (kind == 'weather') ...{'sky': sky, 't': double.parse(celsius.toStringAsFixed(1)), 'night': night, 'moon': double.parse(moon.toStringAsFixed(3))},
+    if (kind == 'link') ...{
+      'url': url,
+      if (title.isNotEmpty) 'title': title,
+      if (site.isNotEmpty) 'site': site,
+      if (img.isNotEmpty) 'img': img,
+      if (card) 'card': true,
+    },
+    if (kind == 'place' && lat != null && lon != null) ...{'lat': lat, 'lon': lon},
+    if ((kind == 'music' || kind == 'round') && file.isNotEmpty) ...{'file': file, 'mime': mime},
+    if (kind == 'music' && site.isNotEmpty) 'site': site,
+    if (kind == 'post') ...{'room': room, 'event': event, if (title.isNotEmpty) 'title': title, if (url.isNotEmpty) 'url': url},
   };
 
+  /// A file reference from a friend's story: a small JSON object with an
+  /// mxc address (the key inside it opens only that file).
+  static String cleanFile(Object? v) {
+    if (v is! String || v.length > 3000) return '';
+    try {
+      final j = jsonDecode(v);
+      if (j is! Map || j['url'] is! String || !(j['url'] as String).startsWith('mxc://')) return '';
+      return v;
+    } catch (_) {
+      return '';
+    }
+  }
+
+  /// Reads what a friend's phone sent: anything odd is cut short or dropped.
   static StoryLive? fromJson(Object? j) {
     if (j is! Map) return null;
     final kind = j['kind'];
-    if (kind is! String || !const {'poll', 'question', 'plan'}.contains(kind)) return null;
+    if (kind is! String || !kinds.contains(kind)) return null;
     String str(Object? v, int max) => v is String ? (v.length > max ? v.substring(0, max) : v) : '';
-    double dbl(Object? v, double d, double lo, double hi) => v is num ? v.toDouble().clamp(lo, hi) : d;
+    double dbl(Object? v, double d, double lo, double hi) => v is num && v.isFinite ? v.toDouble().clamp(lo, hi) : d;
     final opts = j['options'] is List ? [for (final o in (j['options'] as List).take(4)) str(o, 40)].where((o) => o.isNotEmpty).toList() : <String>[];
     if (kind == 'poll' && opts.length < 2) return null;
-    return StoryLive(
+    final it = StoryLive(
       kind: kind,
       q: str(j['q'], 120),
       options: opts,
@@ -64,7 +155,60 @@ class StoryLive {
       place: str(j['place'], 80),
       at: Offset(dbl(j['x'], .5, 0, 1), dbl(j['y'], .5, 0, 1)),
       scale: dbl(j['s'], 1, .4, 3),
+      look: dbl(j['look'], 0, 0, kind == 'weather' ? 2 : 3).round(),
     );
+    switch (kind) {
+      case 'weather':
+        final t = j['t'];
+        if (t is! num || !t.isFinite) return null;
+        it
+          ..celsius = t.toDouble().clamp(-90, 60).toDouble()
+          ..sky = const {'clear', 'partly', 'cloudy', 'rain', 'storm', 'snow', 'fog'}.contains(j['sky']) ? j['sky'] as String : 'cloudy'
+          ..night = j['night'] == true
+          ..moon = dbl(j['moon'], 0, 0, 1)
+          ..place = str(j['place'], 40);
+      case 'place':
+        it.q = str(j['q'], 60).trim();
+        if (it.q.isEmpty) return null;
+        final lat = j['lat'], lon = j['lon'];
+        if (lat is num && lon is num && lat.isFinite && lon.isFinite && lat.abs() <= 90 && lon.abs() <= 180) {
+          it
+            ..lat = lat.toDouble()
+            ..lon = lon.toDouble();
+        }
+      case 'link':
+        final url = str(j['url'], 500).trim();
+        final u = Uri.tryParse(url);
+        if (u == null || !(u.scheme == 'https' || u.scheme == 'http') || u.host.isEmpty) return null;
+        final img = str(j['img'], 16000);
+        it
+          ..url = url
+          ..q = str(j['q'], 40)
+          ..title = str(j['title'], 120)
+          ..site = str(j['site'], 60)
+          ..img = RegExp(r'^[A-Za-z0-9+/=]*$').hasMatch(img) ? img : ''
+          ..card = j['card'] == true;
+      case 'react':
+        if (!reactions.contains(it.q)) it.q = reactions.first;
+      case 'music' || 'round':
+        it
+          ..file = cleanFile(j['file'])
+          ..mime = str(j['mime'], 60)
+          ..site = str(j['site'], 60);
+        final want = kind == 'music' ? 'audio/' : 'video/';
+        if (it.file.isEmpty || !it.mime.startsWith(want)) return null;
+        if (kind == 'music' && it.q.trim().isEmpty) it.q = '♪';
+      case 'post':
+        it
+          ..room = str(j['room'], 255)
+          ..event = str(j['event'], 255)
+          ..title = str(j['title'], 120)
+          ..url = str(j['url'], 300);
+        if (!it.room.startsWith('!') || it.q.trim().isEmpty) return null;
+        final u = Uri.tryParse(it.url);
+        if (it.url.isNotEmpty && (u == null || u.scheme != 'https')) it.url = '';
+    }
+    return it;
   }
 }
 
@@ -74,13 +218,50 @@ String encodeLive(List<StoryLive> items) => items.isEmpty
         'items': [for (final x in items) x.toJson()],
       });
 
+/// A story's extra JSON as a map (items, cover, clip); {} when none.
+Map<String, dynamic> extraMap(String? extra) {
+  if (extra == null || extra.isEmpty) return {};
+  try {
+    final j = jsonDecode(extra);
+    return j is Map<String, dynamic> ? Map.of(j) : {};
+  } catch (_) {
+    return {};
+  }
+}
+
+/// [extra] with [changes] put in (a null value takes a key out).
+String withExtra(String? extra, Map<String, Object?> changes) {
+  final m = extraMap(extra);
+  for (final e in changes.entries) {
+    if (e.value == null) {
+      m.remove(e.key);
+    } else {
+      m[e.key] = e.value;
+    }
+  }
+  m.removeWhere((k, v) => k == 'items' && v is List && v.isEmpty);
+  return m.isEmpty ? '' : jsonEncode(m);
+}
+
+/// The chosen cover picture of a video story (tip 468): a file reference.
+String storyCover(String? extra) => StoryLive.cleanFile(extraMap(extra)['cover']);
+
+/// The part of a long video this story shows (tip 525), in seconds.
+(double, double)? storyClip(String? extra) {
+  final c = extraMap(extra)['clip'];
+  if (c is! Map) return null;
+  final a = c['from'], b = c['to'];
+  if (a is! num || b is! num || !a.isFinite || !b.isFinite || a < 0 || b <= a || b - a > 120) return null;
+  return (a.toDouble(), b.toDouble());
+}
+
 List<StoryLive> decodeLive(String? extra) {
   if (extra == null || extra.isEmpty) return const [];
   try {
     final j = jsonDecode(extra);
     final items = j is Map ? j['items'] : null;
     if (items is! List) return const [];
-    return [for (final x in items.take(6)) ?StoryLive.fromJson(x)];
+    return [for (final x in items.take(8)) ?StoryLive.fromJson(x)];
   } catch (_) {
     return const [];
   }
@@ -115,9 +296,10 @@ class _StoryLiveCardState extends State<StoryLiveCard> {
 
   @override
   Widget build(BuildContext context) {
+    final it = widget.item;
+    if (it.isSticker) return StorySticker(item: it);
     final l = L.of(context);
     final p = paletteOf(context);
-    final it = widget.item;
     const ink = Color(0xFF000000);
     const card = Color(0xFFFFFFFF);
     final choice = picked ?? widget.chosen;
@@ -125,7 +307,7 @@ class _StoryLiveCardState extends State<StoryLiveCard> {
     final title = Text(
       it.q,
       textAlign: TextAlign.center,
-      style: Tokens.body.style.copyWith(color: ink, fontWeight: FontWeight.w600),
+      style: Tokens.body.style.copyWith(color: ink, fontWeight: Tokens.semi),
     );
     Widget body;
     switch (it.kind) {
@@ -224,7 +406,7 @@ class _StoryLiveCardState extends State<StoryLiveCard> {
                 decoration: BoxDecoration(color: p.accent, borderRadius: BorderRadius.circular(Tokens.capsule)),
                 child: Text(
                   choice != null ? l.storyGoingSent : l.storyGoing,
-                  style: Tokens.body.style.copyWith(color: p.onAccent, fontWeight: FontWeight.w600),
+                  style: Tokens.body.style.copyWith(color: p.onAccent, fontWeight: Tokens.semi),
                 ),
               ),
             ),
@@ -245,12 +427,14 @@ class _StoryLiveCardState extends State<StoryLiveCard> {
 }
 
 /// Full-screen form for a poll / question / plan (no popup text boxes).
-Future<StoryLive?> editLive(BuildContext context, String kind, [StoryLive? old]) => paneNav(context).push<StoryLive>(
-  IosPageRoute(
-    fullscreenDialog: true,
-    builder: (_) => _LiveForm(kind: kind, old: old),
-  ),
-);
+Future<StoryLive?> editLive(BuildContext context, String kind, [StoryLive? old]) => StoryLive.stickers.contains(kind)
+    ? editSticker(context, kind, old)
+    : paneNav(context).push<StoryLive>(
+        IosPageRoute(
+          fullscreenDialog: true,
+          builder: (_) => _LiveForm(kind: kind, old: old),
+        ),
+      );
 
 class _LiveForm extends StatefulWidget {
   const _LiveForm({required this.kind, this.old});
@@ -358,17 +542,27 @@ class _LiveFormState extends State<_LiveForm> {
 
 /// Who sees a story. Close friends are kept on this phone.
 class StoryAudience {
-  const StoryAudience.all() : mode = 'all', rooms = const [];
-  const StoryAudience(this.mode, this.rooms);
-  final String mode; // all, close, picked
+  const StoryAudience.all() : mode = 'all', rooms = const [], name = '';
+  const StoryAudience(this.mode, this.rooms, {this.name = ''});
+  final String mode; // all, close, picked, group
   final List<String> rooms;
+
+  /// 'group': the group's name (그룹 전용 스토리, 4-app board).
+  final String name;
+
+  /// 'group': the one group whose members get it.
+  String get groupRoom => mode == 'group' && rooms.isNotEmpty ? rooms.first : '';
 
   String label(L l) => switch (mode) {
     'close' => l.storyCloseFriends,
     'picked' => l.storyPickedCount(rooms.length),
+    'group' => l.storyGroupOnlyLabel(name),
     _ => l.storyAllFriends,
   };
 }
+
+/// Groups I can share a group-only story with (not channels, not bots).
+List<ChatPreview> storyGroupsToShare(AppState s) => s.chats.where((c) => !c.isDirect && !c.isChannel && !c.isBot && !c.archived).toList();
 
 List<String> closeFriends(AppState s) {
   try {
@@ -394,13 +588,14 @@ class _AudiencePage extends StatefulWidget {
 class _AudiencePageState extends State<_AudiencePage> {
   late String mode = widget.now.mode;
   late Set<String> picked = {...widget.now.rooms};
+  late String group = widget.now.groupRoom;
   late Set<String> close;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     close = {...closeFriends(AppScope.read(context))};
-    if (mode != 'picked') picked = {};
+    if (widget.now.mode != 'picked') picked = {};
   }
 
   @override
@@ -409,6 +604,7 @@ class _AudiencePageState extends State<_AudiencePage> {
     final p = paletteOf(context);
     final s = AppScope.of(context);
     final friends = storyFriends(s);
+    final groups = storyGroupsToShare(s);
     Widget option(String m, String title, String sub, IconData icon, Color color) => IosTile(
       key: Key('aud-$m'),
       leading: iconTile(color, icon),
@@ -426,11 +622,15 @@ class _AudiencePageState extends State<_AudiencePage> {
         trailing: [
           GlassDone(
             key: const Key('aud-done'),
-            onTap: mode == 'picked' && picked.isEmpty
+            onTap: (mode == 'picked' && picked.isEmpty) || (mode == 'group' && group.isEmpty)
                 ? null
                 : () async {
                     if (mode == 'close') await s.setPref('story_close', jsonEncode(close.toList()));
                     if (!context.mounted) return;
+                    if (mode == 'group') {
+                      final g = s.chats.where((c) => c.roomId == group).firstOrNull;
+                      return Navigator.of(context).pop(StoryAudience('group', [group], name: g?.name ?? ''));
+                    }
                     Navigator.of(context).pop(StoryAudience(mode, mode == 'close' ? close.toList() : (mode == 'picked' ? picked.toList() : const [])));
                   },
           ),
@@ -446,9 +646,30 @@ class _AudiencePageState extends State<_AudiencePage> {
               option('all', l.storyAllFriends, l.storyAllFriendsSub(friends.length), CupertinoIcons.person_2_fill, Palette.tileBlue),
               option('close', l.storyCloseFriends, l.storyCloseFriendsSub(close.length), CupertinoIcons.star_fill, p.tileGreen),
               option('picked', l.storyPicked, l.storyPickedSub, CupertinoIcons.checkmark_circle_fill, Palette.tileOrange),
+              // 그룹 전용 스토리 (4-app board): only that group's members.
+              if (groups.isNotEmpty) option('group', l.storyGroupOnly, l.storyGroupOnlySub, CupertinoIcons.person_3_fill, Palette.tilePurple),
             ],
           ),
-          if (mode != 'all')
+          if (mode == 'group')
+            IosSection(
+              header: sectionHeader(context, l.storyGroupOnly),
+              footer: sectionFooter(context, l.storyGroupOnlyInfo),
+              children: [
+                for (final c in groups)
+                  IosTile(
+                    key: Key('aud-group-${c.roomId}'),
+                    leadingSize: Tokens.memberAvatar,
+                    leading: Avatar(name: c.name, size: Tokens.memberAvatar, squircle: true),
+                    title: Text(c.name),
+                    trailing: Icon(
+                      group == c.roomId ? CupertinoIcons.checkmark_circle_fill : CupertinoIcons.circle,
+                      color: group == c.roomId ? p.accent : p.separator,
+                    ),
+                    onTap: () => setState(() => group = c.roomId),
+                  ),
+              ],
+            )
+          else if (mode != 'all')
             IosSection(
               header: sectionHeader(context, mode == 'close' ? l.storyCloseFriends : l.storyPicked),
               children: [

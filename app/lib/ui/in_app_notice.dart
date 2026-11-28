@@ -10,8 +10,10 @@ import 'package:flutter/services.dart';
 
 import '../core/app_state.dart';
 import '../core/backend.dart';
+import '../core/my_plans.dart';
 import '../core/reminders.dart';
 import '../core/rules.dart';
+import '../core/my_sounds.dart';
 import '../core/sounds.dart';
 import '../design/tokens.dart';
 import '../l10n/app_localizations.dart';
@@ -55,8 +57,10 @@ class _InAppNoticesState extends State<InAppNotices> {
     final chat = st.chats.where((c) => c.roomId == r.roomId).firstOrNull;
     if (chat == null) return;
     final l = L.of(context);
-    final m = Msg(id: 'remind:${r.msgId}', sender: '', body: '⏰ ${l.remindDue}', time: r.at, mine: false, kind: 'text');
-    if (st.on('in_app_sound', fallback: true)) unawaited(Sounds.message(st.pref(soundKey(chat), 'nuri')));
+    // A plan's reminder says which plan ("1시간 뒤: 저녁 모임").
+    final plan = MyPlans.find(st, r.msgId) != null && r.chat.isNotEmpty;
+    final m = Msg(id: 'remind:${r.msgId}', sender: '', body: '⏰ ${plan ? r.chat : l.remindDue}', time: r.at, mine: false, kind: 'text');
+    if (st.on('in_app_sound', fallback: true)) unawaited(Sounds.play(st, MySounds.forChat(st, chat.roomId, soundKey(chat))));
     hide?.cancel();
     hide = Timer(const Duration(seconds: 6), () {
       if (mounted) setState(() => showing = null);
@@ -95,13 +99,14 @@ class _InAppNoticesState extends State<InAppNotices> {
       // Calls ring on their own screen.
       if (m.kind == 'call' || m.call != null) continue;
       final n = Notice(roomId: c.roomId, chat: c.name, sender: m.sender, kind: m.kind, body: m.body, time: m.time);
-      if (!noticeAllowed(n, st.settings, c, DateTime.now())) continue;
+      if (!noticeAllowed(n, st.settings, c, DateTime.now(), me: st.backend.userId ?? '')) continue;
       fresh = (c, m);
     }
     primed = true;
     if (fresh == null) return;
-    if (st.on('in_app_sound', fallback: true)) unawaited(Sounds.message(st.pref(soundKey(fresh.$1), 'nuri')));
-    if (st.on('in_app_vibrate', fallback: true)) unawaited(HapticFeedback.mediumImpact());
+    if (st.on('in_app_sound', fallback: true) && !st.on('quiet:${fresh.$1.roomId}'))
+      unawaited(Sounds.play(st, MySounds.forChat(st, fresh.$1.roomId, soundKey(fresh.$1))));
+    if (st.on('in_app_vibrate', fallback: true) && !st.on('quiet:${fresh.$1.roomId}')) unawaited(HapticFeedback.mediumImpact());
     if (st.pref('in_app_style', 'banner') != 'banner') return;
     hide?.cancel();
     hide = Timer(const Duration(seconds: 4), () {
@@ -177,7 +182,7 @@ class _Banner extends StatelessWidget {
                       chat.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Tokens.preview.style.copyWith(color: p.label, fontWeight: FontWeight.w600),
+                      style: Tokens.preview.style.copyWith(color: p.label, fontWeight: Tokens.semi),
                     ),
                     Text(
                       text,

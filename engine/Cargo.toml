@@ -2,6 +2,8 @@
 name = "burumy_engine"
 version = "0.1.0"
 edition = "2024"
+license = "LicenseRef-Burumy-Proprietary"
+publish = false
 
 [dependencies]
 anyhow = "1.0.105"
@@ -10,11 +12,16 @@ mime = "0.3.18"
 rand = "0.8"
 sha2 = "0.10"
 base64 = "0.22"
+chacha20poly1305 = "0.11"
 # Same crate matrix-sdk is built on; only for the CollectStrategy type.
 matrix-sdk-base = { version = "0.19.1", default-features = false, features = ["e2e-encryption"] }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.154"
 zeroize = "1.9.2"
+# Stop a running download (download list X); already pulled in by matrix-sdk.
+futures-util = "0.3.34"
+# 대화 가져오기: gzip parts (already pulled in by matrix-sdk; MIT/Apache).
+flate2 = "1.1"
 
 # Phones and computers: encrypted SQLite store.
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]

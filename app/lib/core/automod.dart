@@ -60,6 +60,9 @@ bool _hasWord(String text, String w) {
   return squeezed.contains(w.replaceAll(RegExp(r'[\s.\-_*·,]+'), ''));
 }
 
+/// A web address (or a disguised one) in the text.
+bool hasLinkText(String text) => _hasLink(text.toLowerCase());
+
 bool _hasLink(String text) =>
     RegExp(r'(https?://|www\.|[a-z0-9-]+\.(com|net|org|io|me|kr|co|ly|gg|link|xyz|app|site|shop)\b)').hasMatch(text) || hasSuspiciousLink(text);
 

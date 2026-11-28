@@ -8,12 +8,13 @@ import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart';
 
 import 'backend.dart';
+import 'data_usage.dart';
 import 'call_media.dart';
 
 enum CallPhase { incoming, calling, connecting, live, ended }
 
 /// Why a call ended (for the line on the call screen).
-enum CallEnd { normal, noAnswer, declined, busy, failed, cancelled }
+enum CallEnd { normal, noAnswer, declined, busy, failed, cancelled, ignored }
 
 class CallSession extends ChangeNotifier {
   CallSession._(this.backend, this.roomId, this.title, this.video, this.phase, {this.callId = ''}) : camera = video, speaker = video;
@@ -161,10 +162,25 @@ class CallSession extends ChangeNotifier {
     await backend.hangupCall(roomId, callId, 'decline');
   }
 
+  /// 무시 (WhatsApp 2025): stop the ringing on my side only. Nothing is
+  /// sent, so the caller just hears it ring out (and can leave a message);
+  /// for me it becomes a missed call.
+  void ignore() {
+    if (phase != CallPhase.incoming) return;
+    phase = CallPhase.ended;
+    endedBy = CallEnd.ignored;
+    _tick?.cancel();
+    if (identical(waiting.value, this)) waiting.value = null;
+    notifyListeners();
+  }
+
   Future<void> hangUp() => _finish(phase == CallPhase.calling ? CallEnd.cancelled : CallEnd.normal);
 
   Future<void> _finish(CallEnd why, {bool send = true}) async {
     if (phase == CallPhase.ended) return;
+    // 데이터 사용량 (tip 379): estimated from the minutes talked.
+    final since = liveSince;
+    if (since != null) DataUsage.noteCall(clock.now().difference(since), video: video);
     phase = CallPhase.ended;
     endedBy = why;
     _tick?.cancel();

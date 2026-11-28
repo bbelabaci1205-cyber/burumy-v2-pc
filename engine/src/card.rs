@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: LicenseRef-Burumy-Proprietary
 //! Channel and group "cards": FAQ, guide menu, link buttons, formatted
-//! posts, giveaways, application forms and safety check-ins.
+//! posts, long posts (see article.rs), giveaways, application forms, safety check-ins and choice flows.
+//!
+//! A choice flow ("flow") carries its whole question tree inside the one
+//! encrypted event, so tapping through it runs only on the reader's phone:
+//! no bot, no server and not even the maker sees the taps. With stats on,
+//! only the result reached goes to the maker's phone, which keeps it under
+//! a one-way code (never the person's ID) and posts numbers only.
 //!
 //! A card is one encrypted room event with checked, size-limited data.
 //! Answers (joining a giveaway, a form, "I'm safe") never go into the room:
@@ -11,7 +17,7 @@
 
 use std::collections::HashMap;
 
-use anyhow::{Result, bail, ensure};
+use anyhow::{Context, Result, bail, ensure};
 use serde_json::{Value, json};
 
 pub const START: &str = "app.burumy.card";
@@ -21,10 +27,42 @@ pub const TALLY: &str = "app.burumy.card.tally";
 pub const WON: &str = "app.burumy.card.won";
 pub const MAX_DATA: usize = 24 * 1024;
 pub const MAX_WINNERS: u64 = 100;
+/// Longest suggested post (tip 531), like a channel post's caption room.
+pub const SUGGEST_TEXT: usize = 4000;
 
 /// Kinds people answer (the others are read-only).
 pub fn answered(kind: &str) -> bool {
-    matches!(kind, "lottery" | "form" | "checkin")
+    matches!(kind, "lottery" | "form" | "checkin" | "flow")
+}
+
+/// Choice flows: at most 10 questions of up to 6 choices, 8 results.
+pub const FLOW_STEPS: usize = 10;
+pub const FLOW_CHOICES: usize = 6;
+pub const FLOW_RESULTS: usize = 8;
+
+/// Key for one person in the maker's answer book. Choice flows keep a
+/// one-way code instead of the ID so the maker's phone never holds who got
+/// which result (it still counts one answer per person).
+pub fn book_key(kind: &str, cid: &str, sender: &str) -> String {
+    if kind != "flow" {
+        return sender.to_owned();
+    }
+    use sha2::{Digest, Sha256};
+    let h = Sha256::digest(format!("burumy.flow\n{cid}\n{sender}").as_bytes());
+    h.iter().take(16).map(|b| format!("{b:02x}")).collect()
+}
+
+/// "s3" -> step 3, "r1" -> result 1, checked against the sizes.
+fn flow_target(v: &Value, steps: usize, results: usize) -> Option<String> {
+    let t = v.as_str()?;
+    let (kind, n) = t.split_at_checked(1)?;
+    let n: usize = n.parse().ok()?;
+    let ok = match kind {
+        "s" => n < steps,
+        "r" => n < results,
+        _ => false,
+    };
+    (ok && n.to_string().len() == t.len() - 1).then(|| t.to_owned())
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -72,6 +110,8 @@ fn link(v: &Value) -> Option<String> {
 const COLORS: [&str; 11] = [
     "green", "blue", "teal", "purple", "pink", "red", "orange", "yellow", "grey", "black", "white",
 ];
+/// 주사위 games (tip 218), as sent alone in a message.
+const DICE: [&str; 6] = ["🎲", "🎯", "🏀", "⚽", "🎳", "🎰"];
 const MAX_ROWS: u64 = 6;
 const PER_ROW: usize = 3;
 
@@ -150,6 +190,7 @@ pub fn sanitize(kind: &str, d: &Value, now: u64) -> Result<Value> {
             ensure!(!blocks.is_empty() || !title.is_empty(), "write something");
             json!({ "title": title, "blocks": blocks })
         }
+        "article" => crate::article::clean_card(d)?,
         "lottery" => {
             let prize =
                 text(&d["prize"], 200).ok_or_else(|| anyhow::anyhow!("what is the prize?"))?;
@@ -179,6 +220,135 @@ pub fn sanitize(kind: &str, d: &Value, now: u64) -> Result<Value> {
         "checkin" => {
             json!({ "text": text(&d["text"], 500).ok_or_else(|| anyhow::anyhow!("write what happened"))? })
         }
+        "flow" => {
+            let title = text(&d["title"], 100).ok_or_else(|| anyhow::anyhow!("a flow needs a title"))?;
+            let steps_in: Vec<&Value> = list(&d["steps"], FLOW_STEPS).collect();
+            let results_in: Vec<&Value> = list(&d["results"], FLOW_RESULTS).collect();
+            ensure!(!steps_in.is_empty(), "add at least one question");
+            ensure!(!results_in.is_empty(), "add at least one result");
+            // Indexes must stay put (choices point at them): a blank
+            // question or result refuses the card instead of shifting.
+            let mut results = vec![];
+            for x in &results_in {
+                let t = text(&x["title"], 100).ok_or_else(|| anyhow::anyhow!("each result needs a name"))?;
+                let l = &x["link"];
+                let link = match (text(&l["label"], 24), link(&l["url"])) {
+                    (Some(label), Some(url)) => json!({ "label": label, "url": url }),
+                    _ => Value::Null,
+                };
+                results.push(json!({ "title": t, "text": opt_text(&x["text"], 1000), "link": link }));
+            }
+            let mut steps = vec![];
+            for x in &steps_in {
+                let q = text(&x["q"], 200).ok_or_else(|| anyhow::anyhow!("each question needs words"))?;
+                let choices: Vec<Value> = list(&x["choices"], FLOW_CHOICES)
+                    .filter_map(|c| {
+                        let label = text(&c["label"], 40)?;
+                        let to = flow_target(&c["to"], steps_in.len(), results.len())?;
+                        Some(json!({ "label": label, "to": to }))
+                    })
+                    .collect();
+                ensure!(!choices.is_empty(), "each question needs a choice");
+                steps.push(json!({ "q": q, "choices": choices }));
+            }
+            // Some result must be reachable from the first question.
+            let mut seen = vec![false; steps.len()];
+            let mut todo = vec![0usize];
+            let mut ends = false;
+            while let Some(i) = todo.pop() {
+                if std::mem::replace(&mut seen[i], true) {
+                    continue;
+                }
+                for c in steps[i]["choices"].as_array().into_iter().flatten() {
+                    let to = c["to"].as_str().unwrap_or_default();
+                    match to.split_at(1) {
+                        ("r", _) => ends = true,
+                        (_, n) => todo.extend(n.parse::<usize>().ok()),
+                    }
+                }
+            }
+            ensure!(ends, "no answer path reaches a result");
+            json!({
+                "title": title,
+                "text": opt_text(&d["text"], 1000),
+                "start": opt_text(&d["start"], 24),
+                "steps": steps,
+                "results": results,
+                "stats": d["stats"].as_bool().unwrap_or(true),
+            })
+        }
+        // "이 그룹을 ○○ 커뮤니티에 추가했어요" line (community.rs). Only the
+        // community's id and name: keys never travel in a chat.
+        "community" => {
+            let id = d["community"].as_str().unwrap_or_default();
+            ensure!(matrix_sdk::ruma::RoomId::parse(id).is_ok(), "bad community");
+            let kind = pick(&d["kind"], &["group", "channel"], "group");
+            json!({ "community": id, "name": text(&d["name"], 64).unwrap_or_default(), "kind": kind })
+        }
+        // "OO님이 메시지를 고정했어요" line. Only the pinned message's id and
+        // a short preview; notify = phones ring (else sent silently).
+        "pin" => {
+            let id = d["id"].as_str().unwrap_or_default();
+            ensure!(matrix_sdk::ruma::EventId::parse(id).is_ok(), "bad message id");
+            json!({ "id": id, "text": opt_text(&d["text"], 100), "notify": d["notify"].as_bool().unwrap_or(false) })
+        }
+        // 스티커 묶음 (tips 538 + 441): the set's encrypted file (place +
+        // key, inside this end-to-end encrypted card), its name and size.
+        // The pictures themselves never travel in the card.
+        "stickers" => {
+            let file = crate::article::clean_file(&d["file"]).context("bad set file")?;
+            let name = text(&d["name"], 32).ok_or_else(|| anyhow::anyhow!("a set needs a name"))?;
+            let n = d["n"].as_u64().unwrap_or(0);
+            ensure!((1..=50).contains(&n), "1-50 stickers");
+            let kind = pick(&d["kind"], &["sticker", "emoji"], "sticker");
+            json!({ "file": file, "name": name, "n": n, "kind": kind })
+        }
+        // 다른 앱 대화 가져오기 (import.rs): parts' places + keys, counts.
+        "import" => crate::import::sanitize(d)?,
+        // 사진 제안 (Telegram tip 373): a profile photo suggested to the
+        // other person in a 1:1. Only the encrypted file's place + key; the
+        // photo itself is uploaded encrypted beforehand.
+        "photo" => {
+            let Some(file) = crate::article::clean_file(&d["file"]) else {
+                bail!("bad photo")
+            };
+            json!({ "file": file, "mime": pick(&d["mime"], &["image/jpeg", "image/png"], "image/jpeg") })
+        }
+        // 채널에 글 제안 (tip 531): a subscriber's post idea in the channel's
+        // admin chat (end-to-end encrypted like everything there). Words,
+        // and/or one photo (its key from upload_encrypted), and when the
+        // subscriber would like it posted (ms; 0 = any time). No money.
+        "suggest" => {
+            let words = opt_text(&d["text"], SUGGEST_TEXT);
+            let photo = d["photo"].as_str().filter(|f| !f.is_empty() && f.len() <= 4096);
+            ensure!(!words.is_empty() || photo.is_some(), "a suggestion needs words or a photo");
+            let mime = d["mime"].as_str().filter(|m| m.starts_with("image/") && m.len() <= 64);
+            json!({
+                "text": words,
+                "photo": photo,
+                "mime": photo.and(mime),
+                "at": d["at"].as_u64().filter(|t| *t > now).unwrap_or(0),
+                "channel": opt_text(&d["channel"], 255),
+            })
+        }
+        // An admin's answer to a suggestion: posted (now or at `at`) or not.
+        "suggest_deal" => {
+            let to = d["to"].as_str().unwrap_or_default();
+            ensure!(matrix_sdk::ruma::EventId::parse(to).is_ok() || (to.len() <= 64 && !to.is_empty()), "bad message id");
+            let act = d["act"].as_str().unwrap_or_default();
+            ensure!(matches!(act, "accept" | "decline"), "bad answer");
+            json!({
+                "to": to,
+                "act": act,
+                "at": d["at"].as_u64().unwrap_or(0),
+                "credit": d["credit"].as_bool().unwrap_or(false),
+                "note": opt_text(&d["note"], 200),
+            })
+        }
+        // 주사위 (tip 218): only which game. The result is worked out on
+        // every phone from this message's server-given id, so the sender
+        // cannot choose it and nothing else needs to travel.
+        "dice" => json!({ "e": pick(&d["e"], &DICE, "🎲") }),
         _ => bail!("unknown card"),
     };
     ensure!(out.to_string().len() <= MAX_DATA, "card is too big");
@@ -198,9 +368,19 @@ pub fn body(kind: &str, d: &Value) -> String {
         "guide" => format!("🧭 {}", d["title"].as_str().unwrap_or_default()),
         "links" => format!("🔗 {}", d["text"].as_str().unwrap_or_default()),
         "rich" => format!("📝 {}", d["title"].as_str().unwrap_or_default()),
+        "community" => format!("🏘️ {}", d["name"].as_str().unwrap_or_default()),
+        "article" => crate::article::body(d),
         "lottery" => format!("🎁 {}", d["prize"].as_str().unwrap_or_default()),
         "form" => format!("📋 {}", d["title"].as_str().unwrap_or_default()),
         "checkin" => format!("🛟 {}", d["text"].as_str().unwrap_or_default()),
+        "flow" => format!("🧩 {}", d["title"].as_str().unwrap_or_default()),
+        "pin" => format!("📌 {}", d["text"].as_str().unwrap_or_default()),
+        "import" => crate::import::body(d),
+        "photo" => "🖼️".to_owned(),
+        "suggest" => format!("✍️ {}", d["text"].as_str().unwrap_or_default().chars().take(80).collect::<String>()),
+        "suggest_deal" => (if d["act"] == "accept" { "🤝" } else { "🙅" }).to_owned(),
+        "stickers" => format!("🎨 {}", d["name"].as_str().unwrap_or_default()),
+        "dice" => d["e"].as_str().unwrap_or("🎲").to_string(),
         _ => String::new(),
     }
 }
@@ -216,6 +396,14 @@ pub fn clean_reply(kind: &str, data: &Value, v: &Value) -> Option<Value> {
             .as_str()
             .filter(|s| matches!(*s, "ok" | "help"))
             .map(|s| json!(s)),
+        // The result reached, only when the maker asked for numbers.
+        "flow" => {
+            let n = data["results"].as_array()?.len();
+            (data["stats"].as_bool() == Some(true))
+                .then(|| flow_target(v, 0, n))
+                .flatten()
+                .map(Value::String)
+        }
         "form" => {
             let qs = data["questions"].as_array()?;
             let a = v.as_array()?;
@@ -376,6 +564,19 @@ mod tests {
     }
 
     #[test]
+    fn photo_suggestion_keeps_only_the_file_place_and_key() {
+        let file = json!({ "url": "mxc://burumy.app/abc", "key": { "alg": "A256CTR", "k": "a-b_c", "kty": "oct" },
+            "iv": "aXY=", "hashes": { "sha256": "c2hh" }, "v": "v2", "extra": "dropped" });
+        let d = sanitize("photo", &json!({ "file": file, "mime": "image/gif", "name": "x" }), 0).unwrap();
+        assert_eq!(d["mime"], "image/jpeg", "only jpeg / png");
+        assert_eq!(d["file"]["url"], "mxc://burumy.app/abc");
+        assert!(d.get("name").is_none() && d["file"].get("extra").is_none());
+        assert_eq!(body("photo", &d), "🖼️");
+        assert!(sanitize("photo", &json!({ "file": { "url": "https://evil" } }), 0).is_err());
+        assert!(sanitize("photo", &json!({}), 0).is_err());
+    }
+
+    #[test]
     fn sanitize_trims_and_refuses_bad_data() {
         let d = sanitize(
             "links",
@@ -493,5 +694,164 @@ mod tests {
         assert_eq!(w.len(), 2);
         assert!(!w.contains(&"@q".to_string()));
         assert_eq!(counts("lottery", &book)["in"], 3);
+    }
+
+    #[test]
+    fn flow_checks_targets_paths_and_answers() {
+        let good = json!({
+            "title": "오늘 뭐 볼까?",
+            "steps": [
+                { "q": "기분은?", "choices": [
+                    { "label": "신나게", "to": "s1" },
+                    { "label": "잔잔하게", "to": "r1" },
+                    { "label": "없는 곳", "to": "s9" },
+                    { "label": "이상한", "to": "x1" },
+                    { "label": "앞에 0", "to": "r01" },
+                    { "label": "", "to": "r0" }
+                ]},
+                { "q": "누구랑?", "choices": [{ "label": "친구", "to": "r0" }, { "label": "처음으로", "to": "s0" }] }
+            ],
+            "results": [
+                { "title": "액션", "text": "크게 봐요", "link": { "label": "예고편", "url": "https://x.com/t" } },
+                { "title": "다큐", "link": { "label": "나쁜", "url": "javascript:alert(1)" } }
+            ]
+        });
+        let d = sanitize("flow", &good, 0).unwrap();
+        let c0 = d["steps"][0]["choices"].as_array().unwrap();
+        assert_eq!(c0.len(), 2, "bad targets and blank labels are dropped");
+        assert_eq!(d["results"][0]["link"]["url"], "https://x.com/t");
+        assert!(d["results"][1]["link"].is_null(), "unsafe link dropped");
+        assert_eq!(d["stats"], true, "numbers on by default");
+        assert_eq!(body("flow", &d), "🧩 오늘 뭐 볼까?");
+
+        // Answers: only an existing result, only with stats on.
+        assert_eq!(clean_reply("flow", &d, &json!("r1")), Some(json!("r1")));
+        assert_eq!(clean_reply("flow", &d, &json!("r2")), None);
+        assert_eq!(clean_reply("flow", &d, &json!("s0")), None);
+        assert_eq!(clean_reply("flow", &d, &json!(["r0"])), None);
+        let mut off = good.clone();
+        off["stats"] = json!(false);
+        let d_off = sanitize("flow", &off, 0).unwrap();
+        assert_eq!(clean_reply("flow", &d_off, &json!("r0")), None);
+
+        // A loop with no way out, a blank result, no questions: refused.
+        let looped = json!({ "title": "t", "steps": [
+            { "q": "a", "choices": [{ "label": "b", "to": "s1" }] },
+            { "q": "b", "choices": [{ "label": "a", "to": "s0" }] }
+        ], "results": [{ "title": "r" }] });
+        assert!(sanitize("flow", &looped, 0).is_err());
+        let mut blank = good.clone();
+        blank["results"][1]["title"] = json!(" ");
+        assert!(sanitize("flow", &blank, 0).is_err());
+        assert!(sanitize("flow", &json!({ "title": "t", "steps": [], "results": [{ "title": "r" }] }), 0).is_err());
+        // Too many pieces are cut, not trusted.
+        let many = json!({ "title": "t",
+            "steps": (0..30).map(|_| json!({ "q": "q", "choices": (0..20).map(|_| json!({ "label": "x", "to": "r0" })).collect::<Vec<_>>() })).collect::<Vec<_>>(),
+            "results": (0..30).map(|_| json!({ "title": "r" })).collect::<Vec<_>>() });
+        let d = sanitize("flow", &many, 0).unwrap();
+        assert_eq!(d["steps"].as_array().unwrap().len(), FLOW_STEPS);
+        assert_eq!(d["steps"][0]["choices"].as_array().unwrap().len(), FLOW_CHOICES);
+        assert_eq!(d["results"].as_array().unwrap().len(), FLOW_RESULTS);
+    }
+
+    #[test]
+    fn flow_book_never_keeps_ids() {
+        let k = book_key("flow", "$card", "@mina:test");
+        assert_eq!(k.len(), 32);
+        assert!(!k.contains("mina"));
+        assert_eq!(k, book_key("flow", "$card", "@mina:test"), "same person counts once");
+        assert_ne!(k, book_key("flow", "$other", "@mina:test"), "not linkable across cards");
+        assert_eq!(book_key("form", "$card", "@mina:test"), "@mina:test");
+        let mut book = HashMap::new();
+        book.insert(k, json!("r1"));
+        book.insert(book_key("flow", "$card", "@jun:test"), json!("r1"));
+        assert_eq!(counts("flow", &book).get("r1"), Some(&2));
+    }
+
+    #[test]
+    fn suggest_cards() {
+        let d = sanitize("suggest", &json!({ "text": "  맛집 후기 ", "at": 5, "channel": "!c:x" }), 10).unwrap();
+        assert_eq!(d["text"], "맛집 후기");
+        // A time already past = any time.
+        assert_eq!(d["at"], 0);
+        assert!(sanitize("suggest", &json!({ "text": "" }), 0).is_err());
+        let p = sanitize("suggest", &json!({ "photo": "{}", "mime": "text/html" }), 0).unwrap();
+        assert!(p["mime"].is_null());
+        assert!(sanitize("suggest_deal", &json!({ "to": "$e:x", "act": "accept", "at": 7 }), 0).is_ok());
+        assert!(sanitize("suggest_deal", &json!({ "to": "$e:x", "act": "pay" }), 0).is_err());
+        assert_eq!(body("suggest_deal", &json!({ "act": "decline" })), "🙅");
+    }
+
+    #[test]
+    fn dice_keeps_only_the_game() {
+        let d = sanitize("dice", &json!({ "e": "🎯", "value": 6 }), 0).unwrap();
+        assert_eq!(d, json!({ "e": "🎯" }));
+        let d = sanitize("dice", &json!({ "e": "<b>" }), 0).unwrap();
+        assert_eq!(d, json!({ "e": "🎲" }));
+        assert_eq!(body("dice", &d), "🎲");
+    }
+}
+
+#[cfg(test)]
+mod sticker_set_tests {
+    use super::{body, sanitize};
+    use serde_json::json;
+
+    fn file() -> serde_json::Value {
+        json!({
+            "url": "mxc://s/abc", "key": {"k": "a2V5", "alg": "A256CTR", "kty": "oct", "key_ops": ["encrypt", "decrypt"], "ext": true},
+            "iv": "aXY", "hashes": {"sha256": "c2hh"}, "v": "v2"
+        })
+    }
+
+    #[test]
+    fn a_set_card_carries_only_the_file_name_and_size() {
+        let c = sanitize(
+            "stickers",
+            &json!({ "file": file(), "name": " 우리 강아지 ", "n": 5, "png": "AAAA", "kind": "x" }),
+            0,
+        )
+        .unwrap();
+        assert_eq!(c["name"], "우리 강아지");
+        assert_eq!(c["n"], 5);
+        assert_eq!(c["kind"], "sticker");
+        assert!(c.get("png").is_none(), "no pictures inside the card");
+        assert_eq!(body("stickers", &c), "🎨 우리 강아지");
+    }
+
+    #[test]
+    fn bad_set_cards_are_refused() {
+        assert!(
+            sanitize(
+                "stickers",
+                &json!({ "file": { "url": "https://evil" }, "name": "a", "n": 1 }),
+                0
+            )
+            .is_err()
+        );
+        assert!(
+            sanitize(
+                "stickers",
+                &json!({ "file": file(), "name": "", "n": 1 }),
+                0
+            )
+            .is_err()
+        );
+        assert!(
+            sanitize(
+                "stickers",
+                &json!({ "file": file(), "name": "a", "n": 0 }),
+                0
+            )
+            .is_err()
+        );
+        assert!(
+            sanitize(
+                "stickers",
+                &json!({ "file": file(), "name": "a", "n": 51 }),
+                0
+            )
+            .is_err()
+        );
     }
 }

@@ -7,6 +7,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
 
 import 'formatting.dart';
+import '../core/media_tags.dart';
 import '../core/app_state.dart';
 import '../core/backend.dart';
 import '../design/tokens.dart';
@@ -17,7 +18,21 @@ Palette paletteOf(BuildContext c) => Palette.of(AppScope.of(c).family, Cupertino
 /// No-photo avatar: iOS colours only, no black/grey, top a little lighter,
 /// no border (rulebook ch. 4-5).
 class Avatar extends StatelessWidget {
-  const Avatar({super.key, required this.name, this.size = 54, this.squircle = false, this.userId, this.roomId, this.owner});
+  const Avatar({
+    super.key,
+    required this.name,
+    this.size = 54,
+    this.squircle = false,
+    this.channel = false,
+    this.round = false,
+    this.userId,
+    this.roomId,
+    this.owner,
+    this.photo,
+  });
+
+  /// A photo handed in directly (a public link's room before joining).
+  final Uint8List? photo;
 
   /// A channel: its owner's small photo at the bottom right (v1 rule).
   final String? owner;
@@ -26,7 +41,26 @@ class Avatar extends StatelessWidget {
   /// A chat: "저장한 메시지" shows the bookmark (Telegram and v1).
   final String? roomId;
   final double size;
+
+  /// A group or channel (not a person).
   final bool squircle;
+
+  /// With [squircle]: a channel rather than a group.
+  final bool channel;
+
+  /// Always a circle (inside story rings), whatever the shape setting.
+  final bool round;
+
+  /// Settings > 모양 > 프로필 모양 (Eric 2026-11-26): people, groups and
+  /// channels each a circle or KakaoTalk's rounded square. Only the look
+  /// changes; the photo is never cut or stretched.
+  static String prefKey(bool room, bool channel) => !room ? 'avatar_people' : (channel ? 'avatar_channels' : 'avatar_groups');
+  static String shapeOf(AppState s, bool room, bool channel) => s.pref(prefKey(room, channel), room ? 'rounded' : 'circle');
+
+  ShapeBorder _shape(BuildContext context) {
+    final rounded = !round && shapeOf(AppScope.of(context), squircle, channel) == 'rounded';
+    return rounded ? RoundedSuperellipseBorder(borderRadius: BorderRadius.circular(size * Tokens.roomKakaoCorner)) : const CircleBorder();
+  }
 
   /// A person: shows the photo I chose for them, if any (나에게만 보이는 사진).
   final String? userId;
@@ -51,7 +85,7 @@ class Avatar extends StatelessWidget {
         child: Stack(
           clipBehavior: Clip.none,
           children: [
-            Avatar(name: name, size: size, squircle: squircle, roomId: roomId),
+            Avatar(name: name, size: size, squircle: squircle, channel: channel, roomId: roomId),
             Positioned(
               right: -b * 0.12,
               bottom: -b * 0.12,
@@ -70,32 +104,36 @@ class Avatar extends StatelessWidget {
         height: size,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color.lerp(base, const Color(0xFFFFFFFF), 0.18)!, base]),
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color.lerp(base, const Color(0xFFFFFFFF), Tokens.avatarTopLight)!, base],
+          ),
         ),
         child: Icon(CupertinoIcons.bookmark_fill, size: size * 0.46, color: const Color(0xFFFFFFFF)),
       );
     }
     // A photo I chose for them first, else the one they share with me.
-    final mine = userId == null ? null : myPhotoFor(s, userId) ?? s.cardPhoto(userId!);
+    // A group/channel: the photo its admins set (그룹·채널 사진).
+    final rid = roomId;
+    final mine = photo ?? (userId != null ? myPhotoFor(s, userId) ?? s.cardPhoto(userId!) : (squircle && rid != null ? s.roomPhoto(rid) : null));
     if (mine != null) {
-      return ClipOval(
+      return ClipPath(
+        clipper: ShapeBorderClipper(shape: _shape(context)),
         child: Image.memory(mine, width: size, height: size, fit: BoxFit.cover, gaplessPlayback: true),
       );
     }
     final base = colorFor(name);
-    final top = Color.lerp(base, const Color(0xFFFFFFFF), 0.18)!;
+    final top = Color.lerp(base, const Color(0xFFFFFFFF), Tokens.avatarTopLight)!;
     // IDs start with @: the letter is the first one after it.
     final clean = name.trim().replaceFirst(RegExp('^@'), '');
     final letter = clean.isEmpty ? '?' : clean.characters.first.toUpperCase();
+    final fill = LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [top, base]);
     return Container(
       width: size,
       height: size,
       alignment: Alignment.center,
-      decoration: BoxDecoration(
-        shape: squircle ? BoxShape.rectangle : BoxShape.circle,
-        borderRadius: squircle ? BorderRadius.circular(size * 0.3) : null,
-        gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [top, base]),
-      ),
+      decoration: ShapeDecoration(shape: _shape(context), gradient: fill),
       child: Text(
         letter,
         style: TextStyle(fontFamily: Tokens.font, fontSize: size * 0.42, fontWeight: FontWeight.w500, color: const Color(0xFFFFFFFF)),
@@ -122,14 +160,25 @@ String shortTime(BuildContext c, DateTime t, {DateTime? now}) {
 }
 
 /// Preview text for a message of any kind.
-String previewText(BuildContext c, {required String kind, String? body, String? caption}) => previewTextL(L.of(c), kind: kind, body: body, caption: caption);
+/// [live]: a 움직이는 사진 says "라이브 포토" instead of "사진".
+String previewText(BuildContext c, {required String kind, String? body, String? caption, bool live = false}) =>
+    previewTextL(L.of(c), kind: kind, body: body, caption: caption, live: live);
 
 /// Same, without a screen (used for phone notifications).
-String previewTextL(L l, {required String kind, String? body, String? caption}) {
+String previewTextL(L l, {required String kind, String? body, String? caption, bool live = false}) {
+  if (live && kind == 'image') {
+    final cap = caption == null ? '' : plainText(caption).trim();
+    return cap.isEmpty ? l.livePhoto : '${l.livePhoto} · $cap';
+  }
   final cap = caption == null ? '' : plainText(caption).trim();
   if (cap.isNotEmpty && const ['image', 'video', 'file'].contains(kind)) {
-    return '${kind == 'file' ? (body ?? l.file) : (kind == 'image' ? l.photo : l.video)} · $cap';
+    final what = kind == 'file' ? (body ?? l.file) : (kind == 'image' ? l.photo : (MediaTags.of(body).gif ? 'GIF' : l.video));
+    return '$what · $cap';
   }
+  // A video sent with its sound off (bm_…g__ name mark, media_tags.dart) shows as GIF.
+  if (kind == 'video' && MediaTags.of(body).gif) return cap.isEmpty ? 'GIF' : 'GIF · $cap';
+  // A made sticker travels as a PNG named burumy-sticker-… (sticker_maker.dart).
+  if (kind == 'image' && (body ?? '').startsWith('burumy-sticker-')) return l.sticker;
   return switch (kind) {
     'image' => l.photo,
     'video' => l.video,
@@ -141,11 +190,14 @@ String previewTextL(L l, {required String kind, String? body, String? caption}) 
     'poll' => '${l.poll}: ${body ?? ''}',
     'checklist' => '${l.checklist}: ${body ?? ''}',
     'meetup' => '${l.meetup}: ${body ?? ''}',
-    'card' => plainText(body ?? ''),
+    // 사진 제안 card (tip 373): the engine's short text is just 🖼️.
+    'card' when body == '🖼️' => l.photoSuggestPreview,
+    'card' || 'pin' => plainText(body ?? ''),
     'verify' => l.verifyRequestLine,
     'contact' => '${l.contactCard}: ${body ?? ''}',
     'location' => l.location,
     'call' => l.callPreview,
+    'room_photo' => l.roomPhotoPreview,
     'bubble' => l.attachBubble,
     _ => plainText(body ?? ''),
   };

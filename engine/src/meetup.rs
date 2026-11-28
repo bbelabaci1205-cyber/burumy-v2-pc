@@ -19,6 +19,8 @@ pub struct Meetup {
     /// Start time, milliseconds since 1970.
     pub starts_at: u64,
     pub place: Option<String>,
+    /// End time (ms since 1970), after the start; None = open-ended.
+    pub ends_at: Option<u64>,
     pub cancelled: bool,
     /// Person -> "yes" / "no" / "maybe".
     pub answers: HashMap<String, String>,
@@ -29,17 +31,43 @@ pub fn clean(text: &str) -> Option<String> {
     (!t.is_empty()).then(|| t.chars().take(MAX_TEXT).collect())
 }
 
-pub fn start_content(title: &str, starts_at: u64, place: Option<&str>) -> serde_json::Value {
-    serde_json::json!({
+pub fn start_content(
+    title: &str,
+    starts_at: u64,
+    ends_at: Option<u64>,
+    place: Option<&str>,
+) -> serde_json::Value {
+    let mut c = serde_json::json!({
         "body": format!("📅 {title}"),
         "title": title,
         "starts_at": starts_at,
         "place": place,
-    })
+    });
+    if let Some(end) = ends_at.filter(|e| *e > starts_at && *e <= MAX_TIME) {
+        c["ends_at"] = end.into();
+    }
+    c
+}
+
+/// Most people one person can bring along ("yes+3" = me and 3 more).
+pub const MAX_GUESTS: u32 = 9;
+
+/// The extra people in a "yes+N" answer (0 for a plain answer).
+pub fn guests(answer: &str) -> u32 {
+    answer
+        .strip_prefix("yes+")
+        .and_then(|n| n.parse::<u32>().ok())
+        .filter(|n| (1..=MAX_GUESTS).contains(n))
+        .unwrap_or(0)
 }
 
 pub fn valid_answer(a: &str) -> bool {
-    matches!(a, "yes" | "no" | "maybe" | "")
+    matches!(a, "yes" | "no" | "maybe" | "") || guests(a) > 0
+}
+
+/// "yes+2" counts as "yes" (with 2 guests).
+pub fn base_answer(a: &str) -> &str {
+    if guests(a) > 0 { "yes" } else { a }
 }
 
 /// Builds every plan in these (decrypted) events, in order.
@@ -59,6 +87,7 @@ pub fn collect(events: &[serde_json::Value]) -> HashMap<String, Meetup> {
                     continue;
                 };
                 let place = c["place"].as_str().and_then(clean);
+                let ends_at = c["ends_at"].as_u64().filter(|e| *e > at && *e <= MAX_TIME);
                 plans.insert(
                     id.into(),
                     (
@@ -67,6 +96,7 @@ pub fn collect(events: &[serde_json::Value]) -> HashMap<String, Meetup> {
                             title,
                             starts_at: at,
                             place,
+                            ends_at,
                             cancelled: false,
                             answers: HashMap::new(),
                         },
@@ -118,7 +148,7 @@ mod tests {
                 "$m",
                 START,
                 "@me:x",
-                start_content("저녁", 1_800_000_000_000, Some("강남")),
+                start_content("저녁", 1_800_000_000_000, None, Some("강남")),
             ),
             ev(
                 "$1",
@@ -172,7 +202,42 @@ mod tests {
 
     #[test]
     fn absurd_times_are_dropped() {
-        let evs = vec![ev("$m", START, "@me:x", start_content("x", u64::MAX, None))];
+        let evs = vec![ev(
+            "$m",
+            START,
+            "@me:x",
+            start_content("x", u64::MAX, None, None),
+        )];
         assert!(collect(&evs).is_empty());
+    }
+
+    #[test]
+    fn guests_and_end_time() {
+        assert!(valid_answer("yes+3"));
+        assert!(!valid_answer("yes+0"));
+        assert!(!valid_answer("yes+10"));
+        assert!(!valid_answer("no+1"));
+        assert_eq!(guests("yes+2"), 2);
+        assert_eq!(base_answer("yes+2"), "yes");
+        let evs = vec![
+            ev(
+                "$m",
+                START,
+                "@me:x",
+                start_content("저녁", 1_800_000_000_000, Some(1_800_007_200_000), None),
+            ),
+            ev(
+                "$1",
+                ANSWER,
+                "@bob:x",
+                json!({ "meetup": "$m", "answer": "yes+2" }),
+            ),
+        ];
+        let m = &collect(&evs)["$m"];
+        assert_eq!(m.ends_at, Some(1_800_007_200_000));
+        assert_eq!(m.answers.get("@bob:x").map(String::as_str), Some("yes+2"));
+        // An end before the start is dropped.
+        let c = start_content("x", 1_800_000_000_000, Some(1_000), None);
+        assert!(c.get("ends_at").is_none());
     }
 }

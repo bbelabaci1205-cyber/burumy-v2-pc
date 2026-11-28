@@ -3,6 +3,10 @@
 //! learns them). A day counts when both people sent at least one message
 //! that day (the phone's own calendar day). The streak is the run of such
 //! days ending today, or ending yesterday while today is still open.
+//!
+//! 그룹 스트릭 (Snapchat 2025 has group streaks): in a group a day counts
+//! when enough different members wrote that day — half the group, at least
+//! 2 and at most 5 people (so big groups don't need everyone).
 
 use std::collections::BTreeSet;
 
@@ -42,6 +46,36 @@ pub fn streak(msgs: &[(u64, bool)], now_ms: u64, tz_offset_min: i32) -> Streak {
     };
     let mut days = 0;
     while both(d) {
+        days += 1;
+        d -= 1;
+    }
+    Streak {
+        days,
+        at_risk: at_risk && days > 0,
+    }
+}
+
+/// People who must write on a day for a group of [members] to keep its
+/// streak: half the group, at least 2, at most 5.
+pub fn group_need(members: usize) -> usize {
+    members.div_ceil(2).clamp(2, 5)
+}
+
+/// Group streak. `msgs`: (time ms, sender).
+pub fn group_streak(msgs: &[(u64, &str)], members: usize, now_ms: u64, tz_offset_min: i32) -> Streak {
+    if members < 2 {
+        return Streak::default();
+    }
+    let need = group_need(members);
+    let mut by_day: std::collections::BTreeMap<i64, BTreeSet<&str>> = Default::default();
+    for (ts, who) in msgs {
+        by_day.entry(day(*ts, tz_offset_min)).or_default().insert(who);
+    }
+    let full = |d: i64| by_day.get(&d).is_some_and(|w| w.len() >= need);
+    let today = day(now_ms, tz_offset_min);
+    let (mut d, at_risk) = if full(today) { (today, false) } else { (today - 1, true) };
+    let mut days = 0;
+    while full(d) {
         days += 1;
         d -= 1;
     }
@@ -121,5 +155,27 @@ mod tests {
         let m = vec![(at(1, 23) + H / 2, true), (at(0, 0) + H / 2, false)];
         assert_eq!(streak(&m, NOW, 0).days, 0);
         assert_eq!(streak(&m, NOW, 9 * 60).days, 1);
+    }
+
+    #[test]
+    fn group_days_need_half_the_group() {
+        assert_eq!(group_need(2), 2);
+        assert_eq!(group_need(5), 3);
+        assert_eq!(group_need(200), 5);
+        let m = vec![
+            (at(2, 9), "@a"),
+            (at(2, 10), "@b"),
+            (at(2, 11), "@c"),
+            (at(1, 9), "@a"),
+            (at(1, 9), "@a"),
+            (at(1, 22), "@b"),
+            (at(1, 23), "@d"),
+            (at(0, 8), "@a"),
+        ];
+        // 5 members: 3 people a day. Today only @a so far: 2 days, at risk.
+        assert_eq!(group_streak(&m, 5, NOW, 0), Streak { days: 2, at_risk: true });
+        // One person writing twice doesn't count twice.
+        let lone = vec![(at(0, 8), "@a"), (at(0, 9), "@a")];
+        assert_eq!(group_streak(&lone, 2, NOW, 0), Streak::default());
     }
 }

@@ -96,4 +96,30 @@ void main() {
     await t.pump(const Duration(seconds: 1));
     expect(find.byKey(const Key('story-share')), findsOneWidget);
   });
+
+  testWidgets('404 front flash: hold ⚡ for warmth / brightness, the screen glows on the shot', (t) async {
+    await openCamera(t);
+    await t.tap(find.byKey(const Key('cam-flip')));
+    await t.pumpAndSettle();
+    await t.tap(find.byKey(const Key('cam-flash')));
+    await t.pumpAndSettle();
+    await t.longPress(find.byKey(const Key('cam-flash')));
+    await t.pumpAndSettle();
+    expect(find.byKey(const Key('cam-flash-panel')), findsOneWidget);
+    expect(find.text('따뜻함'), findsOneWidget);
+    final box = t.getRect(find.byKey(const Key('cam-flash-warm')));
+    await t.tapAt(Offset(box.left + box.width * .8, box.center.dy));
+    await t.pumpAndSettle();
+    final s = t.state(find.byType(StoryCameraPage)).context;
+    expect(AppScope.read(s).pref('front_flash_warm', ''), '0.80');
+    expect(find.text('80%'), findsOneWidget);
+    await t.tap(find.byKey(const Key('cam-flash-panel-close')), warnIfMissed: false);
+    await t.pumpAndSettle();
+    expect(find.byKey(const Key('cam-flash-panel')), findsNothing);
+    await t.tap(find.byKey(const Key('cam-shutter')));
+    await t.pump(const Duration(milliseconds: 100));
+    expect(find.byKey(const Key('cam-screen-flash')), findsOneWidget);
+    await realWait(t, 800);
+    expect(find.byKey(const Key('cam-screen-flash')), findsNothing);
+  });
 }

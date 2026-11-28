@@ -22,7 +22,10 @@ String storyMime(String name) {
 bool isStoryVideo(String name) => storyMime(name).startsWith('video/');
 
 class StoryVideo extends StatefulWidget {
-  const StoryVideo({super.key, required this.bytes, required this.mime, this.loop = false, this.onReady});
+  const StoryVideo({super.key, required this.bytes, required this.mime, this.loop = false, this.onReady, this.speed = 1});
+
+  /// Settings speed (round videos use the player's remembered speed).
+  final double speed;
   final Uint8List bytes;
   final String mime;
   final bool loop;
@@ -58,6 +61,7 @@ class _StoryVideoState extends State<StoryVideo> {
       }
       await v.initialize();
       await v.setLooping(widget.loop);
+      if (widget.speed != 1) await v.setPlaybackSpeed(widget.speed);
       if (!mounted) {
         await v.dispose();
         return;

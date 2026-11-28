@@ -4,20 +4,30 @@
 //! A thin wrapper around matrix-rust-sdk (Apache-2.0) that the Flutter app
 //! calls through its own bindings. Written from scratch for v2: it does not
 //! copy or follow any FluffyChat / matrix-dart-sdk code.
+#![recursion_limit = "256"]
 
 pub mod account;
 pub mod call;
+pub mod article;
 pub mod card;
 pub mod checklist;
+pub mod community;
+pub mod history;
+pub mod import;
 pub mod location;
+pub mod links;
 pub mod lock;
 pub mod meetup;
+pub mod mine;
 pub mod org;
 pub mod poll;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod preview;
+pub mod search;
 mod quiet;
+pub mod signal;
 pub mod streak;
+pub mod topic;
 pub mod verify;
 
 use std::{path::Path, time::Duration};
@@ -52,6 +62,11 @@ const BIRTHDAY_FIELD: &str = "app.burumy.birthday";
 /// My profile card for friends (photo, about me, birthday), sent inside
 /// each 1:1 chat's own encryption: the server can't read it.
 pub const PROFILE_TYPE: &str = "im.securemessenger.profile";
+
+/// 이모지 상태 (Telegram tip 359): an emoji beside my name, sent end-to-end
+/// encrypted into each 1:1 chat (the server never sees it; group members
+/// who aren't friends don't get it). `{ "e": "🏖️", "until": ms or 0 }`.
+pub const STATUS_TYPE: &str = "app.burumy.status";
 
 /// Someone's photo, about-me and birthday as I may see them.
 #[derive(Debug, Clone, Default)]
@@ -115,7 +130,7 @@ pub struct CallPass {
 }
 
 /// What the app shows for one message.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Message {
     pub event_id: String,
     pub sender: String,
@@ -133,8 +148,15 @@ pub struct Message {
     pub reply_to: Option<String>,
     /// First message of the thread this one belongs to ("스레드로 답장").
     pub thread_root: Option<String>,
+    /// 주제 (group topics, tip 527): the topic id written inside the
+    /// encrypted content; None = 일반 (General). The server never sees it.
+    pub topic: Option<String>,
     /// Changed after sending.
     pub edited: bool,
+    /// When the last accepted change was made (ms), if edited.
+    pub edited_at: Option<u64>,
+    /// The words as first sent, if edited ("수정 기록").
+    pub first_body: Option<String>,
     /// Internal: this event only changes another message (not shown itself).
     #[doc(hidden)]
     pub replaces: Option<String>,
@@ -153,6 +175,8 @@ pub struct Message {
     pub preview: Option<LinkPreview>,
     /// Voice message: length and loudness bars (0..1024).
     pub voice: Option<Voice>,
+    /// 움직이는 사진: a photo that also carries a short clip.
+    pub live: Option<Live>,
     /// Poll with its current numbers (kind "poll").
     pub poll: Option<poll::Poll>,
     /// A home-screen bubble (always view-once).
@@ -161,6 +185,8 @@ pub struct Message {
     pub call: Option<call::Call>,
     /// Words under a photo, video or file (the body is then the file name).
     pub caption: Option<String>,
+    /// File size in bytes from the message (photo, video, file, voice).
+    pub size: Option<u64>,
     /// Checklist with its ticks (kind "checklist").
     pub checklist: Option<checklist::Checklist>,
     /// Plan with who is coming (kind "meetup").
@@ -170,6 +196,25 @@ pub struct Message {
     /// FAQ, guide, link buttons, formatted post, giveaway, form or
     /// safety check-in (kind "card").
     pub card: Option<card::Card>,
+    /// 부분 인용 (Telegram tip 399): the part of the answered message the
+    /// sender picked, carried inside the encrypted message. With
+    /// `quote_name` and no `reply_to` it came from another chat ("다른
+    /// 대화에서 답장"): only the copied words and the writer's name travel.
+    pub quote: Option<String>,
+    pub quote_name: Option<String>,
+    /// 설명 위로 (tip 452): the words show above the photo or video.
+    pub caption_above: bool,
+    /// The photo, video or file was swapped by an edit (tips 482, 81,
+    /// 224): download it from this event (the edit), not the message.
+    /// The old one stays in the message itself (수정 기록).
+    pub media_from: Option<String>,
+    pub media_changed: bool,
+    /// 보내는 이름 (channel batch #15, Telegram tips 472 + 310): who this
+    /// message was sent as, carried inside the encrypted message as JSON.
+    /// `{"ch":true}` = as this channel (an admin hiding their name in a
+    /// channel that shows authors); `{"room":"!id","addr":"name"}` = as
+    /// one of the sender's public channels. The app checks the claim.
+    pub post_as: Option<String>,
 }
 
 /// A bubble waiting on my home screen: who and when, never what.
@@ -187,6 +232,29 @@ pub struct Voice {
     pub waveform: Vec<u16>,
 }
 
+/// 움직이는 사진 (iPhone Live Photo / Android Motion Photo): the still is the
+/// normal photo; a short clip (about 3 s) rides along, encrypted the same
+/// way. `style` = "live" (plays once), "loop" or "bounce" (forward, then
+/// backward).
+#[derive(Debug, Clone, PartialEq)]
+pub struct Live {
+    pub style: String,
+    pub duration_ms: u64,
+}
+
+/// The clip may be at most this long and this big (a Live Photo is ~3 s).
+pub const LIVE_MAX_MS: u64 = 10_000;
+pub const LIVE_MAX_BYTES: usize = 20 * 1024 * 1024;
+
+/// Checks the play style; anything unknown plays once.
+pub fn live_style(s: &str) -> &'static str {
+    match s {
+        "loop" => "loop",
+        "bounce" => "bounce",
+        _ => "live",
+    }
+}
+
 /// Title and picture of a web link, carried inside the encrypted message.
 #[derive(Debug, Clone, PartialEq)]
 pub struct LinkPreview {
@@ -195,6 +263,23 @@ pub struct LinkPreview {
     pub description: Option<String>,
     pub site: Option<String>,
     pub has_image: bool,
+    /// Tip 400: the card sits above the words (sender's choice).
+    pub above: bool,
+    /// Tip 400: small picture at the side instead of a big one on top.
+    pub small: bool,
+}
+
+/// How the sender set up the link card before sending (Telegram tip 400):
+/// which link, card above or below the words, small or big picture, or no
+/// card at all. Everything stays inside the encrypted message.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct LinkChoice {
+    /// One of the links in the text; None = the first one.
+    pub url: Option<String>,
+    pub above: bool,
+    pub small: bool,
+    /// "미리보기 안 함".
+    pub off: bool,
 }
 
 /// Field inside an encrypted text message holding its link card.
@@ -216,6 +301,10 @@ pub struct Member {
     pub name: String,
     /// "owner", "admin" or "member".
     pub role: String,
+    /// When their membership last changed (joined, or renamed) in ms; 0 =
+    /// unknown. Used for "새 멤버" limits (a rename restarts the clock,
+    /// which only ever makes the limit stricter).
+    pub since: u64,
 }
 
 /// A person found by ID or name.
@@ -264,6 +353,9 @@ pub struct ChatSummary {
     pub peer: String,
 }
 
+/// Body of a live location message: "📍live:<end ms>".
+const LIVE_MARK: &str = "📍live:";
+
 /// Our built-in sticker message: only the sticker's id travels (inside
 /// the encrypted message); the picture is already in every app.
 pub const STICKER_TYPE: &str = "im.securemessenger.sticker";
@@ -272,6 +364,57 @@ pub const STICKER_TYPE: &str = "im.securemessenger.sticker";
 pub const FORWARDED_FIELD: &str = "im.securemessenger.forwarded";
 /// Marks a message sent quietly: the other phones make no sound for it.
 pub const SILENT_FIELD: &str = "app.burumy.silent";
+
+/// 부분 인용 / 다른 대화에서 답장 (Telegram tip 399): {"text": picked words,
+/// "name": writer (only when it came from another chat)}. Inside the
+/// encrypted content, so the server never sees it.
+pub const QUOTE_FIELD: &str = "app.burumy.quote";
+/// Field inside an encrypted message: who it was sent as (see `post_as`).
+pub const AS_FIELD: &str = "app.burumy.as";
+
+/// Keeps only the parts of a "sent as" claim the app understands, so a
+/// message can't smuggle anything else through it.
+pub fn clean_post_as(v: &serde_json::Value) -> Option<String> {
+    if v.get("ch").and_then(serde_json::Value::as_bool) == Some(true) {
+        return Some(r#"{"ch":true}"#.into());
+    }
+    let room = v.get("room")?.as_str()?;
+    let addr = v.get("addr").and_then(serde_json::Value::as_str).unwrap_or("");
+    if !room.starts_with('!') || room.len() > 255 || addr.len() > 64 {
+        return None;
+    }
+    Some(serde_json::json!({ "room": room, "addr": addr }).to_string())
+}
+/// Telegram's limit for a quote; names are cut too.
+pub const QUOTE_MAX: usize = 1024;
+pub const QUOTE_NAME_MAX: usize = 64;
+
+/// The quote's words and writer, cut to the limits; empty words = none.
+pub fn read_quote(v: &serde_json::Value) -> (Option<String>, Option<String>) {
+    let cut = |s: &str, n: usize| s.chars().take(n).collect::<String>();
+    let text = v.get("text").and_then(|x| x.as_str()).map(|t| cut(t.trim(), QUOTE_MAX)).filter(|t| !t.is_empty());
+    let name = text.as_ref().and(v.get("name").and_then(|x| x.as_str())).map(|n| cut(n.trim(), QUOTE_NAME_MAX)).filter(|n| !n.is_empty());
+    (text, name)
+}
+
+/// The quote field to send ([read_quote] reads it back the same way).
+pub fn quote_value(text: &str, name: Option<&str>) -> Option<serde_json::Value> {
+    let (text, name) = read_quote(&serde_json::json!({ "text": text, "name": name.unwrap_or("") }));
+    let mut v = serde_json::json!({ "text": text? });
+    if let Some(n) = name {
+        v["name"] = n.into();
+    }
+    Some(v)
+}
+/// Room-name mark of a 1:1 chat started with an 아이디 키 proof.
+pub const ID_KEY_PREFIX: &str = "bk1:";
+
+/// Leave reason when an invitation is turned down by the "contacts only"
+/// invitation setting (no other words travel with it).
+pub const INVITES_BLOCKED: &str = "app.burumy.invites_blocked";
+/// Field inside a photo message: its moving clip (encrypted file, mimetype,
+/// size, duration) and how it plays. See [`Live`].
+pub const LIVE_FIELD: &str = "im.securemessenger.live";
 /// Field inside a photo/video message: can be opened only once.
 pub const VIEW_ONCE_FIELD: &str = "im.securemessenger.view_once";
 /// Field inside a view-once message meant for the friend's home-screen bubble.
@@ -332,6 +475,46 @@ fn story_extra_of(e: &matrix_sdk::deserialized_responses::TimelineEvent) -> Opti
         .map(str::to_owned)
 }
 
+/// Set on a story sent again after a change (tip 393): when it was first
+/// posted (ms), so it keeps its place and time.
+pub const STORY_TIME_FIELD: &str = "im.securemessenger.story_time";
+/// Kept on my profile past its hours (tips 392 / 468 / 534): a small JSON
+/// object the app reads (album name, top pin). Sealed like the story.
+pub const STORY_PIN_FIELD: &str = "im.securemessenger.story_pin";
+/// For a kept story: when it leaves the story row (ms).
+pub const STORY_UNTIL_FIELD: &str = "im.securemessenger.story_until";
+/// A group's or channel's story (tip 428), posted by an admin into the room
+/// itself (inside the room's encryption).
+pub const ROOM_STORY_FIELD: &str = "im.securemessenger.room_story";
+/// A member's story for one group only (4-app board): any member of a group
+/// (not a channel) may post one; only that group's members get it.
+pub const MEMBER_STORY_FIELD: &str = "im.securemessenger.member_story";
+/// post_stories(room = "members:!id"): a member story into that group.
+pub const MEMBER_STORY_PREFIX: &str = "members:";
+
+fn content_of(e: &matrix_sdk::deserialized_responses::TimelineEvent) -> Option<serde_json::Value> {
+    let v = serde_json::from_str::<serde_json::Value>(e.raw().json().get()).ok()?;
+    v.get("content").cloned()
+}
+
+/// A pin JSON from the app: a small object, or nothing.
+fn clean_pin(pin: &str) -> Result<Option<serde_json::Value>> {
+    if pin.is_empty() {
+        return Ok(None);
+    }
+    anyhow::ensure!(pin.len() <= 512, "pin too big");
+    let v: serde_json::Value = serde_json::from_str(pin)?;
+    anyhow::ensure!(v.is_object(), "bad pin");
+    Ok(Some(v))
+}
+
+/// What post_stories sent: how many chats, and the new story ids.
+#[derive(Debug, Clone)]
+pub struct StoryPosted {
+    pub sent: usize,
+    pub ids: Vec<String>,
+}
+
 /// One story I can see (mine or a friend's), still within its time.
 #[derive(Debug, Clone)]
 pub struct StoryRef {
@@ -348,6 +531,17 @@ pub struct StoryRef {
     pub extra: Option<String>,
     /// A friend-feed post (no time limit) rather than a story.
     pub feed: bool,
+    /// Kept on the profile: the app's pin JSON (album, top), if any.
+    pub pin: Option<String>,
+    /// When it leaves the story row (ms); 0 for a feed post.
+    pub until: u64,
+    /// Changed after posting (tip 393).
+    pub edited: bool,
+    /// A group's or channel's story (tip 428): room_id is that room.
+    pub group: bool,
+    /// 그룹 전용 스토리 (4-app board, WhatsApp group status): a member's
+    /// own story shown only to that group (room_id); sender is the person.
+    pub member: bool,
 }
 /// Event sent (encrypted) when a view-once photo was opened.
 pub const OPENED_TYPE: &str = "im.securemessenger.opened";
@@ -360,8 +554,126 @@ pub const ROOM_SWITCHES: &str = "app.burumy.room_switches";
 /// Group/channel tool settings (state event, readable by members; only
 /// things that may be public to members: rules, welcome, reactions...).
 pub const ROOM_CONFIG: &str = "app.burumy.room_config";
+/// Group/channel photo, inside the room's encryption (v1 had a plain
+/// m.room.avatar; v2 keeps private rooms' photos away from the server).
+pub const ROOM_PHOTO_TYPE: &str = "app.burumy.room_photo";
+
+/// Groups and channels: a message may be edited this long after sending
+/// (the server refuses later edits too). 1:1 chats have no limit.
+pub const EDIT_WINDOW_MS: u64 = 24 * 60 * 60 * 1000;
+
+/// An edit is shown only when it changes words into words.
+pub fn edit_accepted(original_kind: &str, edit_kind: &str) -> bool {
+    original_kind == "text" && edit_kind == "text"
+}
+
+/// 설명 위로 (tip 452), inside the encrypted message.
+pub const CAPTION_ABOVE_FIELD: &str = "app.burumy.caption_above";
+
+/// What an edit may change (tips 452 B, 482, 81, 224).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum EditKind {
+    /// Not shown at all.
+    Refused,
+    /// Words into words.
+    Text,
+    /// Only the words with a photo, video or file (the same file).
+    Caption,
+    /// A new photo, video or file: swapped in, or added to a text.
+    Media,
+}
+
+fn is_media_kind(k: &str) -> bool {
+    matches!(k, "image" | "video" | "file")
+}
+
+/// Which edits count. Swapping or adding a photo is never allowed in
+/// public groups and channels (`swaps_ok` false): that is how illegal
+/// pictures get hidden in old messages there. A caption edit must keep
+/// the very same file (`same_file`).
+pub fn edit_rule(original_kind: &str, edit_kind: &str, same_file: bool, swaps_ok: bool) -> EditKind {
+    match (original_kind, edit_kind) {
+        ("text", "text") => EditKind::Text,
+        (o, e) if is_media_kind(o) && is_media_kind(e) && same_file && o == e => EditKind::Caption,
+        (o, e) if (o == "text" || is_media_kind(o)) && is_media_kind(e) && swaps_ok => EditKind::Media,
+        _ => EditKind::Refused,
+    }
+}
+
+/// The same photo, video or file with new words (the file itself, its
+/// key and its name stay).
+fn with_caption(t: MessageType, caption: &str) -> Result<MessageType> {
+    fn set(body: &mut String, filename: &mut Option<String>, caption: &str) {
+        let name = filename.clone().unwrap_or_else(|| body.clone());
+        if caption.is_empty() {
+            (*body, *filename) = (name, None);
+        } else {
+            (*body, *filename) = (caption.to_owned(), Some(name));
+        }
+    }
+    Ok(match t {
+        MessageType::Image(mut c) => {
+            set(&mut c.body, &mut c.filename, caption);
+            MessageType::Image(c)
+        }
+        MessageType::Video(mut c) => {
+            set(&mut c.body, &mut c.filename, caption);
+            MessageType::Video(c)
+        }
+        MessageType::File(mut c) => {
+            set(&mut c.body, &mut c.filename, caption);
+            MessageType::File(c)
+        }
+        _ => bail!("no photo, video or file in this message"),
+    })
+}
+
+/// Where the file of a message (or of an edit's new content) is on the server.
+fn media_url_of(ev: &matrix_sdk::deserialized_responses::TimelineEvent) -> Option<String> {
+    let v: serde_json::Value = ev.raw().deserialize_as().ok()?;
+    let c = v.get("content")?;
+    let c = c.get("m.new_content").unwrap_or(c);
+    c.get("url")
+        .or_else(|| c.get("file")?.get("url"))
+        .and_then(|u| u.as_str())
+        .map(str::to_owned)
+}
+
+/// Whether a message sent at `sent_ms` may still be edited.
+pub fn edit_window_open(is_group: bool, sent_ms: u64, now_ms: u64) -> bool {
+    !is_group || now_ms.saturating_sub(sent_ms) <= EDIT_WINDOW_MS
+}
+
+/// Default for "새 멤버 사진·영상·링크 제한" when the owner never set it:
+/// on (7 days) in public rooms, off in private ones.
+pub const NEW_MEDIA_DAYS_PUBLIC: u64 = 7;
 
 /// Checks one room tool setting: known key, right type, sane size.
+/// A list of at most `n` non-empty strings of at most `len` characters.
+fn short_list(v: &serde_json::Value, n: usize, len: usize) -> bool {
+    matches!(v, serde_json::Value::Array(a) if a.len() <= n && a.iter().all(|x| x.as_str().is_some_and(|s| !s.is_empty() && s.chars().count() <= len)))
+}
+
+fn join_question_ok(v: &serde_json::Value) -> bool {
+    use serde_json::Value as V;
+    match v {
+        V::String(s) => !s.trim().is_empty() && s.chars().count() <= 200,
+        V::Object(o) => {
+            let q_ok = o.get("q").and_then(V::as_str).is_some_and(|s| !s.trim().is_empty() && s.chars().count() <= 200);
+            let choices = o.get("choices").and_then(V::as_array);
+            let n = choices.map_or(0, Vec::len);
+            let c_ok = choices.is_some_and(|c| c.iter().all(|x| x.as_str().is_some_and(|s| !s.trim().is_empty() && s.chars().count() <= 80)));
+            let r_ok = o.get("right").and_then(V::as_u64).is_some_and(|r| (r as usize) < n);
+            o.len() == 3 && q_ok && (2..=6).contains(&n) && c_ok && r_ok
+        }
+        _ => false,
+    }
+}
+
+/// Old room settings that held people's words in plain text (read for old
+/// rooms, never written again: welcome and rules now travel encrypted).
+pub const PLAIN_TEXT_KEYS: [&str; 2] = ["welcome", "rules"];
+
 pub fn check_room_config(key: &str, v: &serde_json::Value) -> Result<()> {
     use serde_json::Value as V;
     let ok = match key {
@@ -377,6 +689,64 @@ pub fn check_room_config(key: &str, v: &serde_json::Value) -> Result<()> {
             .as_str()
             .is_some_and(|s| s.is_empty() || RoomId::parse(s).is_ok()),
         "old_members" => v.as_u64().is_some_and(|n| n <= 10_000_000),
+        // v1 parity (2026-11-27): room switches and lists the app enforces
+        // on every phone (the server only checks who may change them).
+        "protect" | "raid" | "views" | "subscriber_dm" | "auto_translate" | "no_member_dm"
+        | "repeat_mute" => v.is_boolean(),
+        // 채널 묶음 #15: 472 작성자 프로필 보이기; 526 a subscriber's message
+        // room for a channel (which channel, and who the subscriber is).
+        "authors" => v.is_boolean(),
+        "channel_dm" => v.as_str().is_some_and(|s| RoomId::parse(s).is_ok()),
+        "subscriber" => v.as_str().is_some_and(|s| UserId::parse(s).is_ok()),
+        "slow" => v.as_u64().is_some_and(|n| n <= 86_400),
+        "post_ttl" => v.as_u64().is_some_and(|n| n <= 31_536_000),
+        "type_lock" => short_list(v, 16, 32),
+        // Join questions: a string (written answer) or a quiz question
+        // {q, choices (2-6), right}. 가입 심사 도우미 (helper) settings.
+        "join_questions" => matches!(v, V::Array(a) if a.len() <= 5 && a.iter().all(join_question_ok)),
+        "gate" => matches!(v, V::Object(o) if o.len() <= 6 && o.iter().all(|(k, x)| match k.as_str() {
+            "on" | "need_answers" | "ai" => x.is_boolean(),
+            "words" => short_list(x, 30, 32),
+            "about" => x.as_str().is_some_and(|s| s.chars().count() <= 300),
+            _ => false,
+        })),
+        // 야간 모드: {from, to} hours (0-23) + tz (minutes from UTC).
+        "night" => matches!(v, V::Object(o) if o.len() <= 3 && o.iter().all(|(k, x)| match k.as_str() {
+            "from" | "to" => x.as_u64().is_some_and(|h| h < 24),
+            "tz" => x.as_i64().is_some_and(|m| (-1440..=1440).contains(&m)),
+            _ => false,
+        })),
+        "keyword_replies" => matches!(v, V::Array(a) if a.len() <= 30 && a.iter().all(|x| matches!(x, V::Object(o) if o.len() <= 3 && o.values().all(|y| y.as_str().is_some_and(|s| s.chars().count() <= 500))))),
+        "member_perms" => matches!(v, V::Object(o) if o.len() <= 16 && o.values().all(|x| x.is_boolean())),
+        "admin_rights" => matches!(v, V::Object(o) if o.len() <= 50 && o.iter().all(|(k, x)| UserId::parse(k.as_str()).is_ok() && short_list(x, 16, 32))),
+        "tags" => matches!(v, V::Object(o) if o.len() <= 500 && o.iter().all(|(k, x)| UserId::parse(k.as_str()).is_ok() && x.as_str().is_some_and(|s| s.chars().count() <= 16))),
+        "mutes" => matches!(v, V::Object(o) if o.len() <= 500 && o.iter().all(|(k, x)| UserId::parse(k.as_str()).is_ok() && x.is_u64())),
+        "pin_until" => matches!(v, V::Object(o) if o.len() <= 50 && o.values().all(|x| x.is_u64())),
+        "handover" => matches!(v, V::Object(o) if o.len() <= 3 && o.get("to").and_then(|t| t.as_str()).is_some_and(|t| UserId::parse(t).is_ok()) && o.get("until").is_some_and(|t| t.is_u64())),
+        // New members can't send photos, videos, files or links for this
+        // many days after joining (0 = off).
+        "new_media_days" => v.as_u64().is_some_and(|n| n <= 30),
+        // Telegram tips batch #16 (groups, 2026-11-27):
+        // 내 태그 스스로 달기 (556) and 강력 스팸 차단 (365) switches.
+        "own_tags" | "antispam" => v.is_boolean(),
+        // 익명 관리자 (94): per admin, the times they were anonymous as
+        // [from, to] ms pairs (to 0 = still anonymous). Messages sent in
+        // those times show the group's name and photo on every phone.
+        "anon" => matches!(v, V::Object(o) if o.len() <= 50 && o.iter().all(|(k, x)| UserId::parse(k.as_str()).is_ok()
+            && matches!(x, V::Array(a) if a.len() <= 20 && a.iter().all(|p| matches!(p, V::Array(q) if q.len() == 2 && q.iter().all(|t| t.is_u64())))))),
+        // 강력 스팸 차단: people an admin said "스팸 아님" for.
+        "spam_ok" => matches!(v, V::Array(a) if a.len() <= 500 && a.iter().all(|x| x.as_str().is_some_and(|u| UserId::parse(u).is_ok()))),
+        // Welcome + rules travel end-to-end encrypted (hidden signal); the
+        // room keeps only their fingerprint (h, SHA-256 hex of the pack with
+        // a random salt) so phones accept the pack only from admins, plus
+        // whether each is on.
+        "texts" => matches!(v, V::Object(o) if o.len() <= 3
+            && o.get("h").and_then(|h| h.as_str()).is_some_and(|h| h.len() == 64 && h.bytes().all(|b| b.is_ascii_hexdigit()))
+            && o.iter().all(|(k, x)| k == "h" || ((k == "w" || k == "r") && x.is_boolean()))),
+        // 주제 (tip 527): the topic list travels encrypted like "texts";
+        // the room keeps only its fingerprint, not even whether topics are on.
+        "topics" => matches!(v, V::Object(o) if o.len() == 1
+            && o.get("h").and_then(|h| h.as_str()).is_some_and(|h| h.len() == 64 && h.bytes().all(|b| b.is_ascii_hexdigit()))),
         _ => false,
     };
     anyhow::ensure!(ok, "bad room setting");
@@ -384,6 +754,55 @@ pub fn check_room_config(key: &str, v: &serde_json::Value) -> Result<()> {
 }
 /// Field inside a message: disappears this many seconds after sending.
 pub const TTL_FIELD: &str = "im.securemessenger.ttl";
+
+/// A view-once photo, video or voice clip nobody opened is gone after this
+/// many seconds (WhatsApp keeps them 14 days, Snapchat 30; a day is enough
+/// for "see it now" and leaves less lying around).
+pub const VIEW_ONCE_TTL: u64 = 24 * 60 * 60;
+
+/// The time a message lives: the chat's timer, unless the message already
+/// carries a shorter one (a view-once photo in a chat with a 1-week timer
+/// still goes after a day). 0 = no timer.
+pub fn pick_ttl(message: Option<u64>, chat: u64) -> Option<u64> {
+    match (message.filter(|x| *x > 0), chat) {
+        (None, 0) => None,
+        (None, c) => Some(c),
+        (Some(m), 0) => Some(m),
+        (Some(m), c) => Some(m.min(c)),
+    }
+}
+
+#[cfg(test)]
+mod view_once_ttl_tests {
+    use super::*;
+    #[test]
+    fn shorter_of_message_and_chat() {
+        assert_eq!(pick_ttl(None, 0), None);
+        assert_eq!(pick_ttl(None, 60), Some(60));
+        assert_eq!(pick_ttl(Some(VIEW_ONCE_TTL), 0), Some(VIEW_ONCE_TTL));
+        assert_eq!(pick_ttl(Some(VIEW_ONCE_TTL), 7 * 86400), Some(VIEW_ONCE_TTL));
+        assert_eq!(pick_ttl(Some(VIEW_ONCE_TTL), 30), Some(30));
+        assert_eq!(pick_ttl(Some(0), 30), Some(30));
+    }
+}
+
+/// One emoji (with its joiners and skin tones), no letters or digits.
+fn status_emoji_ok(e: &str) -> bool {
+    e.is_empty()
+        || (e.chars().count() <= 10
+            && e.len() <= 40
+            && !e.chars().any(|c| c.is_alphanumeric() || c.is_whitespace() || c.is_control()))
+}
+
+/// A status event's content -> (emoji, until), "" once it is over.
+fn read_status(c: &serde_json::Value, now: u64) -> (String, u64) {
+    let e = c["e"].as_str().unwrap_or_default();
+    let until = c["until"].as_u64().unwrap_or(0);
+    if !status_emoji_ok(e) || e.is_empty() || (until != 0 && until <= now) {
+        return (String::new(), 0);
+    }
+    (e.to_owned(), until)
+}
 
 fn now_ms() -> u64 {
     matrix_sdk::ruma::MilliSecondsSinceUnixEpoch::now()
@@ -430,6 +849,11 @@ impl Default for Prefs {
 }
 
 /// One logged-in device.
+/// Downloads running now, by event id (so the X button can stop one).
+static RUNNING_DOWNLOADS: std::sync::LazyLock<
+    std::sync::Mutex<std::collections::HashMap<String, futures_util::future::AbortHandle>>,
+> = std::sync::LazyLock::new(Default::default);
+
 #[derive(Clone)]
 pub struct Engine {
     client: Client,
@@ -449,6 +873,14 @@ pub struct Engine {
         std::sync::Arc<std::sync::Mutex<std::collections::HashMap<String, serde_json::Value>>>,
     /// View-once messages I opened whose "opened" mark may not be back yet.
     opened_here: std::sync::Arc<std::sync::Mutex<std::collections::HashSet<String>>>,
+    /// Hidden signals waiting for the app (see signal.rs).
+    signals: std::sync::Arc<std::sync::Mutex<Vec<signal::Signal>>>,
+    /// When this phone last did its community rounds (per community).
+    community_rounds: std::sync::Arc<std::sync::Mutex<std::collections::HashMap<String, u64>>>,
+    /// Which rooms are communities (never changes for a room).
+    community_kind: std::sync::Arc<std::sync::Mutex<std::collections::HashMap<String, bool>>>,
+    /// 보내는 이름 picked per chat (this phone only, set by the app).
+    send_as: std::sync::Arc<std::sync::Mutex<std::collections::HashMap<OwnedRoomId, serde_json::Value>>>,
 }
 
 /// SDK errors are not thread-safe on the web, so they are turned into
@@ -507,6 +939,10 @@ impl Engine {
             my_votes: Default::default(),
             my_cards: Default::default(),
             opened_here: Default::default(),
+            signals: Default::default(),
+            community_rounds: Default::default(),
+            community_kind: Default::default(),
+            send_as: Default::default(),
         })
     }
 
@@ -573,6 +1009,20 @@ impl Engine {
             .await
             .map_err(to_err)?;
         self.after_login(password).await
+    }
+
+    /// QR로 PC 연결: signs in with the one-time token my phone vouched for
+    /// (Matrix `m.login.token`). Past chats open after the emoji check or
+    /// the 대화 복구 키, like any other new device.
+    pub async fn login_token(&self, token: &str, device_name: &str) -> Result<()> {
+        self.client
+            .matrix_auth()
+            .login_token(token)
+            .initial_device_display_name(device_name)
+            .send()
+            .await
+            .map_err(to_err)?;
+        self.after_login("").await
     }
 
     async fn after_login(&self, password: &str) -> Result<()> {
@@ -647,6 +1097,8 @@ impl Engine {
             .map_err(to_err)?;
         Box::pin(self.on_device_messages(&r.to_device)).await;
         Box::pin(self.on_erase_requests(&r.rooms)).await;
+        self.on_signals(&r.rooms);
+        Box::pin(self.community_duty(&self.community_rounds.clone())).await;
         Ok(())
     }
 
@@ -658,6 +1110,8 @@ impl Engine {
             .map_err(to_err)?;
         Box::pin(self.on_device_messages(&r.to_device)).await;
         Box::pin(self.on_erase_requests(&r.rooms)).await;
+        self.on_signals(&r.rooms);
+        Box::pin(self.community_duty(&self.community_rounds.clone())).await;
         Ok(())
     }
 
@@ -676,6 +1130,30 @@ impl Engine {
             let Ok(v) = serde_json::from_str::<serde_json::Value>(raw.json().get()) else {
                 continue;
             };
+            if v["type"].as_str() == Some(community::KEY_MSG) {
+                if let Some(sender) = v["sender"].as_str() {
+                    if let Err(err) = Box::pin(self.take_community_key(sender, &v["content"])).await {
+                        eprintln!("community key skipped: {err}");
+                    }
+                }
+                continue;
+            }
+            if v["type"].as_str() == Some(mine::DRAFT_MSG) {
+                if let Some(sender) = v["sender"].as_str() {
+                    if let Err(err) = Box::pin(self.take_draft_message(sender, &v["content"])).await {
+                        eprintln!("draft skipped: {err}");
+                    }
+                }
+                continue;
+            }
+            if v["type"].as_str() == Some(history::HISTORY_MSG) {
+                if let Some(sender) = v["sender"].as_str() {
+                    if let Err(err) = Box::pin(self.take_history(sender, &v["content"])).await {
+                        eprintln!("history pack skipped: {err}");
+                    }
+                }
+                continue;
+            }
             if v["type"].as_str() == Some(card::WON) {
                 if let (Some(sender), Some(room), Some(cid)) = (
                     v["sender"].as_str(),
@@ -755,14 +1233,28 @@ impl Engine {
                     == matrix_sdk::ruma::events::room::member::MembershipState::Join),
             "voter not in chat"
         );
-        let ids: Vec<String> = start["content"]["answers"]
-            .as_array()
-            .map(|a| {
-                a.iter()
-                    .filter_map(|x| x["id"].as_str().map(str::to_owned))
-                    .collect()
-            })
-            .unwrap_or_default();
+        // The maker's answers plus the ones members added in time.
+        let raws: Vec<serde_json::Value> = match room.event_cache().await {
+            Ok((cache, _drop)) => cache
+                .events()
+                .await
+                .unwrap_or_default()
+                .iter()
+                .filter_map(trusted_json)
+                .collect(),
+            Err(_) => vec![],
+        };
+        let mut ids = poll::answer_ids(&raws, pid);
+        if ids.is_empty() {
+            ids = start["content"]["answers"]
+                .as_array()
+                .map(|a| {
+                    a.iter()
+                        .filter_map(|x| x["id"].as_str().map(str::to_owned))
+                        .collect()
+                })
+                .unwrap_or_default();
+        }
         choices.retain(|c| ids.contains(c));
         choices.dedup();
         if start["content"]["multiple"].as_bool() != Some(true) {
@@ -774,6 +1266,8 @@ impl Engine {
             bail!("closed")
         }
         let quiz = start["content"]["quiz"].is_string();
+        let locked = quiz || start["content"]["change_vote"].as_bool() == Some(false);
+        let hidden = start["content"]["hide_results"].as_bool() == Some(true);
         let key = format!("burumy.pollbook.{pid}");
         let mut book: poll::MakerBook = self
             .client
@@ -790,8 +1284,8 @@ impl Engine {
                 .collect();
         }
         let f = book.fingerprint(sender);
-        // A quiz answer is final.
-        if quiz && book.votes.get(&f).is_some_and(|c| !c.is_empty()) {
+        // A quiz answer (or a poll with changes off) is final.
+        if locked && book.votes.get(&f).is_some_and(|c| !c.is_empty()) {
             return Ok(());
         }
         book.votes.insert(f, choices);
@@ -800,6 +1294,19 @@ impl Engine {
             .set_custom_value_no_read(key.as_bytes(), serde_json::to_vec(&book)?)
             .await
             .map_err(to_err)?;
+        // Results hidden until the end: no numbers leave this phone yet.
+        if hidden {
+            return Ok(());
+        }
+        self.post_tally(&room, pid, &book).await
+    }
+
+    async fn post_tally(
+        &self,
+        room: &matrix_sdk::Room,
+        pid: &str,
+        book: &poll::MakerBook,
+    ) -> Result<()> {
         let (counts, voters) = book.counts();
         room.send_raw(
             poll::TALLY,
@@ -808,6 +1315,33 @@ impl Engine {
         .await
         .map_err(to_err)?;
         Ok(())
+    }
+
+    /// Anonymous polls with hidden results: once a poll of mine has ended,
+    /// my phone posts the final numbers (once).
+    async fn post_final_tallies(&self, room: &matrix_sdk::Room, msgs: &[Message]) {
+        let now = now_ms();
+        for m in msgs.iter().filter(|m| m.mine) {
+            let Some(p) = &m.poll else { continue };
+            if !(p.anonymous && p.hide_results && (p.closed || poll::past(p.close_at, now))) {
+                continue;
+            }
+            let done = format!("burumy.pollfinal.{}", m.event_id);
+            let store = self.client.state_store();
+            if store.get_custom_value(done.as_bytes()).await.ok().flatten().is_some() {
+                continue;
+            }
+            let book: poll::MakerBook = store
+                .get_custom_value(format!("burumy.pollbook.{}", m.event_id).as_bytes())
+                .await
+                .ok()
+                .flatten()
+                .and_then(|b| serde_json::from_slice(&b).ok())
+                .unwrap_or_default();
+            if self.post_tally(room, &m.event_id, &book).await.is_ok() {
+                let _ = store.set_custom_value_no_read(done.as_bytes(), vec![1]).await;
+            }
+        }
     }
 
     /// The raw start event of a poll (decrypted).
@@ -849,11 +1383,14 @@ impl Engine {
             "refusing to send into a room without encryption"
         );
         let data = card::sanitize(kind, &data, now_ms())?;
+        let mut content =
+            serde_json::json!({ "kind": kind, "data": data, "body": card::body(kind, &data) });
+        // "알림 없이 고정": the pin line arrives without a sound.
+        if kind == "pin" && data["notify"] != serde_json::json!(true) {
+            content[SILENT_FIELD] = serde_json::json!(true);
+        }
         let r = room
-            .send_raw(
-                card::START,
-                serde_json::json!({ "kind": kind, "data": data, "body": card::body(kind, &data) }),
-            )
+            .send_raw(card::START, { let mut c = content; topic::stamp(room_id.as_str(), &mut c); c })
             .await
             .map_err(to_err)?;
         Ok(r.response.event_id.to_string())
@@ -930,14 +1467,16 @@ impl Engine {
         );
         let clean = card::clean_reply(&kind, &data, &answer).context("bad answer")?;
         let mut book = self.card_book(cid).await?;
+        // Choice flows: a one-way code, never the person's ID.
+        let who = card::book_key(&kind, cid, sender);
         anyhow::ensure!(
-            book.len() < 100_000 || book.contains_key(sender),
+            book.len() < 100_000 || book.contains_key(&who),
             "too many answers"
         );
         if clean.is_null() {
-            book.remove(sender);
+            book.remove(&who);
         } else {
-            book.insert(sender.to_owned(), clean);
+            book.insert(who, clean);
         }
         self.save_card_book(cid, &book).await?;
         room.send_raw(
@@ -1055,6 +1594,11 @@ impl Engine {
         let start = self.card_start(&room, cid).await?;
         let me = self.client.user_id().context("not logged in")?.to_string();
         anyhow::ensure!(start["sender"].as_str() == Some(me.as_str()), "not my card");
+        // Choice flows show numbers only; there are no names to list.
+        anyhow::ensure!(
+            start["content"]["kind"].as_str() != Some("flow"),
+            "numbers only"
+        );
         let mut out: Vec<(String, String)> = self
             .card_book(cid)
             .await?
@@ -1167,7 +1711,7 @@ impl Engine {
         let r = room
             .send_raw(
                 checklist::START,
-                checklist::start_content(&title, &items, others_mark, others_add),
+                { let mut c = checklist::start_content(&title, &items, others_mark, others_add); topic::stamp(room_id.as_str(), &mut c); c },
             )
             .await
             .map_err(to_err)?;
@@ -1210,12 +1754,14 @@ impl Engine {
         Ok(())
     }
 
-    /// Starts a plan: what, when (ms since 1970), and where (optional).
+    /// Starts a plan: what, when (ms since 1970), until when (0 = open),
+    /// and where (optional).
     pub async fn create_meetup(
         &self,
         room_id: &RoomId,
         title: &str,
         starts_at: u64,
+        ends_at: u64,
         place: &str,
     ) -> Result<String> {
         let room = self.encrypted_room(room_id).await?;
@@ -1224,14 +1770,24 @@ impl Engine {
         let r = room
             .send_raw(
                 meetup::START,
-                meetup::start_content(&title, starts_at, place.as_deref()),
+                {
+                    let mut c = meetup::start_content(
+                        &title,
+                        starts_at,
+                        (ends_at > 0).then_some(ends_at),
+                        place.as_deref(),
+                    );
+                    topic::stamp(room_id.as_str(), &mut c);
+                    c
+                },
             )
             .await
             .map_err(to_err)?;
         Ok(r.response.event_id.to_string())
     }
 
-    /// "yes", "no" or "maybe" ("" takes my answer back).
+    /// "yes" (or "yes+N" with N guests), "no" or "maybe" ("" takes my
+    /// answer back).
     pub async fn answer_meetup(
         &self,
         room_id: &RoomId,
@@ -1297,6 +1853,58 @@ impl Engine {
         Ok(r.response.event_id.to_string())
     }
 
+    /// 실시간 위치 (v1): a location message that my phone moves (by editing
+    /// it) until `until_ms`. The end time rides in the encrypted body
+    /// ("📍live:<ms>"), so only the people in the chat know it is live.
+    pub async fn send_live_location(
+        &self,
+        room_id: &RoomId,
+        lat: f64,
+        lon: f64,
+        accuracy: Option<f64>,
+        until_ms: u64,
+    ) -> Result<String> {
+        use matrix_sdk::ruma::events::room::message::LocationMessageEventContent;
+        let geo = location::geo_uri(lat, lon, accuracy).context("not a place on Earth")?;
+        anyhow::ensure!(until_ms <= now_ms() + 8 * 3_600_000 + 60_000, "8 hours at most");
+        let room = self.encrypted_room(room_id).await?;
+        let content = RoomMessageEventContent::new(MessageType::Location(
+            LocationMessageEventContent::new(format!("{LIVE_MARK}{until_ms}"), geo),
+        ));
+        let r = room.send(content).await.map_err(to_err)?;
+        Ok(r.response.event_id.to_string())
+    }
+
+    /// Moves my live location (or ends it with `until_ms` = now).
+    pub async fn update_live_location(
+        &self,
+        room_id: &RoomId,
+        event_id: &str,
+        lat: f64,
+        lon: f64,
+        accuracy: Option<f64>,
+        until_ms: u64,
+    ) -> Result<()> {
+        use matrix_sdk::ruma::events::room::message::{
+            LocationMessageEventContent, ReplacementMetadata,
+        };
+        let geo = location::geo_uri(lat, lon, accuracy).context("not a place on Earth")?;
+        let room = self.encrypted_room(room_id).await?;
+        let eid = matrix_sdk::ruma::EventId::parse(event_id)?;
+        let original = room.event(&eid, None).await.map_err(to_err)?;
+        let parsed = original.raw().deserialize().map_err(to_err)?;
+        anyhow::ensure!(
+            Some(parsed.sender()) == self.client.user_id(),
+            "only your own messages"
+        );
+        let content = RoomMessageEventContent::new(MessageType::Location(
+            LocationMessageEventContent::new(format!("{LIVE_MARK}{until_ms}"), geo),
+        ))
+        .make_replacement(ReplacementMetadata::new(eid, None));
+        room.send(content).await.map_err(to_err)?;
+        Ok(())
+    }
+
     /// The room, only if it is end-to-end encrypted.
     async fn encrypted_room(&self, room_id: &RoomId) -> Result<matrix_sdk::Room> {
         let room = self.client.get_room(room_id).context("unknown room")?;
@@ -1322,6 +1930,8 @@ impl Engine {
         quiz: Option<u32>,
         explain: &str,
         close_at: u64,
+        extra: &str,
+        photos: Vec<(String, String, Vec<u8>)>,
     ) -> Result<String> {
         let room = self.client.get_room(room_id).context("unknown room")?;
         if !room
@@ -1332,11 +1942,33 @@ impl Engine {
         {
             bail!("refusing to send into a room without encryption");
         }
-        let answers: Vec<String> = answers
-            .iter()
-            .map(|a| a.trim().to_owned())
-            .filter(|a| !a.is_empty())
+        // Extras follow the answers as the app sent them (blank rows dropped
+        // together with their extras).
+        let mut extra: serde_json::Value = if extra.trim().is_empty() {
+            serde_json::json!({})
+        } else {
+            serde_json::from_str(extra)?
+        };
+        let sent: Vec<usize> = (0..answers.len())
+            .filter(|i| !answers[*i].trim().is_empty())
             .collect();
+        if let Some(list) = extra["answers"].as_array() {
+            let kept: Vec<serde_json::Value> = sent
+                .iter()
+                .map(|i| list.get(*i).cloned().unwrap_or_default())
+                .collect();
+            extra["answers"] = kept.into();
+        }
+        let answers: Vec<String> = sent.iter().map(|i| answers[*i].trim().to_owned()).collect();
+        anyhow::ensure!(
+            answers.iter().all(|a| a.chars().count() <= poll::MAX_ANSWER_TEXT),
+            "answer too long"
+        );
+        anyhow::ensure!(
+            extra["description"].as_str().unwrap_or_default().chars().count() <= poll::MAX_DESCRIPTION,
+            "description too long"
+        );
+        anyhow::ensure!(photos.len() <= 1 + poll::MAX_ANSWERS, "too many photos");
         anyhow::ensure!(
             !question.trim().is_empty() && (2..=poll::MAX_ANSWERS).contains(&answers.len()),
             "a poll needs a question and 2-10 answers"
@@ -1357,23 +1989,126 @@ impl Engine {
                 "deadline must be 1 minute to 30 days away"
             );
         }
-        let anonymous = anonymous || self.is_channel(room_id).await;
+        let channel = self.is_channel(room_id).await;
+        let anonymous = anonymous || channel;
+        // Subscribers can't post into a channel, so they can't add answers.
+        if channel {
+            extra["add_options"] = false.into();
+        }
+        let mut content = poll::start_content_ext(
+            question.trim(),
+            &answers,
+            anonymous,
+            multiple,
+            quiz,
+            explain,
+            close_at,
+        );
+        poll::apply_extras(&mut content, &extra, quiz.is_some());
+        // Photos: "q" = under the question, "<n>" = the n-th answer as sent.
+        // Each is encrypted on this phone before upload.
+        for (slot, mime, data) in photos {
+            anyhow::ensure!(mime.starts_with("image/"), "photos only");
+            anyhow::ensure!(data.len() <= 20 * 1024 * 1024, "photo too big");
+            let target = if slot == "q" {
+                None
+            } else {
+                let n: usize = slot.parse().context("bad photo slot")?;
+                let at = sent.iter().position(|i| *i == n).context("photo for a blank answer")?;
+                Some(at)
+            };
+            let mut cursor = std::io::Cursor::new(data);
+            let file = self
+                .client
+                .upload_encrypted_file(&mut cursor)
+                .await
+                .map_err(to_err)?;
+            let media = serde_json::json!({ "file": file, "mimetype": mime });
+            match target {
+                None => content["media"] = media,
+                Some(at) => {
+                    let a = &mut content["answers"][at];
+                    a["media"] = media;
+                    // One attachment per answer: a photo wins.
+                    if let Some(o) = a.as_object_mut() {
+                        o.remove("sticker");
+                        o.remove("geo");
+                    }
+                }
+            }
+        }
         let r = room
-            .send_raw(
-                poll::START,
-                poll::start_content_ext(
-                    question.trim(),
-                    &answers,
-                    anonymous,
-                    multiple,
-                    quiz,
-                    explain,
-                    close_at,
-                ),
-            )
+            .send_raw(poll::START, { let mut c = content; topic::stamp(room_id.as_str(), &mut c); c })
             .await
             .map_err(to_err)?;
         Ok(r.response.event_id.to_string())
+    }
+
+    /// A member adds an answer to a poll that allows it.
+    pub async fn add_poll_option(&self, room_id: &RoomId, poll_id: &str, text: &str) -> Result<String> {
+        let room = self.client.get_room(room_id).context("unknown room")?;
+        let start = self.poll_start(&room, poll_id).await?;
+        anyhow::ensure!(start["content"]["add_options"].as_bool() == Some(true), "adding answers is off");
+        anyhow::ensure!(!self.poll_closed(&room, poll_id).await, "poll closed");
+        anyhow::ensure!(
+            !poll::past(start["content"]["close_at"].as_u64().unwrap_or(0), now_ms()),
+            "poll closed"
+        );
+        let text = text.trim();
+        anyhow::ensure!(
+            !text.is_empty() && text.chars().count() <= poll::MAX_ANSWER_TEXT,
+            "answer must be 1-100 characters"
+        );
+        let raws: Vec<serde_json::Value> = match room.event_cache().await {
+            Ok((cache, _drop)) => cache.events().await.unwrap_or_default().iter().filter_map(trusted_json).collect(),
+            Err(_) => vec![],
+        };
+        let now = poll::collect(&raws, "", &std::collections::HashMap::new());
+        if let Some(p) = now.get(poll_id) {
+            anyhow::ensure!(p.answers.len() < poll::MAX_WITH_ADDED, "this poll is full");
+            anyhow::ensure!(
+                !p.answers.iter().any(|a| a.text.to_lowercase() == text.to_lowercase()),
+                "that answer is already there"
+            );
+        }
+        let r = room
+            .send_raw(poll::OPTION, serde_json::json!({ "poll": poll_id, "text": text }))
+            .await
+            .map_err(to_err)?;
+        Ok(r.response.event_id.to_string())
+    }
+
+    /// The decrypted photo of a poll: `slot` "" = under the question, else
+    /// an answer id.
+    pub async fn poll_photo(&self, room_id: &RoomId, poll_id: &str, slot: &str) -> Result<Vec<u8>> {
+        use matrix_sdk::{
+            media::{MediaFormat, MediaRequestParameters},
+            ruma::events::room::{EncryptedFile, MediaSource},
+        };
+        let room = self.client.get_room(room_id).context("unknown room")?;
+        let start = self.poll_start(&room, poll_id).await?;
+        let c = &start["content"];
+        let media = if slot.is_empty() {
+            c["media"].clone()
+        } else {
+            c["answers"]
+                .as_array()
+                .and_then(|a| a.iter().find(|x| x["id"].as_str() == Some(slot)))
+                .map(|x| x["media"].clone())
+                .unwrap_or_default()
+        };
+        let file: EncryptedFile = serde_json::from_value(media["file"].clone()).context("no photo")?;
+        self.client
+            .media()
+            .get_media_content(
+                &MediaRequestParameters {
+                    source: MediaSource::Encrypted(Box::new(file)),
+                    format: MediaFormat::File,
+                },
+                true,
+            )
+            .await
+            .map_err(to_err)
     }
 
     /// Votes (or changes my vote; an empty list takes it back).
@@ -1633,6 +2368,15 @@ impl Engine {
         Ok(out)
     }
 
+    /// A short-lived Matrix OpenID token: proves who I am to our own small
+    /// services (call pass, trust list) without giving them my login token.
+    pub async fn openid_token(&self) -> Result<String> {
+        use matrix_sdk::ruma::api::client::account::request_openid_token::v3::Request;
+        let me = self.client.user_id().context("not logged in")?.to_owned();
+        let t = self.client.send(Request::new(me)).await.map_err(to_err)?;
+        Ok(t.access_token)
+    }
+
     /// What the app needs to ask for a call pass itself (used on the web):
     /// a fresh OpenID token, the media key (base64) and whether it is video.
     pub async fn call_ask(
@@ -1691,6 +2435,24 @@ impl Engine {
             start["sender"].as_str() == self.client.user_id().map(|u| u.as_str()),
             "only the maker can close"
         );
+        if start["content"]["anonymous"].as_bool() == Some(true)
+            && start["content"]["hide_results"].as_bool() == Some(true)
+        {
+            let book: poll::MakerBook = self
+                .client
+                .state_store()
+                .get_custom_value(format!("burumy.pollbook.{poll_id}").as_bytes())
+                .await
+                .map_err(to_err)?
+                .and_then(|b| serde_json::from_slice(&b).ok())
+                .unwrap_or_default();
+            self.post_tally(&room, poll_id, &book).await?;
+            let _ = self
+                .client
+                .state_store()
+                .set_custom_value_no_read(format!("burumy.pollfinal.{poll_id}").as_bytes(), vec![1])
+                .await;
+        }
         room.send_raw(poll::END, serde_json::json!({ "poll": poll_id }))
             .await
             .map_err(to_err)?;
@@ -1734,6 +2496,39 @@ impl Engine {
     /// New end-to-end encrypted 1:1 chat.
     pub async fn create_dm(&self, other: &UserId) -> Result<OwnedRoomId> {
         let room = self.client.create_dm(other).await.map_err(to_err)?;
+        Ok(room.room_id().to_owned())
+    }
+
+    /// New 1:1 chat that carries an 아이디 키 proof (made by the app from the
+    /// key the other person gave me). The proof rides in the room name, the
+    /// one place an invitation shows before joining; only the invited
+    /// person's phone checks it, and chat lists never show it as a name.
+    pub async fn create_dm_keyed(&self, other: &UserId, proof: &str) -> Result<OwnedRoomId> {
+        if proof.is_empty() {
+            return self.create_dm(other).await;
+        }
+        if !proof.starts_with(ID_KEY_PREFIX) || proof.len() > 64 {
+            bail!("bad id key proof");
+        }
+        use matrix_sdk::ruma::{
+            api::client::room::{Visibility, create_room::v3::{Request as CreateRoom, RoomPreset}},
+            events::{InitialStateEvent, room::encryption::RoomEncryptionEventContent},
+            serde::Raw,
+        };
+        let mut req = CreateRoom::new();
+        req.name = Some(proof.to_owned());
+        req.invite = vec![other.to_owned()];
+        req.is_direct = true;
+        req.preset = Some(RoomPreset::TrustedPrivateChat);
+        req.visibility = Visibility::Private;
+        req.initial_state = vec![
+            Raw::new(&InitialStateEvent::new(
+                Default::default(),
+                RoomEncryptionEventContent::with_recommended_defaults(),
+            ))?
+            .cast(),
+        ];
+        let room = self.client.create_room(req).await.map_err(to_err)?;
         Ok(room.room_id().to_owned())
     }
 
@@ -1798,6 +2593,10 @@ impl Engine {
     pub async fn invitations(&self) -> Vec<Invitation> {
         let mut out = Vec::new();
         for id in self.visible_invites().await {
+            // Community invites are taken by the app itself (community.rs).
+            if self.is_community(&id).await {
+                continue;
+            }
             let Some(r) = self.client.get_room(&id) else {
                 continue;
             };
@@ -1809,8 +2608,9 @@ impl Engine {
                 .unwrap_or_default();
             let direct = r.is_direct().await.unwrap_or(false);
             // Only a name the room really has; the app shows the sender otherwise.
+            // A 1:1 invitation passes on its 아이디 키 proof here (the app checks it).
             let name = if direct {
-                String::new()
+                r.name().filter(|n| n.starts_with(ID_KEY_PREFIX)).unwrap_or_default()
             } else {
                 r.name().unwrap_or_default()
             };
@@ -1831,6 +2631,47 @@ impl Engine {
         Ok(())
     }
 
+    /// Declines a group/channel invitation because "그룹·채널 초대" only lets
+    /// my contacts add me. The leave carries a fixed marker (nothing else),
+    /// so the room's admins can offer me the invite link instead (tip 385).
+    pub async fn decline_blocked(&self, room_id: &RoomId) -> Result<()> {
+        use matrix_sdk::ruma::api::client::membership::leave_room;
+        let mut req = leave_room::v3::Request::new(room_id.to_owned());
+        req.reason = Some(INVITES_BLOCKED.to_owned());
+        self.client.send(req).await.map_err(to_err)?;
+        Ok(())
+    }
+
+    /// People who turned down an invitation to this room because they only
+    /// take invitations from contacts (and haven't joined since).
+    pub async fn invites_blocked(&self, room_id: &RoomId) -> Vec<String> {
+        let Some(room) = self.client.get_room(room_id) else {
+            return vec![];
+        };
+        let me = self.client.user_id().map(|u| u.to_string()).unwrap_or_default();
+        let Ok(list) = room
+            .get_state_events(matrix_sdk::ruma::events::StateEventType::RoomMember)
+            .await
+        else {
+            return vec![];
+        };
+        list.iter()
+            .filter_map(|r| {
+                let s = match r {
+                    matrix_sdk::deserialized_responses::RawAnySyncOrStrippedState::Sync(r) => r.json().get(),
+                    matrix_sdk::deserialized_responses::RawAnySyncOrStrippedState::Stripped(r) => r.json().get(),
+                };
+                let v: serde_json::Value = serde_json::from_str(s).ok()?;
+                let who = v["state_key"].as_str()?;
+                (v["content"]["membership"].as_str() == Some("leave")
+                    && v["content"]["reason"].as_str() == Some(INVITES_BLOCKED)
+                    && v["sender"].as_str() == Some(who)
+                    && who != me)
+                    .then(|| who.to_owned())
+            })
+            .collect()
+    }
+
     pub async fn is_encrypted(&self, room_id: &RoomId) -> Result<bool> {
         let room = self.client.get_room(room_id).context("unknown room")?;
         Ok(room
@@ -1838,6 +2679,24 @@ impl Engine {
             .await
             .map_err(to_err)?
             .is_encrypted())
+    }
+
+    /// 보내는 이름 (tips 472 + 310): from now on my messages in this chat
+    /// say who they are sent as. `as_json` empty = as myself again.
+    pub fn set_send_as(&self, room_id: &RoomId, as_json: &str) -> Result<()> {
+        let v = if as_json.trim().is_empty() {
+            None
+        } else {
+            let v: serde_json::Value = serde_json::from_str(as_json)?;
+            let clean = clean_post_as(&v).context("bad sender")?;
+            Some(serde_json::from_str::<serde_json::Value>(&clean)?)
+        };
+        let mut m = self.send_as.lock().map_err(|_| anyhow!("lock"))?;
+        match v {
+            Some(v) => m.insert(room_id.to_owned(), v),
+            None => m.remove(room_id),
+        };
+        Ok(())
     }
 
     pub async fn send_text(&self, room_id: &RoomId, text: &str) -> Result<String> {
@@ -1850,6 +2709,17 @@ impl Engine {
         room_id: &RoomId,
         text: &str,
         silent: bool,
+    ) -> Result<String> {
+        Box::pin(self.send_text_link(room_id, text, silent, &LinkChoice::default())).await
+    }
+
+    /// Like [send_text_with], with the sender's link card set-up (tip 400).
+    pub async fn send_text_link(
+        &self,
+        room_id: &RoomId,
+        text: &str,
+        silent: bool,
+        link: &LinkChoice,
     ) -> Result<String> {
         let room = self.client.get_room(room_id).context("unknown room")?;
         if !room
@@ -1864,20 +2734,48 @@ impl Engine {
         if silent {
             v[SILENT_FIELD] = serde_json::Value::Bool(true);
         }
+        Box::pin(self.add_preview(&mut v, text, link)).await;
+        let id = Box::pin(self.send_timed_value(&room, v)).await?;
+        Box::pin(self.copy_to_web(room_id, &id, text, None)).await;
+        Ok(id)
+    }
+
+    /// Public channel with its web page on: my new post is also shown on
+    /// the web page (the owner turned it on knowing posts leave encryption).
+    /// Posts with a chat timer are never copied. Failures only skip it.
+    async fn copy_to_web(&self, room_id: &RoomId, id: &str, text: &str, photo: Option<(String, Vec<u8>)>) {
+        if !self.room_link(room_id).await.web || Box::pin(self.timer(room_id)).await > 0 {
+            return;
+        }
+        let _ = Box::pin(self.web_post(room_id, id, text, now_ms(), photo)).await;
+    }
+
+    /// Puts the link card (if any) into an outgoing text message.
+    #[allow(unused_variables)]
+    async fn add_preview(&self, v: &mut serde_json::Value, text: &str, link: &LinkChoice) {
         #[cfg(not(target_arch = "wasm32"))]
-        if !self.prefs().await.no_link_previews {
-            if let Some(card) = Box::pin(self.make_preview(text)).await {
+        if !link.off && !self.prefs().await.no_link_previews {
+            if let Some(mut card) = Box::pin(self.make_preview(text, link.url.as_deref())).await {
+                if link.above {
+                    card["above"] = true.into();
+                }
+                if link.small && card.get("image").is_some() {
+                    card["small"] = true.into();
+                }
                 v[PREVIEW_FIELD] = card;
             }
         }
-        Box::pin(self.send_timed_value(&room, v)).await
     }
 
     /// Builds the link card on this phone: reads the page, and encrypts its
     /// picture before uploading it. Any failure just sends the text alone.
+    /// `pick` = the link the sender chose (must be in the text).
     #[cfg(not(target_arch = "wasm32"))]
-    async fn make_preview(&self, text: &str) -> Option<serde_json::Value> {
-        let url = preview::first_link(text)?;
+    async fn make_preview(&self, text: &str, pick: Option<&str>) -> Option<serde_json::Value> {
+        let url = match pick {
+            Some(u) if preview::all_links(text).iter().any(|l| l == u) => u.to_owned(),
+            _ => preview::first_link(text)?,
+        };
         let page = preview::fetch_page(&url).await.ok()?;
         let mut card = serde_json::json!({ "url": page.url, "title": page.title });
         if let Some(d) = page.description {
@@ -1924,6 +2822,92 @@ impl Engine {
             .map_err(to_err)
     }
 
+    /// Encrypts bytes on this phone and uploads them; returns the file
+    /// reference (place + key) as JSON to put inside an encrypted message.
+    /// Used for long posts and their photos.
+    pub async fn upload_encrypted(&self, data: Vec<u8>) -> Result<String> {
+        anyhow::ensure!(
+            !data.is_empty() && data.len() <= 50 * 1024 * 1024,
+            "file size"
+        );
+        let mut cursor = std::io::Cursor::new(data);
+        let file = self
+            .client
+            .upload_encrypted_file(&mut cursor)
+            .await
+            .map_err(to_err)?;
+        Ok(serde_json::to_string(&file)?)
+    }
+
+    /// Downloads and decrypts one file reference that came inside an
+    /// encrypted message (a long post or one of its photos).
+    pub async fn download_encrypted(&self, file: &str) -> Result<Vec<u8>> {
+        use matrix_sdk::{
+            media::{MediaFormat, MediaRequestParameters},
+            ruma::events::room::{EncryptedFile, MediaSource},
+        };
+        let v: serde_json::Value = serde_json::from_str(file)?;
+        let v = article::clean_file(&v).context("bad file reference")?;
+        let file: EncryptedFile = serde_json::from_value(v)?;
+        self.client
+            .media()
+            .get_media_content(
+                &MediaRequestParameters {
+                    source: MediaSource::Encrypted(Box::new(file)),
+                    format: MediaFormat::File,
+                },
+                false,
+            )
+            .await
+            .map_err(to_err)
+    }
+
+    /// Opens a long post: its document (from the card, or downloaded and
+    /// decrypted), checked again on this phone. Returns JSON.
+    pub async fn open_article(&self, room_id: &RoomId, event_id: &str) -> Result<String> {
+        let room = self.client.get_room(room_id).context("unknown room")?;
+        let v = self.card_start(&room, event_id).await?;
+        anyhow::ensure!(
+            v["content"]["kind"].as_str() == Some("article"),
+            "not a long post"
+        );
+        let data = card::sanitize("article", &v["content"]["data"], 0)?;
+        if let Some(doc) = data.get("doc") {
+            return Ok(doc.to_string());
+        }
+        let bytes = self.download_encrypted(&data["file"].to_string()).await?;
+        Ok(article::open_file(&bytes)?.to_string())
+    }
+
+    /// Posts a long post or formatted message. [doc] is the document JSON
+    /// whose photos are already uploaded with [upload_encrypted]. A short
+    /// one goes inside the encrypted card; a long one is uploaded as an
+    /// encrypted file and the card carries its key and a preview.
+    pub async fn send_article(&self, room_id: &RoomId, doc: &str) -> Result<String> {
+        let doc: serde_json::Value = serde_json::from_str(doc)?;
+        let doc = article::clean_doc(&doc)?;
+        let raw = doc.to_string();
+        let data = if raw.len() <= article::INLINE_MAX {
+            serde_json::json!({ "doc": doc })
+        } else {
+            anyhow::ensure!(raw.len() <= article::MAX_FILE, "document too big");
+            let images = doc["blocks"]
+                .as_array()
+                .map(|b| b.iter().filter(|x| x["t"] == "img").count())
+                .unwrap_or(0);
+            let file = self.upload_encrypted(raw.clone().into_bytes()).await?;
+            serde_json::json!({
+                "file": serde_json::from_str::<serde_json::Value>(&file)?,
+                "preview": article::preview(&doc),
+                "size": raw.len(),
+                "chars": article::chars(&doc),
+                "images": images,
+            })
+        };
+        self.create_card(room_id, "article", &data.to_string())
+            .await
+    }
+
     /// Sends a message, adding the chat's timer (if any) inside the
     /// encrypted content.
     async fn send_timed(
@@ -1943,6 +2927,8 @@ impl Engine {
         let mut v = serde_json::to_value(&content)?;
         if view_once {
             v[VIEW_ONCE_FIELD] = serde_json::Value::Bool(true);
+            // 4-app board: unopened, it goes by itself after a day.
+            v[TTL_FIELD] = VIEW_ONCE_TTL.into();
         }
         Box::pin(self.send_timed_value(room, v)).await
     }
@@ -1953,8 +2939,14 @@ impl Engine {
         mut v: serde_json::Value,
     ) -> Result<String> {
         let ttl = Box::pin(self.timer(room.room_id())).await;
-        if ttl > 0 {
-            v[TTL_FIELD] = serde_json::Value::from(ttl);
+        let set = v.get(TTL_FIELD).and_then(|x| x.as_u64());
+        if let Some(t) = pick_ttl(set, ttl) {
+            v[TTL_FIELD] = serde_json::Value::from(t);
+        }
+        topic::stamp(room.room_id().as_str(), &mut v);
+        let who = self.send_as.lock().ok().and_then(|m| m.get(room.room_id()).cloned());
+        if let Some(a) = who {
+            v[AS_FIELD] = a;
         }
         let r = room.send_raw("m.room.message", v).await.map_err(to_err)?;
         Ok(r.response.event_id.to_string())
@@ -2027,7 +3019,7 @@ impl Engine {
             v.get("content").cloned().context("no content")?
         };
         if let Some(c) = content.as_object_mut() {
-            for k in ["m.relates_to", "m.new_content", TTL_FIELD, VIEW_ONCE_FIELD] {
+            for k in ["m.relates_to", "m.new_content", TTL_FIELD, VIEW_ONCE_FIELD, AS_FIELD] {
                 c.remove(k);
             }
             c.insert(FORWARDED_FIELD.into(), serde_json::Value::Bool(true));
@@ -2048,37 +3040,14 @@ impl Engine {
         if term.is_empty() {
             return Ok(vec![]);
         }
-        let room = self.client.get_room(room_id).context("unknown room")?;
-        if self
-            .is_quiet(room_id, &self.quiet_state().await.unwrap_or_default())
-            .await
-        {
+        let q = self.quiet_state().await.unwrap_or_default();
+        if self.is_quiet(room_id, &q).await {
             return Ok(vec![]);
         }
-        let (cache, _drop) = room.event_cache().await.map_err(to_err)?;
-        loop {
-            if cache.events().await.map_err(to_err)?.len() >= max_events {
-                break;
-            }
-            let outcome = cache
-                .pagination()
-                .run_backwards_once(100)
-                .await
-                .map_err(to_err)?;
-            if outcome.reached_start {
-                break;
-            }
-        }
-        let mut hits: Vec<Message> = self
-            .fold(&cache.events().await.map_err(to_err)?)
-            .into_iter()
-            .filter(|m| {
-                matches!(m.kind.as_str(), "text" | "file")
-                    && m.body
-                        .as_deref()
-                        .is_some_and(|b| b.to_lowercase().contains(&term))
-            })
-            .collect();
+        // Same rules as 전체 검색: captions too, hidden messages never.
+        let mut hits = self
+            .search_room(room_id, "text", &term, max_events, &self.unseen(&q))
+            .await?;
         hits.reverse();
         Ok(hits)
     }
@@ -2271,11 +3240,15 @@ impl Engine {
             } else {
                 self.set_my_photo("", vec![]).await?;
             }
-            self.set_my_bio(if open(who_bio) { bio } else { "" }).await?;
+            self.set_my_bio(if open(who_bio) { bio } else { "" })
+                .await?;
             let account = self.client.account();
             if open(who_birthday) && !birthday.is_empty() {
-                let v = ProfileFieldValue::new(BIRTHDAY_FIELD, serde_json::Value::String(birthday.to_owned()))
-                    .map_err(to_err)?;
+                let v = ProfileFieldValue::new(
+                    BIRTHDAY_FIELD,
+                    serde_json::Value::String(birthday.to_owned()),
+                )
+                .map_err(to_err)?;
                 account.set_profile_field(v).await.map_err(to_err)?;
             } else {
                 // Nothing there yet is fine.
@@ -2324,6 +3297,64 @@ impl Engine {
         Ok(sent)
     }
 
+    /// 이모지 상태: sends my emoji (or "" = none) and when it ends (0 =
+    /// until I change it) to every friend's 1:1 chat. Returns how many.
+    pub async fn set_emoji_status(&self, emoji: &str, until: u64) -> Result<usize> {
+        let emoji = emoji.trim();
+        anyhow::ensure!(status_emoji_ok(emoji), "one emoji");
+        anyhow::ensure!(until == 0 || until > now_ms(), "already over");
+        let quiet = self.quiet_state().await.unwrap_or_default();
+        let content = serde_json::json!({ "e": emoji, "until": until });
+        let mut sent = 0;
+        for room in self.client.joined_rooms() {
+            if room.is_direct().await.unwrap_or(false)
+                && !self.is_quiet(room.room_id(), &quiet).await
+                && room
+                    .latest_encryption_state()
+                    .await
+                    .map(|e| e.is_encrypted())
+                    .unwrap_or(false)
+                && room.send_raw(STATUS_TYPE, content.clone()).await.is_ok()
+            {
+                sent += 1;
+            }
+        }
+        Ok(sent)
+    }
+
+    /// Someone's emoji status from our 1:1 chat ("" when none or over).
+    pub async fn emoji_status_of(&self, user_id: &str) -> Result<(String, u64)> {
+        let uid = OwnedUserId::try_from(user_id).map_err(to_err)?;
+        let mut best: Option<(u64, serde_json::Value)> = None;
+        for room in self.client.joined_rooms() {
+            if !room.is_direct().await.unwrap_or(false)
+                || !room
+                    .direct_targets()
+                    .iter()
+                    .any(|t| t.as_user_id() == Some(uid.as_ref()))
+            {
+                continue;
+            }
+            let Ok((cache, _drop)) = room.event_cache().await else {
+                continue;
+            };
+            for e in cache.events().await.unwrap_or_default() {
+                // Only what came through the chat's encryption counts.
+                let Some(v) = trusted_json(&e) else { continue };
+                if v.get("type").and_then(|t| t.as_str()) != Some(STATUS_TYPE)
+                    || v.get("sender").and_then(|s| s.as_str()) != Some(user_id)
+                {
+                    continue;
+                }
+                let ts = v.get("origin_server_ts").and_then(|t| t.as_u64()).unwrap_or(0);
+                if best.as_ref().is_none_or(|(t, _)| ts >= *t) {
+                    best = Some((ts, v["content"].clone()));
+                }
+            }
+        }
+        Ok(best.map(|(_, c)| read_status(&c, now_ms())).unwrap_or_default())
+    }
+
     /// Someone's photo, about-me and birthday: the newest card they sent
     /// me in our 1:1 chat, else what they made public.
     pub async fn profile_of(&self, user_id: &str) -> Result<ProfileCard> {
@@ -2335,7 +3366,10 @@ impl Engine {
         let mut best: Option<(u64, serde_json::Value)> = None;
         for room in self.client.joined_rooms() {
             if !room.is_direct().await.unwrap_or(false)
-                || !room.direct_targets().iter().any(|t| t.as_user_id() == Some(uid.as_ref()))
+                || !room
+                    .direct_targets()
+                    .iter()
+                    .any(|t| t.as_user_id() == Some(uid.as_ref()))
             {
                 continue;
             }
@@ -2351,7 +3385,10 @@ impl Engine {
                 {
                     continue;
                 }
-                let ts = v.get("origin_server_ts").and_then(|t| t.as_u64()).unwrap_or(0);
+                let ts = v
+                    .get("origin_server_ts")
+                    .and_then(|t| t.as_u64())
+                    .unwrap_or(0);
                 if best.as_ref().is_none_or(|(t, _)| ts >= *t) {
                     best = Some((ts, v["content"].clone()));
                 }
@@ -2376,19 +3413,32 @@ impl Engine {
                 },
                 None => None,
             };
-            let text = |k: &str| c.get(k).and_then(|x| x.as_str()).unwrap_or_default().to_owned();
+            let text = |k: &str| {
+                c.get(k)
+                    .and_then(|x| x.as_str())
+                    .unwrap_or_default()
+                    .to_owned()
+            };
             let birthday = text("birthday");
             return Ok(ProfileCard {
                 photo,
                 bio: text("bio"),
-                birthday: if birthday_ok(&birthday) { birthday } else { String::new() },
+                birthday: if birthday_ok(&birthday) {
+                    birthday
+                } else {
+                    String::new()
+                },
                 private: true,
             });
         }
         // Public profile (everyone may see it).
         let account = self.client.account();
         let photo = match account.fetch_user_profile_of(&uid).await {
-            Ok(p) => match p.get_static::<matrix_sdk::ruma::profile::AvatarUrl>().ok().flatten() {
+            Ok(p) => match p
+                .get_static::<matrix_sdk::ruma::profile::AvatarUrl>()
+                .ok()
+                .flatten()
+            {
                 Some(url) => self
                     .client
                     .media()
@@ -2415,7 +3465,11 @@ impl Engine {
         Ok(ProfileCard {
             photo,
             bio: self.bio_of(user_id).await.unwrap_or_default(),
-            birthday: if birthday_ok(&birthday) { birthday } else { String::new() },
+            birthday: if birthday_ok(&birthday) {
+                birthday
+            } else {
+                String::new()
+            },
             private: false,
         })
     }
@@ -2445,6 +3499,11 @@ impl Engine {
                     {
                         "admin"
                     }
+                    matrix_sdk::ruma::events::room::power_levels::UserPowerLevel::Int(i)
+                        if i64::from(i) < 0 =>
+                    {
+                        "muted"
+                    }
                     _ => "member",
                 };
                 Member {
@@ -2454,6 +3513,7 @@ impl Engine {
                         .map(str::to_owned)
                         .unwrap_or_else(|| m.user_id().localpart().to_owned()),
                     role: role.into(),
+                    since: m.event().timestamp().map(u64::from).unwrap_or(0),
                 }
             })
             .collect();
@@ -2565,7 +3625,122 @@ impl Engine {
         {
             bail!("refusing to send into a room without encryption");
         }
-        Box::pin(self.send_media(&room, name, mime, data, false, false, caption.trim())).await
+        let photo = (mime.starts_with("image/") && self.room_link(room_id).await.web).then(|| (mime.to_owned(), data.clone()));
+        let id = Box::pin(self.send_media(&room, name, mime, data, false, false, caption.trim())).await?;
+        if let Some(p) = photo {
+            Box::pin(self.copy_to_web(room_id, &id, caption.trim(), Some(p))).await;
+        }
+        Ok(id)
+    }
+
+    /// Same, and with [caption_above] the words show above the photo or
+    /// video (설명 위로, tip 452; the mark is inside the encryption).
+    pub async fn send_file_opts(
+        &self,
+        room_id: &RoomId,
+        name: &str,
+        mime: &str,
+        data: Vec<u8>,
+        caption: &str,
+        caption_above: bool,
+    ) -> Result<String> {
+        if !caption_above || caption.trim().is_empty() {
+            return Box::pin(self.send_file_with(room_id, name, mime, data, caption)).await;
+        }
+        anyhow::ensure!(caption.chars().count() <= 4096, "caption too long");
+        let room = self.client.get_room(room_id).context("unknown room")?;
+        if !room
+            .latest_encryption_state()
+            .await
+            .map_err(to_err)?
+            .is_encrypted()
+        {
+            bail!("refusing to send into a room without encryption");
+        }
+        let photo = (mime.starts_with("image/") && self.room_link(room_id).await.web).then(|| (mime.to_owned(), data.clone()));
+        let msgtype = Box::pin(self.media_msgtype(name, mime, data, caption.trim())).await?;
+        let mut v = serde_json::to_value(RoomMessageEventContent::new(msgtype))?;
+        v[CAPTION_ABOVE_FIELD] = true.into();
+        let id = Box::pin(self.send_timed_value(&room, v)).await?;
+        if let Some(p) = photo {
+            Box::pin(self.copy_to_web(room_id, &id, caption.trim(), Some(p))).await;
+        }
+        Ok(id)
+    }
+
+    /// Edits my photo, video or file message (tips 452 B, 482, 81, 224):
+    /// new words with it, words above or under, and with [file] (name,
+    /// mime, bytes) a new photo, video or file in its place. A text message
+    /// can get a photo this way too (the text becomes its words). Swapping
+    /// or adding a file is refused in public groups and channels; the
+    /// other phones refuse it there as well ([edit_rule]). View-once,
+    /// 움직이는 사진 and voice messages can't be edited.
+    pub async fn edit_media(
+        &self,
+        room_id: &RoomId,
+        event_id: &str,
+        caption: &str,
+        caption_above: bool,
+        file: Option<(String, String, Vec<u8>)>,
+    ) -> Result<()> {
+        use matrix_sdk::ruma::events::room::message::ReplacementMetadata;
+        anyhow::ensure!(caption.chars().count() <= 4096, "caption too long");
+        let room = self.client.get_room(room_id).context("unknown room")?;
+        let eid = matrix_sdk::ruma::EventId::parse(event_id)?;
+        let original = room.event(&eid, None).await.map_err(to_err)?;
+        let parsed = original.raw().deserialize().map_err(to_err)?;
+        anyhow::ensure!(Some(parsed.sender()) == self.client.user_id(), "only your own messages");
+        let sent: u64 = parsed.origin_server_ts().get().into();
+        let group = self.is_channel(room_id).await || room.joined_members_count() > 2;
+        anyhow::ensure!(edit_window_open(group, sent, now_ms()), "edit window closed");
+        let raw: serde_json::Value = original.raw().deserialize_as().map_err(to_err)?;
+        let c = &raw["content"];
+        anyhow::ensure!(
+            c.get(VIEW_ONCE_FIELD).is_none() && c.get(LIVE_FIELD).is_none() && c.get(BUBBLE_FIELD).is_none(),
+            "this message can't be edited"
+        );
+        let swaps = self.swaps_ok(&room).await;
+        // What the message shows now (a swapped file lives in its edit).
+        let (cache, _drop) = room.event_cache().await.map_err(to_err)?;
+        let mut now = self.fold_rules(&cache.events().await.map_err(to_err)?, swaps, group).into_iter().find(|m| m.event_id == event_id);
+        if now.is_none() {
+            // Not loaded on this phone yet: ask the server for the recent page.
+            now = Box::pin(self.messages(room_id, 100)).await?.into_iter().find(|m| m.event_id == event_id);
+        }
+        let now = now.context("message not found")?;
+        anyhow::ensure!(matches!(now.kind.as_str(), "text" | "image" | "video" | "file"), "this message can't be edited");
+        let caption = caption.trim();
+        let msgtype = match file {
+            Some((name, mime, data)) => {
+                anyhow::ensure!(swaps, "photos can't be changed in public groups and channels");
+                anyhow::ensure!(!mime.starts_with("audio/"), "voice messages can't be swapped in");
+                Box::pin(self.media_msgtype(&name, &mime, data, caption)).await?
+            }
+            None => {
+                anyhow::ensure!(now.kind != "text", "nothing to change");
+                let from = now.media_from.clone().unwrap_or_else(|| event_id.to_owned());
+                let fid = matrix_sdk::ruma::EventId::parse(&from)?;
+                let fev = room.event(&fid, None).await.map_err(to_err)?;
+                let AnySyncTimelineEvent::MessageLike(AnySyncMessageLikeEvent::RoomMessage(SyncMessageLikeEvent::Original(m))) =
+                    fev.raw().deserialize().map_err(to_err)?
+                else {
+                    bail!("not a message")
+                };
+                let mt = match m.content.relates_to {
+                    Some(matrix_sdk::ruma::events::room::message::Relation::Replacement(r)) => r.new_content.msgtype,
+                    _ => m.content.msgtype,
+                };
+                with_caption(mt, caption)?
+            }
+        };
+        let content = RoomMessageEventContent::new(msgtype).make_replacement(ReplacementMetadata::new(eid, None));
+        let mut v = serde_json::to_value(content)?;
+        if caption_above && !caption.is_empty() {
+            v["m.new_content"][CAPTION_ABOVE_FIELD] = true.into();
+            v[CAPTION_ABOVE_FIELD] = true.into();
+        }
+        room.send_raw("m.room.message", v).await.map_err(to_err)?;
+        Ok(())
     }
 
     /// A voice message: the recording is encrypted on this device first,
@@ -2614,7 +3789,8 @@ impl Engine {
         Box::pin(self.send_timed_value(&room, v)).await
     }
 
-    /// A photo or video that the other side can open only once.
+    /// A photo, video or voice clip (한 번만 듣기, tip 418) that the other
+    /// side can open only once.
     pub async fn send_view_once(
         &self,
         room_id: &RoomId,
@@ -2632,24 +3808,130 @@ impl Engine {
             bail!("refusing to send into a room without encryption");
         }
         anyhow::ensure!(
-            mime.starts_with("image/") || mime.starts_with("video/"),
-            "view once is for photos and videos"
+            mime.starts_with("image/") || mime.starts_with("video/") || mime.starts_with("audio/"),
+            "view once is for photos, videos and voice"
         );
         Box::pin(self.send_media(&room, name, mime, data, true, false, "")).await
     }
 
-    /// Encrypts the file on this device, uploads the scrambled bytes, then
-    /// sends the message (with the chat timer, and the view-once mark).
-    async fn send_media(
+    /// 움직이는 사진: the still photo plus its short clip, both encrypted on
+    /// this device and uploaded as scrambled bytes; the clip's key, size,
+    /// length and play style sit inside the encrypted message. Apps that
+    /// don't know the field simply show the still photo.
+    #[allow(clippy::too_many_arguments)]
+    pub async fn send_live_photo(
         &self,
-        room: &matrix_sdk::Room,
+        room_id: &RoomId,
         name: &str,
         mime: &str,
         data: Vec<u8>,
-        view_once: bool,
-        bubble: bool,
+        video_mime: &str,
+        video: Vec<u8>,
+        duration_ms: u64,
+        style: &str,
         caption: &str,
     ) -> Result<String> {
+        use matrix_sdk::ruma::events::room::ImageInfo;
+        use matrix_sdk::ruma::events::room::message::ImageMessageEventContent;
+        anyhow::ensure!(caption.chars().count() <= 4096, "caption too long");
+        anyhow::ensure!(mime.starts_with("image/"), "the still must be a photo");
+        anyhow::ensure!(video_mime.starts_with("video/"), "the clip must be a video");
+        anyhow::ensure!(!video.is_empty() && video.len() <= LIVE_MAX_BYTES, "clip too big");
+        let room = self.client.get_room(room_id).context("unknown room")?;
+        if !room
+            .latest_encryption_state()
+            .await
+            .map_err(to_err)?
+            .is_encrypted()
+        {
+            bail!("refusing to send into a room without encryption");
+        }
+        let clip_size = video.len();
+        let mut cursor = std::io::Cursor::new(video);
+        let clip = self
+            .client
+            .upload_encrypted_file(&mut cursor)
+            .await
+            .map_err(to_err)?;
+        let photo = self.room_link(room_id).await.web.then(|| (mime.to_owned(), data.clone()));
+        let size = matrix_sdk::ruma::UInt::new(data.len() as u64);
+        let mut cursor = std::io::Cursor::new(data);
+        let file = self
+            .client
+            .upload_encrypted_file(&mut cursor)
+            .await
+            .map_err(to_err)?;
+        let caption = caption.trim();
+        let mut info = ImageInfo::new();
+        (info.mimetype, info.size) = (Some(mime.to_owned()), size);
+        let mut image = ImageMessageEventContent::encrypted(
+            if caption.is_empty() { name.to_owned() } else { caption.to_owned() },
+            file,
+        )
+        .info(Some(Box::new(info)));
+        image.filename = (!caption.is_empty()).then(|| name.to_owned());
+        let mut v = serde_json::to_value(RoomMessageEventContent::new(MessageType::Image(image)))?;
+        v[LIVE_FIELD] = serde_json::json!({
+            "file": clip,
+            "mimetype": video_mime,
+            "size": clip_size,
+            "duration": duration_ms.min(LIVE_MAX_MS),
+            "style": live_style(style),
+        });
+        let id = Box::pin(self.send_timed_value(&room, v)).await?;
+        // A public channel's web page gets the still photo only.
+        if let Some(p) = photo {
+            Box::pin(self.copy_to_web(room_id, &id, caption, Some(p))).await;
+        }
+        Ok(id)
+    }
+
+    /// The decrypted moving clip of a 움직이는 사진 (mimetype, bytes).
+    pub async fn live_video(&self, room_id: &RoomId, event_id: &str) -> Result<(String, Vec<u8>)> {
+        use matrix_sdk::{
+            media::{MediaFormat, MediaRequestParameters},
+            ruma::events::room::{EncryptedFile, MediaSource},
+        };
+        let room = self.client.get_room(room_id).context("unknown room")?;
+        let eid = <&matrix_sdk::ruma::EventId>::try_from(event_id).map_err(to_err)?;
+        let ev = room.event(eid, None).await.map_err(to_err)?;
+        let v: serde_json::Value = ev.raw().deserialize_as().map_err(to_err)?;
+        let live = v
+            .get("content")
+            .and_then(|c| c.get(LIVE_FIELD))
+            .context("no clip")?;
+        anyhow::ensure!(
+            v.get("content").and_then(|c| c.get(VIEW_ONCE_FIELD)).is_none(),
+            "view-once photos stay still"
+        );
+        let mime = live
+            .get("mimetype")
+            .and_then(|m| m.as_str())
+            .filter(|m| m.starts_with("video/"))
+            .unwrap_or("video/mp4")
+            .to_owned();
+        let file: EncryptedFile = serde_json::from_value(live.get("file").context("no clip")?.clone())?;
+        let data = self
+            .client
+            .media()
+            .get_media_content(
+                &MediaRequestParameters {
+                    source: MediaSource::Encrypted(Box::new(file)),
+                    format: MediaFormat::File,
+                },
+                false,
+            )
+            .await
+            .map_err(to_err)?;
+        anyhow::ensure!(data.len() <= LIVE_MAX_BYTES, "clip too big");
+        Ok((mime, data))
+    }
+
+    /// Encrypts the file on this device, uploads the scrambled bytes, then
+    /// sends the message (with the chat timer, and the view-once mark).
+    /// Encrypts and uploads a file and makes its message part (photo,
+    /// video, audio or file) with the words in [caption].
+    async fn media_msgtype(&self, name: &str, mime: &str, data: Vec<u8>, caption: &str) -> Result<MessageType> {
         use matrix_sdk::ruma::events::room::ImageInfo;
         use matrix_sdk::ruma::events::room::message::{
             AudioInfo, AudioMessageEventContent, FileInfo, FileMessageEventContent,
@@ -2705,6 +3987,20 @@ impl Engine {
             MessageType::File(c) => c.filename = file_name,
             _ => {}
         }
+        Ok(msgtype)
+    }
+
+    async fn send_media(
+        &self,
+        room: &matrix_sdk::Room,
+        name: &str,
+        mime: &str,
+        data: Vec<u8>,
+        view_once: bool,
+        bubble: bool,
+        caption: &str,
+    ) -> Result<String> {
+        let msgtype = Box::pin(self.media_msgtype(name, mime, data, caption)).await?;
         if !bubble {
             return self
                 .send_timed_with(room, RoomMessageEventContent::new(msgtype), view_once)
@@ -2778,25 +4074,15 @@ impl Engine {
         hours: u32,
         extra: &str,
     ) -> Result<usize> {
-        use matrix_sdk::ruma::events::room::ImageInfo;
-        use matrix_sdk::ruma::events::room::message::{
-            ImageMessageEventContent, VideoInfo, VideoMessageEventContent,
-        };
-        // hours = 0: a feed post, which may also be words only (mime "").
-        let feed = hours == 0;
-        anyhow::ensure!(
-            mime.starts_with("image/") || mime.starts_with("video/") || (feed && mime.is_empty()),
-            "stories are photos or videos"
-        );
-        anyhow::ensure!(
-            !mime.is_empty() || !caption.trim().is_empty(),
-            "nothing to post"
-        );
-        anyhow::ensure!(caption.chars().count() <= 2048, "caption too long");
-        anyhow::ensure!(extra.len() <= 8192, "story parts too big");
-        if !extra.is_empty() {
-            serde_json::from_str::<serde_json::Value>(extra)?;
-        }
+        Ok(self
+            .post_stories(mime, data, caption, only, hours, &[extra.to_owned()], "")
+            .await?
+            .sent)
+    }
+
+    /// The 1:1 chats a story of mine may go to: all friends, or the chats
+    /// in [only]; never quiet (hidden) chats or chats without encryption.
+    async fn story_rooms(&self, only: &[String]) -> Vec<matrix_sdk::Room> {
         let quiet = self.quiet_state().await.unwrap_or_default();
         let mut rooms = vec![];
         for room in self.client.joined_rooms() {
@@ -2812,20 +4098,31 @@ impl Engine {
                 rooms.push(room);
             }
         }
-        anyhow::ensure!(!rooms.is_empty(), "no friends yet");
-        if mime.is_empty() {
-            let mut v = serde_json::to_value(RoomMessageEventContent::text_plain(caption.trim()))?;
-            v[STORY_FIELD] = call::new_call_id().into();
-            v[FEED_FIELD] = true.into();
-            let mut sent = 0;
-            for room in rooms {
-                if room.send_raw("m.room.message", v.clone()).await.is_ok() {
-                    sent += 1;
-                }
-            }
-            anyhow::ensure!(sent > 0, "post not sent");
-            return Ok(sent);
+        rooms
+    }
+
+    /// Am I an admin (level 50+) of this room?
+    async fn am_admin(&self, room: &matrix_sdk::Room) -> bool {
+        let Some(me) = self.client.user_id() else {
+            return false;
+        };
+        match room.power_levels().await {
+            Ok(pl) => match pl.for_user(me) {
+                matrix_sdk::ruma::events::room::power_levels::UserPowerLevel::Int(i) => i64::from(i) >= 50,
+                _ => true,
+            },
+            Err(_) => false,
         }
+    }
+
+    /// The story's picture or video as message content (uploaded once,
+    /// encrypted on this phone).
+    async fn story_content(&self, mime: &str, data: Vec<u8>, caption: &str) -> Result<serde_json::Value> {
+        use matrix_sdk::ruma::events::room::ImageInfo;
+        use matrix_sdk::ruma::events::room::message::{
+            ImageMessageEventContent, VideoInfo, VideoMessageEventContent,
+        };
+        anyhow::ensure!(mime.starts_with("image/") || mime.starts_with("video/"), "stories are photos or videos");
         let size = matrix_sdk::ruma::UInt::new(data.len() as u64);
         let mut cursor = std::io::Cursor::new(data);
         let file = self
@@ -2856,27 +4153,278 @@ impl Engine {
         if !caption.is_empty() {
             v["filename"] = "story".into();
         }
-        v[STORY_FIELD] = call::new_call_id().into();
+        Ok(v)
+    }
+
+    /// One upload, several stories (tip 525: a long video in parts, each
+    /// part's start / end in its [extras] entry). [room] empty: to my 1:1
+    /// friends (all, or [only]); else a group's or channel's story (tip
+    /// 428), which only its admins may post. hours 0 = a feed post.
+    #[allow(clippy::too_many_arguments)]
+    pub async fn post_stories(
+        &self,
+        mime: &str,
+        data: Vec<u8>,
+        caption: &str,
+        only: &[String],
+        hours: u32,
+        extras: &[String],
+        room: &str,
+    ) -> Result<StoryPosted> {
+        // hours = 0: a feed post, which may also be words only (mime "").
+        let feed = hours == 0;
+        anyhow::ensure!(
+            mime.starts_with("image/") || mime.starts_with("video/") || (feed && mime.is_empty()),
+            "stories are photos or videos"
+        );
+        anyhow::ensure!(
+            !mime.is_empty() || !caption.trim().is_empty(),
+            "nothing to post"
+        );
+        anyhow::ensure!(caption.chars().count() <= 2048, "caption too long");
+        anyhow::ensure!(extras.len() <= 10, "too many parts");
+        // Live parts (polls, weather, place, link cards with a small picture).
+        for extra in extras {
+            anyhow::ensure!(extra.len() <= 24576, "story parts too big");
+            if !extra.is_empty() {
+                serde_json::from_str::<serde_json::Value>(extra)?;
+            }
+        }
+        let empty = [String::new()];
+        let extras = if extras.is_empty() { &empty[..] } else { extras };
+        let (room, member) = match room.strip_prefix(MEMBER_STORY_PREFIX) {
+            Some(r) => (r, true),
+            None => (room, false),
+        };
+        let rooms = if room.is_empty() {
+            let rooms = self.story_rooms(only).await;
+            anyhow::ensure!(!rooms.is_empty(), "no friends yet");
+            rooms
+        } else {
+            anyhow::ensure!(!feed, "rooms have no feed");
+            let id = RoomId::parse(room).context("bad room")?;
+            let r = self.client.get_room(&id).context("unknown room")?;
+            anyhow::ensure!(!r.is_direct().await.unwrap_or(false), "not a group");
+            if member {
+                anyhow::ensure!(!self.is_channel(r.room_id()).await, "channels have no member stories");
+                anyhow::ensure!(
+                    r.latest_encryption_state().await.map(|e| e.is_encrypted()).unwrap_or(false),
+                    "refusing to post into a room without encryption"
+                );
+            } else {
+                anyhow::ensure!(self.am_admin(&r).await, "only admins post the room's story");
+            }
+            vec![r]
+        };
+        let mut v = if mime.is_empty() {
+            serde_json::to_value(RoomMessageEventContent::text_plain(caption.trim()))?
+        } else {
+            self.story_content(mime, data, caption).await?
+        };
         if feed {
             v[FEED_FIELD] = true.into();
         } else {
             v[TTL_FIELD] = story_seconds(hours).into();
         }
-        if !extra.is_empty() {
-            v[STORY_EXTRA_FIELD] = extra.into();
+        if !room.is_empty() {
+            v[ROOM_STORY_FIELD] = true.into();
         }
+        if member {
+            v[MEMBER_STORY_FIELD] = true.into();
+        }
+        let mut ids = vec![];
         let mut sent = 0;
-        for room in rooms {
-            if room.send_raw("m.room.message", v.clone()).await.is_ok() {
-                sent += 1;
+        for extra in extras {
+            let id = call::new_call_id();
+            let mut v = v.clone();
+            v[STORY_FIELD] = id.clone().into();
+            if !extra.is_empty() {
+                v[STORY_EXTRA_FIELD] = extra.clone().into();
+            }
+            let mut n = 0;
+            for room in &rooms {
+                if room.send_raw("m.room.message", v.clone()).await.is_ok() {
+                    n += 1;
+                }
+            }
+            if n > 0 {
+                ids.push(id);
+                sent = sent.max(n);
             }
         }
         anyhow::ensure!(sent > 0, "story not sent");
+        Ok(StoryPosted { sent, ids })
+    }
+
+    /// My copies of one story: (room, event id, origin time, content).
+    async fn my_story_copies(&self, story_id: &str) -> Vec<(matrix_sdk::Room, String, u64, serde_json::Value)> {
+        let me = self
+            .client
+            .user_id()
+            .map(|u| u.to_string())
+            .unwrap_or_default();
+        let mut out = vec![];
+        for room in self.client.joined_rooms() {
+            let Ok((cache, _drop)) = room.event_cache().await else {
+                continue;
+            };
+            for e in cache.events().await.unwrap_or_default() {
+                if story_of(&e).as_deref() != Some(story_id) {
+                    continue;
+                }
+                let Ok(v) = serde_json::from_str::<serde_json::Value>(e.raw().json().get()) else {
+                    continue;
+                };
+                if v.get("sender").and_then(|x| x.as_str()) != Some(me.as_str()) {
+                    continue;
+                }
+                let (Some(eid), Some(ts), Some(c)) = (
+                    v.get("event_id").and_then(|x| x.as_str()),
+                    v.get("origin_server_ts").and_then(|x| x.as_u64()),
+                    v.get("content"),
+                ) else {
+                    continue;
+                };
+                // A redacted copy has no picture any more.
+                if c.get("msgtype").is_none() {
+                    continue;
+                }
+                out.push((room.clone(), eid.to_owned(), ts, c.clone()));
+            }
+        }
+        out
+    }
+
+    /// Changes a story I posted (tip 393), or keeps it on my profile past
+    /// its hours (tips 392 / 468 / 534). Each chat gets a new copy with the
+    /// same story id and first time; the older copies are taken back. New
+    /// [data] (with [mime]) replaces the picture; empty keeps it. [only]
+    /// as in post_story (a group's story stays in its room). [pin] = the
+    /// app's pin JSON ("" = not kept: the story leaves at its first end).
+    /// Chats left out of [only] lose the story. Returns how many chats.
+    #[allow(clippy::too_many_arguments)]
+    pub async fn edit_story(
+        &self,
+        story_id: &str,
+        mime: &str,
+        data: Vec<u8>,
+        caption: &str,
+        extra: &str,
+        only: &[String],
+        pin: &str,
+    ) -> Result<usize> {
+        anyhow::ensure!(caption.chars().count() <= 2048, "caption too long");
+        anyhow::ensure!(extra.len() <= 24576, "story parts too big");
+        if !extra.is_empty() {
+            serde_json::from_str::<serde_json::Value>(extra)?;
+        }
+        let pin = clean_pin(pin)?;
+        let copies = self.my_story_copies(story_id).await;
+        let (_, _, base_ts, base) = copies
+            .iter()
+            .max_by_key(|c| c.2)
+            .cloned()
+            .context("no such story")?;
+        anyhow::ensure!(base.get(FEED_FIELD).is_none(), "feed posts are not stories");
+        let first = base
+            .get(STORY_TIME_FIELD)
+            .and_then(|x| x.as_u64())
+            .unwrap_or_else(|| copies.iter().map(|c| c.2).min().unwrap_or(base_ts));
+        let ends = match base.get(STORY_UNTIL_FIELD).and_then(|x| x.as_u64()) {
+            Some(t) if base.get(STORY_PIN_FIELD).is_some() => t,
+            _ => base_ts.saturating_add(
+                base.get(TTL_FIELD)
+                    .and_then(|x| x.as_u64())
+                    .unwrap_or(STORY_SECONDS)
+                    .saturating_mul(1000),
+            ),
+        };
+        let now = now_ms();
+        let group = base.get(ROOM_STORY_FIELD).is_some();
+        let mut v = if data.is_empty() {
+            let mut v = base.clone();
+            let caption = caption.trim();
+            v["body"] = if caption.is_empty() { "story" } else { caption }.into();
+            if caption.is_empty() {
+                if let Some(o) = v.as_object_mut() {
+                    o.remove("filename");
+                }
+            } else {
+                v["filename"] = "story".into();
+            }
+            v
+        } else {
+            let mut v = self.story_content(mime, data, caption).await?;
+            for k in [ROOM_STORY_FIELD, MEMBER_STORY_FIELD] {
+                if let Some(x) = base.get(k) {
+                    v[k] = x.clone();
+                }
+            }
+            v
+        };
+        if let Some(o) = v.as_object_mut() {
+            for k in ["m.relates_to", "m.new_content", STORY_EXTRA_FIELD, TTL_FIELD, STORY_PIN_FIELD, STORY_UNTIL_FIELD] {
+                o.remove(k);
+            }
+        }
+        v[STORY_FIELD] = story_id.into();
+        v[STORY_TIME_FIELD] = first.into();
+        if !extra.is_empty() {
+            v[STORY_EXTRA_FIELD] = extra.into();
+        }
+        match pin {
+            Some(p) => {
+                v[STORY_PIN_FIELD] = p;
+                v[STORY_UNTIL_FIELD] = ends.into();
+            }
+            None => {
+                anyhow::ensure!(now < ends, "story ended");
+                v[TTL_FIELD] = ends.saturating_sub(now).div_ceil(1000).max(1).into();
+            }
+        }
+        // Where it goes now.
+        let targets: Vec<matrix_sdk::Room> = if group {
+            let mut seen: Vec<matrix_sdk::Room> = vec![];
+            for (r, ..) in &copies {
+                if !seen.iter().any(|x| x.room_id() == r.room_id()) && self.am_admin(r).await {
+                    seen.push(r.clone());
+                }
+            }
+            seen
+        } else {
+            self.story_rooms(only).await
+        };
+        anyhow::ensure!(!targets.is_empty(), "no friends yet");
+        let mut sent = 0;
+        for room in &targets {
+            if room.send_raw("m.room.message", v.clone()).await.is_ok() {
+                sent += 1;
+                // Take back the older copies in this chat.
+                for (r, eid, ..) in &copies {
+                    if r.room_id() == room.room_id()
+                        && let Ok(eid) = matrix_sdk::ruma::OwnedEventId::try_from(eid.as_str())
+                    {
+                        let _ = room.redact(&eid, None, None).await;
+                    }
+                }
+            }
+        }
+        anyhow::ensure!(sent > 0, "story not sent");
+        // Chats no longer chosen lose it.
+        for (r, eid, ..) in &copies {
+            if !targets.iter().any(|t| t.room_id() == r.room_id())
+                && let Ok(eid) = matrix_sdk::ruma::OwnedEventId::try_from(eid.as_str())
+            {
+                let _ = r.redact(&eid, None, None).await;
+            }
+        }
         Ok(sent)
     }
 
-    /// Stories within their 24 hours, oldest first: mine once (not once per
-    /// friend) and each friend's.
+    /// Stories I can see, oldest first: mine once (not once per friend),
+    /// each friend's, and my groups' (admins' only). Within their hours, or
+    /// kept on a profile ([StoryRef::pin]). A changed story shows its
+    /// newest copy, at its first time.
     pub async fn stories(&self) -> Result<Vec<StoryRef>> {
         let quiet = self.quiet_state().await.unwrap_or_default();
         let me = self
@@ -2885,11 +4433,16 @@ impl Engine {
             .map(|u| u.to_string())
             .unwrap_or_default();
         let now = now_ms();
-        let mut out: Vec<StoryRef> = vec![];
+        // (story id, sender, event time, room, event, group)
+        let mut latest: Vec<(String, String, u64, String, matrix_sdk::deserialized_responses::TimelineEvent, bool)> = vec![];
         for room in self.client.joined_rooms() {
-            if !room.is_direct().await.unwrap_or(false)
-                || self.is_quiet(room.room_id(), &quiet).await
-            {
+            if self.is_quiet(room.room_id(), &quiet).await {
+                continue;
+            }
+            let direct = room.is_direct().await.unwrap_or(false);
+            // Groups and channels: only their admins' stories count.
+            let pl = if direct { None } else { room.power_levels().await.ok() };
+            if !direct && pl.is_none() {
                 continue;
             }
             let Ok((cache, _drop)) = room.event_cache().await else {
@@ -2897,38 +4450,93 @@ impl Engine {
             };
             for e in cache.events().await.unwrap_or_default() {
                 let Some(id) = story_of(&e) else { continue };
-                let extra = story_extra_of(&e);
-                let feed = is_feed(&e);
-                let Some(m) = self.to_message(&e) else {
+                let Ok(v) = serde_json::from_str::<serde_json::Value>(e.raw().json().get()) else {
                     continue;
                 };
-                // A story must carry its timer; a feed post has none.
-                if m.expires_at.is_some_and(|t| t <= now)
-                    || (!feed && m.expires_at.is_none())
-                    || !(matches!(m.kind.as_str(), "image" | "video") || (feed && m.kind == "text"))
+                let (Some(sender), Some(ts)) = (
+                    v.get("sender").and_then(|x| x.as_str()),
+                    v.get("origin_server_ts").and_then(|x| x.as_u64()),
+                ) else {
+                    continue;
+                };
+                let group = v.pointer(&format!("/content/{ROOM_STORY_FIELD}")).is_some();
+                if direct == group {
+                    continue;
+                }
+                // A member's group-only story: any member may post one in a
+                // group, never in a channel (there only admins speak).
+                let member = group && v.pointer(&format!("/content/{MEMBER_STORY_FIELD}")).is_some();
+                if member && self.is_channel(room.room_id()).await {
+                    continue;
+                }
+                if let Some(pl) = pl.as_ref().filter(|_| !member) {
+                    let admin = <&UserId>::try_from(sender).is_ok_and(|u| match pl.for_user(u) {
+                        matrix_sdk::ruma::events::room::power_levels::UserPowerLevel::Int(i) => i64::from(i) >= 50,
+                        _ => true,
+                    });
+                    if !admin {
+                        continue;
+                    }
+                }
+                let room_id = room.room_id().to_string();
+                // Group stories are told apart by room too; 1:1 ones by person.
+                match latest
+                    .iter_mut()
+                    .find(|x| x.0 == id && x.1 == sender && x.5 == group && (!group || x.3 == room_id))
                 {
-                    continue;
+                    Some(x) if x.2 >= ts => {}
+                    Some(x) => *x = (id, sender.to_owned(), ts, room_id, e, group),
+                    None => latest.push((id, sender.to_owned(), ts, room_id, e, group)),
                 }
-                if out.iter().any(|x| x.story_id == id && x.sender == m.sender) {
-                    continue;
-                }
-                out.push(StoryRef {
-                    story_id: id,
-                    room_id: room.room_id().to_string(),
-                    event_id: m.event_id.clone(),
-                    mine: m.sender == me,
-                    sender: m.sender.clone(),
-                    ts: m.ts,
-                    kind: m.kind.clone(),
-                    caption: if m.kind == "text" {
-                        m.body.clone()
-                    } else {
-                        m.caption.clone()
-                    },
-                    extra,
-                    feed,
-                });
             }
+        }
+        let mut out: Vec<StoryRef> = vec![];
+        for (id, _, _, room_id, e, group) in latest {
+            let extra = story_extra_of(&e);
+            let feed = is_feed(&e);
+            let c = content_of(&e).unwrap_or_default();
+            let Some(m) = self.to_message(&e) else {
+                continue;
+            };
+            let pin = c
+                .get(STORY_PIN_FIELD)
+                .filter(|p| p.is_object())
+                .map(|p| p.to_string());
+            let until = if feed {
+                0
+            } else if pin.is_some() {
+                c.get(STORY_UNTIL_FIELD).and_then(|x| x.as_u64()).unwrap_or(m.ts)
+            } else {
+                m.expires_at.unwrap_or(0)
+            };
+            // A story must carry its timer (or be kept); a feed post has none.
+            if (!feed && pin.is_none() && (m.expires_at.is_none() || until <= now))
+                || !(matches!(m.kind.as_str(), "image" | "video") || (feed && m.kind == "text"))
+            {
+                continue;
+            }
+            let first = c.get(STORY_TIME_FIELD).and_then(|x| x.as_u64());
+            out.push(StoryRef {
+                story_id: id,
+                room_id,
+                event_id: m.event_id.clone(),
+                mine: m.sender == me,
+                sender: m.sender.clone(),
+                ts: first.unwrap_or(m.ts),
+                kind: m.kind.clone(),
+                caption: if m.kind == "text" {
+                    m.body.clone()
+                } else {
+                    m.caption.clone()
+                },
+                extra,
+                feed,
+                pin,
+                until,
+                edited: first.is_some(),
+                group,
+                member: group && c.get(MEMBER_STORY_FIELD).is_some(),
+            });
         }
         out.sort_by_key(|x| x.ts);
         Ok(out)
@@ -3007,7 +4615,8 @@ impl Engine {
             .collect())
     }
 
-    /// Deletes my story or feed post from every 1:1 chat it went to.
+    /// Deletes my story or feed post from every chat it went to (1:1
+    /// chats, or the group whose story it was).
     pub async fn delete_story(&self, story_id: &str) -> Result<usize> {
         let me = self
             .client
@@ -3016,9 +4625,6 @@ impl Engine {
             .unwrap_or_default();
         let mut n = 0;
         for room in self.client.joined_rooms() {
-            if !room.is_direct().await.unwrap_or(false) {
-                continue;
-            }
             let Ok((cache, _drop)) = room.event_cache().await else {
                 continue;
             };
@@ -3142,6 +4748,15 @@ impl Engine {
         room_id: &RoomId,
         event_id: &str,
     ) -> Result<(String, Vec<u8>, bool)> {
+        self.download_file_with(room_id, event_id, false).await
+    }
+
+    /// The file's request (where it is on the server + its key).
+    async fn media_request(
+        &self,
+        room_id: &RoomId,
+        event_id: &str,
+    ) -> Result<(String, matrix_sdk::media::MediaRequestParameters, bool)> {
         use matrix_sdk::{
             media::{MediaFormat, MediaRequestParameters},
             ruma::events::room::MediaSource,
@@ -3156,7 +4771,12 @@ impl Engine {
         else {
             bail!("not a message")
         };
-        let (name, source) = match &m.content.msgtype {
+        // An edit that swapped the file: its new content holds the file.
+        let msgtype = match &m.content.relates_to {
+            Some(matrix_sdk::ruma::events::room::message::Relation::Replacement(r)) => &r.new_content.msgtype,
+            _ => &m.content.msgtype,
+        };
+        let (name, source) = match msgtype {
             MessageType::File(f) => (f.body.clone(), f.source.clone()),
             MessageType::Image(f) => (f.body.clone(), f.source.clone()),
             MessageType::Video(f) => (f.body.clone(), f.source.clone()),
@@ -3164,19 +4784,71 @@ impl Engine {
             _ => bail!("no file in this message"),
         };
         let encrypted_file = matches!(source, MediaSource::Encrypted(_));
-        let data = self
-            .client
-            .media()
-            .get_media_content(
-                &MediaRequestParameters {
-                    source,
-                    format: MediaFormat::File,
-                },
-                false,
-            )
-            .await
-            .map_err(to_err)?;
+        Ok((
+            name,
+            MediaRequestParameters {
+                source,
+                format: MediaFormat::File,
+            },
+            encrypted_file,
+        ))
+    }
+
+    /// [cache] = keep a copy in this device's encrypted store (auto-download,
+    /// or a video opened again) so it opens without downloading again.
+    pub async fn download_file_with(
+        &self,
+        room_id: &RoomId,
+        event_id: &str,
+        cache: bool,
+    ) -> Result<(String, Vec<u8>, bool)> {
+        let (name, request, encrypted_file) = self.media_request(room_id, event_id).await?;
+        // [cancel_download] stops it for real (the transfer is dropped).
+        let media = self.client.media();
+        let (job, stop) = futures_util::future::abortable(media.get_media_content(&request, cache));
+        RUNNING_DOWNLOADS
+            .lock()
+            .map_err(|_| anyhow!("lock"))?
+            .insert(event_id.to_owned(), stop);
+        let got = job.await;
+        if let Ok(mut m) = RUNNING_DOWNLOADS.lock() {
+            m.remove(event_id);
+        }
+        let data = got.map_err(|_| anyhow!("cancelled"))?.map_err(to_err)?;
         Ok((name, data, encrypted_file))
+    }
+
+    /// Stops a running [download_file_with] (download list "X").
+    pub fn cancel_download(&self, event_id: &str) -> bool {
+        RUNNING_DOWNLOADS
+            .lock()
+            .ok()
+            .and_then(|mut m| m.remove(event_id))
+            .map(|h| h.abort())
+            .is_some()
+    }
+
+    /// Removes the kept copy of one file (Settings > Data: keep for N days).
+    pub async fn forget_file(&self, room_id: &RoomId, event_id: &str) -> Result<()> {
+        let (_, request, _) = self.media_request(room_id, event_id).await?;
+        self.client
+            .media()
+            .remove_media_content(&request)
+            .await
+            .map_err(to_err)
+    }
+
+    /// Kept copies: biggest single file and how long an unopened copy stays
+    /// (None = no limit). The store drops older copies on its own.
+    pub async fn set_media_keep(&self, max_file: Option<u64>, keep_secs: Option<u64>) -> Result<()> {
+        use matrix_sdk::media::MediaRetentionPolicy;
+        let policy = MediaRetentionPolicy::new()
+            .with_max_cache_size(Some(4 * 1024 * 1024 * 1024))
+            .with_max_file_size(max_file)
+            .with_last_access_expiry(keep_secs.map(std::time::Duration::from_secs));
+        let media = self.client.media();
+        media.set_media_retention_policy(policy).await.map_err(to_err)?;
+        media.clean().await.map_err(to_err)
     }
 
     /// Turns on phone notifications through our push gateway. The server is
@@ -3209,6 +4881,15 @@ impl Engine {
         &self,
         ev: &matrix_sdk::deserialized_responses::TimelineEvent,
     ) -> Option<Message> {
+        let mut m = self.to_message_inner(ev)?;
+        m.topic = topic::read(ev.raw().json().get());
+        Some(m)
+    }
+
+    fn to_message_inner(
+        &self,
+        ev: &matrix_sdk::deserialized_responses::TimelineEvent,
+    ) -> Option<Message> {
         // In our (always encrypted) chats a message that did not come end-to-end
         // encrypted was injected around the encryption (a bad server or a
         // modified app): never show it or let it change anything.
@@ -3232,7 +4913,11 @@ impl Engine {
                     MessageType::File(f) => ("file", f.filename().to_owned()),
                     // Only a valid point; anything else shows as plain text.
                     MessageType::Location(l) => match location::parse(&l.geo_uri) {
-                        Some(g) => ("location", g),
+                        // Live: the end time goes after the point (";live=").
+                        Some(g) => match l.body.strip_prefix(LIVE_MARK).and_then(|x| x.parse::<u64>().ok()) {
+                            Some(until) => ("location", format!("{g};live={until}")),
+                            None => ("location", g),
+                        },
                         None => ("text", l.body.clone()),
                     },
                     // A request to check each other's keys (in-chat card).
@@ -3256,6 +4941,16 @@ impl Engine {
                 };
                 let (mut kind, mut body) = kind_body(&m.content.msgtype);
                 let mut caption = caption_of(&m.content.msgtype);
+                // The sender's phone writes the size; shown on the bubble and
+                // used by the auto-download size limit.
+                let file_size: Option<u64> = match &m.content.msgtype {
+                    MessageType::Image(f) => f.info.as_ref().and_then(|i| i.size),
+                    MessageType::Video(f) => f.info.as_ref().and_then(|i| i.size),
+                    MessageType::File(f) => f.info.as_ref().and_then(|i| i.size),
+                    MessageType::Audio(f) => f.info.as_ref().and_then(|i| i.size),
+                    _ => None,
+                }
+                .map(u64::from);
                 if m.content.msgtype.msgtype() == TIMER_TYPE {
                     kind = "timer";
                     body = m
@@ -3310,6 +5005,15 @@ impl Engine {
                         waveform,
                     })
                 });
+                // Only photos carry a clip; view-once photos stay still.
+                let live = raw.as_ref().and_then(|v| {
+                    let l = v.get("content")?.get(LIVE_FIELD)?;
+                    l.get("file")?;
+                    Some(Live {
+                        style: live_style(l.get("style").and_then(|x| x.as_str()).unwrap_or("")).to_owned(),
+                        duration_ms: l.get("duration").and_then(|x| x.as_u64()).unwrap_or(0).min(LIVE_MAX_MS),
+                    })
+                }).filter(|_| matches!(m.content.msgtype, MessageType::Image(_)) && !view_once);
                 let preview = raw.as_ref().and_then(|v| {
                     let p = v.get("content")?.get(PREVIEW_FIELD)?;
                     let s = |k: &str| p.get(k).and_then(|x| x.as_str()).map(str::to_owned);
@@ -3319,13 +5023,26 @@ impl Engine {
                         description: s("description"),
                         site: s("site"),
                         has_image: p.get("image").is_some(),
+                        above: p.get("above").and_then(|x| x.as_bool()).unwrap_or(false),
+                        small: p.get("small").and_then(|x| x.as_bool()).unwrap_or(false),
                     })
                 });
+                let (quote, quote_name) = raw
+                    .as_ref()
+                    .and_then(|v| v.get("content")?.get(QUOTE_FIELD).cloned())
+                    .map(|q| read_quote(&q))
+                    .unwrap_or((None, None));
+                let post_as = raw.as_ref().and_then(|v| clean_post_as(v.get("content")?.get(AS_FIELD)?));
                 let expires_at = raw
+                    .as_ref()
                     .and_then(|v| v.get("content")?.get(TTL_FIELD)?.as_u64())
                     .filter(|s| *s > 0)
                     .map(|s| ts.saturating_add(s.saturating_mul(1000)));
                 let (mut reply_to, mut replaces, mut thread_root) = (None, None, None);
+                let mut caption_above = raw
+                    .as_ref()
+                    .and_then(|v| v.get("content")?.get(CAPTION_ABOVE_FIELD)?.as_bool())
+                    .unwrap_or(false);
                 match &m.content.relates_to {
                     Some(Relation::Reply(r)) => reply_to = Some(r.in_reply_to.event_id.to_string()),
                     Some(Relation::Thread(t)) => thread_root = Some(t.event_id.to_string()),
@@ -3333,6 +5050,10 @@ impl Engine {
                         replaces = Some(r.event_id.to_string());
                         (kind, body) = kind_body(&r.new_content.msgtype);
                         caption = caption_of(&r.new_content.msgtype);
+                        caption_above = raw
+                            .as_ref()
+                            .and_then(|v| v.get("content")?.get("m.new_content")?.get(CAPTION_ABOVE_FIELD)?.as_bool())
+                            .unwrap_or(false);
                     }
                     _ => {}
                 }
@@ -3341,12 +5062,15 @@ impl Engine {
                     sender,
                     body: Some(body),
                     was_encrypted,
+                    topic: None,
                     ts,
                     mine,
                     kind: kind.into(),
                     reply_to,
                     thread_root,
                     edited: false,
+                    edited_at: None,
+                    first_body: None,
                     replaces,
                     reactions: vec![],
                     expires_at,
@@ -3356,14 +5080,22 @@ impl Engine {
                     silent,
                     preview,
                     voice,
+                    live,
                     poll: None,
                     call: None,
                     bubble,
                     caption: if view_once { None } else { caption },
+                    size: file_size,
                     checklist: None,
                     meetup: None,
                     contact: None,
                     card: None,
+                    quote,
+                    quote_name,
+                    caption_above,
+                    media_from: None,
+                    media_changed: false,
+                    post_as,
                 })
             }
             AnySyncTimelineEvent::MessageLike(AnySyncMessageLikeEvent::RoomEncrypted(_)) => {
@@ -3372,12 +5104,15 @@ impl Engine {
                     sender,
                     body: None,
                     was_encrypted: true,
+                    topic: None,
                     ts,
                     mine,
                     kind: "locked".into(),
                     reply_to: None,
                     thread_root: None,
                     edited: false,
+                    edited_at: None,
+                    first_body: None,
                     replaces: None,
                     reactions: vec![],
                     expires_at: None,
@@ -3387,14 +5122,22 @@ impl Engine {
                     silent: false,
                     preview: None,
                     voice: None,
+                    live: None,
                     poll: None,
                     call: None,
                     bubble: false,
                     caption: None,
+                    size: None,
                     checklist: None,
                     meetup: None,
                     contact: None,
                     card: None,
+                    quote: None,
+                    quote_name: None,
+                    caption_above: false,
+                    media_from: None,
+                    media_changed: false,
+                    post_as: None,
                 })
             }
             _ => {
@@ -3409,12 +5152,15 @@ impl Engine {
                         sender,
                         body: Some(String::new()),
                         was_encrypted,
+                        topic: None,
                         ts,
                         mine,
                         kind: "call".into(),
                         reply_to: None,
                         thread_root: None,
                         edited: false,
+                        edited_at: None,
+                        first_body: None,
                         replaces: None,
                         reactions: vec![],
                         expires_at: None,
@@ -3424,6 +5170,7 @@ impl Engine {
                         silent: false,
                         preview: None,
                         voice: None,
+                        live: None,
                         poll: None,
                         call: Some(call::Call {
                             call_id: c["call"].as_str()?.into(),
@@ -3435,10 +5182,66 @@ impl Engine {
                         }),
                         bubble: false,
                         caption: None,
+                        size: None,
                         checklist: None,
                         meetup: None,
                         contact: None,
                         card: None,
+                        quote: None,
+                        quote_name: None,
+                        caption_above: false,
+                        media_from: None,
+                        media_changed: false,
+                        post_as: None,
+                    });
+                }
+                if v["type"].as_str() == Some(ROOM_PHOTO_TYPE) {
+                    // "그룹 사진을 바꿨어요" line; a copy sent again for new
+                    // members stays hidden.
+                    let c = &v["content"];
+                    if c.get("again").and_then(|x| x.as_bool()) == Some(true) {
+                        return None;
+                    }
+                    let name = if c.get("photo").is_some() { "set".to_owned() } else { "removed".to_owned() };
+                    return Some(Message {
+                        event_id,
+                        sender,
+                        body: Some(name),
+                        was_encrypted,
+                        topic: None,
+                        ts,
+                        mine,
+                        kind: "room_photo".into(),
+                        reply_to: None,
+                        thread_root: None,
+                        edited: false,
+                        edited_at: None,
+                        first_body: None,
+                        replaces: None,
+                        reactions: vec![],
+                        expires_at: None,
+                        view_once: false,
+                        opened: false,
+                        forwarded: false,
+                        silent: false,
+                        preview: None,
+                        voice: None,
+                        live: None,
+                        poll: None,
+                        call: None,
+                        bubble: false,
+                        caption: None,
+                        size: None,
+                        checklist: None,
+                        meetup: None,
+                        contact: None,
+                        card: None,
+                        quote: None,
+                        quote_name: None,
+                        caption_above: false,
+                        media_from: None,
+                        media_changed: false,
+                        post_as: None,
                     });
                 }
                 if v["type"].as_str() == Some(CONTACT_TYPE) {
@@ -3456,12 +5259,15 @@ impl Engine {
                         sender,
                         body: Some(name),
                         was_encrypted,
+                        topic: None,
                         ts,
                         mine,
                         kind: "contact".into(),
                         reply_to: None,
                         thread_root: None,
                         edited: false,
+                        edited_at: None,
+                        first_body: None,
                         replaces: None,
                         reactions: vec![],
                         expires_at: None,
@@ -3471,14 +5277,22 @@ impl Engine {
                         silent: false,
                         preview: None,
                         voice: None,
+                        live: None,
                         poll: None,
                         call: None,
                         bubble: false,
                         caption: None,
+                        size: None,
                         checklist: None,
                         meetup: None,
                         contact: Some(uid.to_owned()),
                         card: None,
+                        quote: None,
+                        quote_name: None,
+                        caption_above: false,
+                        media_from: None,
+                        media_changed: false,
+                        post_as: None,
                     });
                 }
                 let is_list = v["type"].as_str() == Some(checklist::START);
@@ -3499,6 +5313,7 @@ impl Engine {
                     sender,
                     body: Some(q),
                     was_encrypted,
+                    topic: None,
                     ts,
                     mine,
                     kind: if is_card {
@@ -3514,23 +5329,33 @@ impl Engine {
                     reply_to: None,
                     thread_root: None,
                     edited: false,
+                    edited_at: None,
+                    first_body: None,
                     replaces: None,
                     reactions: vec![],
                     expires_at: None,
                     view_once: false,
                     opened: false,
                     forwarded: false,
-                    silent: false,
+                    silent: is_card && v["content"][SILENT_FIELD].as_bool().unwrap_or(false),
                     preview: None,
                     voice: None,
+                    live: None,
                     poll: None,
                     call: None,
                     bubble: false,
                     caption: None,
+                    size: None,
                     checklist: None,
                     meetup: None,
                     contact: None,
                     card: None,
+                    quote: None,
+                    quote_name: None,
+                    caption_above: false,
+                    media_from: None,
+                    media_changed: false,
+                    post_as: None,
                 })
             }
         }
@@ -3539,6 +5364,32 @@ impl Engine {
     /// Applies edits (only the sender's own edits count) and drops the edit
     /// events themselves. Deleted messages are already gone (not shown).
     fn fold(&self, events: &[matrix_sdk::deserialized_responses::TimelineEvent]) -> Vec<Message> {
+        self.fold_rules(events, false, false)
+    }
+
+    /// Group or channel (more than two people): edits count for 24 hours.
+    async fn is_group_chat(&self, room: &matrix_sdk::Room) -> bool {
+        self.is_channel(room.room_id()).await || room.joined_members_count() > 2
+    }
+
+    /// Whether this chat lets a sent photo be swapped: not in public groups
+    /// and channels (a public address, even with join approval on).
+    async fn swaps_ok(&self, room: &matrix_sdk::Room) -> bool {
+        room.join_rule() != Some(matrix_sdk::ruma::events::room::join_rules::JoinRule::Public)
+            && self.room_link(room.room_id()).await.kind != "public"
+    }
+
+    /// [fold] with the chat's swap rule ([swaps_ok]).
+    fn fold_rules(
+        &self,
+        events: &[matrix_sdk::deserialized_responses::TimelineEvent],
+        swaps_ok: bool,
+        group: bool,
+    ) -> Vec<Message> {
+        let mut url_of: std::collections::HashMap<String, String> = events
+            .iter()
+            .filter_map(|e| Some((e.event_id()?.to_string(), media_url_of(e)?)))
+            .collect();
         // Deletions that the local copy has not applied yet.
         let gone: std::collections::HashSet<String> = events
             .iter()
@@ -3568,8 +5419,52 @@ impl Engine {
                 .iter_mut()
                 .find(|t| Some(&t.event_id) == e.replaces.as_ref() && t.sender == e.sender)
             {
-                t.body = e.body.clone();
+                // Groups and channels: an edit sent more than 24 hours after
+                // the message never counts. The server refuses those, but a
+                // modified app can hide the edit link inside the encryption
+                // where the server can't see it (보안검수 2026-11-28), so
+                // every phone checks too, by the server's own times.
+                if group && !edit_window_open(true, t.ts, e.ts) {
+                    continue;
+                }
+                // Words can change; a caption only with the same file; a
+                // photo, video or file only outside public chats (see
+                // [edit_rule]), even from a modified app.
+                let same = url_of.get(&t.event_id).is_some() && url_of.get(&t.event_id) == url_of.get(&e.event_id);
+                match edit_rule(&t.kind, &e.kind, same, swaps_ok) {
+                    EditKind::Refused => continue,
+                    EditKind::Text => {
+                        if t.first_body.is_none() {
+                            t.first_body = t.body.clone();
+                        }
+                        t.body = e.body.clone();
+                    }
+                    EditKind::Caption => {
+                        if t.first_body.is_none() {
+                            t.first_body = Some(t.caption.clone().unwrap_or_default());
+                        }
+                        t.caption = e.caption.clone();
+                        t.caption_above = e.caption_above;
+                    }
+                    EditKind::Media => {
+                        if t.first_body.is_none() {
+                            t.first_body = Some(if t.kind == "text" { t.body.clone().unwrap_or_default() } else { t.caption.clone().unwrap_or_default() });
+                        }
+                        if let Some(u) = url_of.get(&e.event_id).cloned() {
+                            url_of.insert(t.event_id.clone(), u);
+                        }
+                        t.kind = e.kind.clone();
+                        t.body = e.body.clone();
+                        t.caption = e.caption.clone();
+                        t.caption_above = e.caption_above;
+                        t.size = e.size;
+                        t.media_from = Some(e.event_id.clone());
+                        t.media_changed = true;
+                        (t.preview, t.voice, t.live) = (None, None, None);
+                    }
+                }
                 t.edited = true;
+                t.edited_at = Some(t.edited_at.unwrap_or(0).max(e.ts));
             }
         }
         let me = self.client.user_id().map(|u| u.to_string());
@@ -3603,12 +5498,15 @@ impl Engine {
                         sender: by.to_owned(),
                         body: None,
                         was_encrypted: true,
+                        topic: None,
                         ts,
                         mine: me.as_deref() == Some(by),
                         kind: "opened".into(),
                         reply_to: None,
                         thread_root: None,
                         edited: false,
+                        edited_at: None,
+                        first_body: None,
                         replaces: None,
                         reactions: vec![],
                         expires_at: None,
@@ -3618,14 +5516,22 @@ impl Engine {
                         silent: false,
                         preview: None,
                         voice: None,
+                        live: None,
                         poll: None,
                         call: None,
                         bubble: false,
                         caption: None,
+                        size: None,
                         checklist: None,
                         meetup: None,
                         contact: None,
                         card: None,
+                        quote: None,
+                        quote_name: None,
+                        caption_above: false,
+                        media_from: None,
+                        media_changed: false,
+                        post_as: None,
                     },
                 );
             }
@@ -3748,7 +5654,7 @@ impl Engine {
         let mut opts = MessagesOptions::backward();
         opts.limit = limit.into();
         let page = room.messages(opts).await.map_err(to_err)?;
-        let mut v = self.fold(&page.chunk.iter().rev().cloned().collect::<Vec<_>>());
+        let mut v = self.fold_rules(&page.chunk.iter().rev().cloned().collect::<Vec<_>>(), self.swaps_ok(&room).await, self.is_group_chat(&room).await);
         v.reverse();
         Ok(v)
     }
@@ -3765,7 +5671,9 @@ impl Engine {
         }
         self.load_my_votes().await;
         let (cache, _drop) = room.event_cache().await.map_err(to_err)?;
-        let mut out: Vec<Message> = self.fold(&cache.events().await.map_err(to_err)?);
+        let swaps = self.swaps_ok(&room).await;
+        let group = self.is_group_chat(&room).await;
+        let mut out: Vec<Message> = self.fold_rules(&cache.events().await.map_err(to_err)?, swaps, group);
         for _ in 0..5 {
             if out.len() >= limit {
                 break;
@@ -3775,17 +5683,39 @@ impl Engine {
                 .run_backwards_once(50)
                 .await
                 .map_err(to_err)?;
-            out = self.fold(&cache.events().await.map_err(to_err)?);
+            out = self.fold_rules(&cache.events().await.map_err(to_err)?, swaps, group);
             if outcome.reached_start {
                 break;
             }
         }
+        if out.iter().any(|m| m.mine && m.poll.as_ref().is_some_and(|p| p.hide_results)) {
+            self.post_final_tallies(&room, &out).await;
+        }
         let q = self.quiet_state().await.unwrap_or_default();
-        if !q.gone.is_empty() {
-            out.retain(|m| !q.gone.contains(&m.event_id));
+        let unseen = self.unseen(&q);
+        if !unseen.is_empty() {
+            out.retain(|m| !unseen.contains(&m.event_id));
         }
         let skip = out.len().saturating_sub(limit);
         Ok(out.split_off(skip))
+    }
+
+    /// The messages this phone already holds for a chat, without asking
+    /// the server for more (안 본 멘션·반응 배지, tips 249/320: the chat list
+    /// looks at every chat often, so this must stay cheap).
+    pub async fn cached_messages(&self, room_id: &RoomId) -> Result<Vec<Message>> {
+        let room = self.client.get_room(room_id).context("unknown room")?;
+        let q = self.quiet_state().await.unwrap_or_default();
+        if self.is_quiet(room_id, &q).await {
+            return Ok(vec![]);
+        }
+        let (cache, _drop) = room.event_cache().await.map_err(to_err)?;
+        let mut out = self.fold_rules(&cache.events().await.map_err(to_err)?, self.swaps_ok(&room).await, self.is_group_chat(&room).await);
+        let unseen = self.unseen(&q);
+        if !unseen.is_empty() {
+            out.retain(|m| !unseen.contains(&m.event_id));
+        }
+        Ok(out)
     }
 
     /// The chat list, newest activity first.
@@ -3802,35 +5732,45 @@ impl Engine {
             if self.is_quiet(room.room_id(), &q).await {
                 continue;
             }
-            let name = room
+            // Communities are not chats: they show through their chats.
+            if self.is_community(room.room_id()).await {
+                continue;
+            }
+            let mut name = room
                 .display_name()
                 .await
                 .map(|n| n.to_string())
                 .unwrap_or_default();
             let is_direct = room.is_direct().await.unwrap_or(false);
+            if name.starts_with(ID_KEY_PREFIX) {
+                // A 1:1 started with an 아이디 키: show the other person.
+                name = self.dm_peer_name(&room).await;
+            }
             let encrypted = room
                 .latest_encryption_state()
                 .await
                 .map(|e| e.is_encrypted())
                 .unwrap_or(false);
             let mut msgs = match room.event_cache().await {
-                Ok((cache, _drop)) => self.fold(&cache.events().await.unwrap_or_default()),
+                Ok((cache, _drop)) => self.fold_rules(&cache.events().await.unwrap_or_default(), self.swaps_ok(&room).await, self.is_group_chat(&room).await),
                 Err(_) => vec![],
             };
-            if !q.gone.is_empty() {
-                msgs.retain(|m| !q.gone.contains(&m.event_id));
+            let unseen = self.unseen(&q);
+            if !unseen.is_empty() {
+                msgs.retain(|m| !unseen.contains(&m.event_id));
             }
+            let is_channel = !is_direct && self.is_channel(room.room_id()).await;
+            let tz = self.tz.load(std::sync::atomic::Ordering::Relaxed);
             let st = if is_direct && streaks_on {
-                streak::streak(
-                    &msgs.iter().map(|m| (m.ts, m.mine)).collect::<Vec<_>>(),
-                    now,
-                    self.tz.load(std::sync::atomic::Ordering::Relaxed),
-                )
+                streak::streak(&msgs.iter().map(|m| (m.ts, m.mine)).collect::<Vec<_>>(), now, tz)
+            } else if !is_direct && !is_channel && streaks_on {
+                // 그룹 스트릭: enough members wrote each day.
+                let members = room.joined_members_count() as usize;
+                streak::group_streak(&msgs.iter().map(|m| (m.ts, m.sender.as_str())).collect::<Vec<_>>(), members, now, tz)
             } else {
                 streak::Streak::default()
             };
             let last = msgs.last().cloned();
-            let is_channel = !is_direct && self.is_channel(room.room_id()).await;
             let peer = if is_direct {
                 room.direct_targets()
                     .iter()
@@ -3949,6 +5889,8 @@ impl Engine {
                         })
                 };
                 let secret = m.view_once || m.bubble || m.kind == "locked";
+                // "고정하고 모두에게 알림": reaches everyone, with the preview.
+                let pin_line = m.card.as_ref().is_some_and(|c| c.kind == "pin");
                 out.push(Notice {
                     room_id: chat.room_id.clone(),
                     chat: if hide {
@@ -3959,10 +5901,12 @@ impl Engine {
                     sender,
                     kind: if m.bubble {
                         "bubble".into()
+                    } else if pin_line {
+                        "pin".into()
                     } else {
                         m.kind.clone()
                     },
-                    body: if hide || secret || m.kind != "text" {
+                    body: if hide || secret || (m.kind != "text" && !pin_line) {
                         None
                     } else {
                         m.body.clone()
@@ -4065,13 +6009,21 @@ impl Engine {
     /// Up to when (ms) the other people in a chat have read. My messages sent
     /// at or before this time are shown as read.
     pub async fn read_until(&self, room_id: &RoomId) -> Result<u64> {
+        Ok(self.read_receipt(room_id).await?.0)
+    }
+
+    /// (read up to, when they read it) in ms; (0, 0) when nothing is shared.
+    /// "When" is the receipt's own time, so it shows only between people who
+    /// both share read ticks (1:1 "오늘 10:38에 읽음", tip 421).
+    pub async fn read_receipt(&self, room_id: &RoomId) -> Result<(u64, u64)> {
         use matrix_sdk::ruma::events::receipt::{ReceiptThread, ReceiptType};
         let room = self.client.get_room(room_id).context("unknown room")?;
         let me = self.client.user_id().context("no user")?.to_owned();
         let mut best = 0u64;
+        let mut when = 0u64;
         // Fair rule: when I hide my read ticks I do not see theirs either.
         if !self.reads_shared(room_id).await {
-            return Ok(0);
+            return Ok((0, 0));
         }
         for m in room
             .members(matrix_sdk::RoomMemberships::JOIN)
@@ -4096,10 +6048,13 @@ impl Engine {
                 }
                 .or(rcpt.ts.map(|t| u64::from(t.get())))
                 .unwrap_or(0);
-                best = best.max(at);
+                if at > best {
+                    best = at;
+                    when = rcpt.ts.map(|t| u64::from(t.get())).unwrap_or(0);
+                }
             }
         }
-        Ok(best)
+        Ok((best, when))
     }
 
     /// True when the 대화 복구 키 is already set up for this account.
@@ -4140,6 +6095,8 @@ impl Engine {
                 "im.securemessenger.channel".into(),
                 serde_json::Value::Bool(true),
             );
+            // Room type, so a public link page can say "채널" before joining.
+            cc.insert("type".into(), links::CHANNEL_TYPE.into());
             req.creation_content = Some(Raw::<CreationContent>::from_json_string(
                 serde_json::Value::Object(cc).to_string(),
             )?);
@@ -4152,6 +6109,23 @@ impl Engine {
     }
 
     /// Renames a group or channel (admins only; the server checks).
+    /// The other person's name (or ID) in a 1:1 chat.
+    async fn dm_peer_name(&self, room: &matrix_sdk::Room) -> String {
+        let me = self.client.user_id().map(|u| u.to_owned());
+        let peer = room
+            .direct_targets()
+            .into_iter()
+            .filter_map(|t| t.into_user_id())
+            .find(|u| Some(u) != me.as_ref());
+        let Some(peer) = peer else {
+            return String::new();
+        };
+        match room.get_member_no_sync(&peer).await {
+            Ok(Some(m)) => m.display_name().map(str::to_owned).unwrap_or_else(|| peer.localpart().to_owned()),
+            _ => peer.localpart().to_owned(),
+        }
+    }
+
     pub async fn set_room_name(&self, room_id: &RoomId, name: &str) -> Result<()> {
         let room = self.client.get_room(room_id).context("unknown room")?;
         let name: String = name.trim().chars().take(128).collect();
@@ -4211,6 +6185,29 @@ impl Engine {
         Ok(())
     }
 
+    /// Sets someone's level in a group or channel: -1 (can't write: timed
+    /// message ban, the server refuses their messages), 0 member, 50 admin,
+    /// 100 owner (owner handover). On myself only a step down (finishing a
+    /// handover). The server checks that I may do it.
+    pub async fn set_member_level(&self, room_id: &RoomId, user_id: &str, level: i64) -> Result<()> {
+        anyhow::ensure!(matches!(level, -1 | 0 | 50 | 100), "bad level");
+        let room = self.client.get_room(room_id).context("unknown room")?;
+        let uid = UserId::parse(user_id).context("bad user id")?;
+        let me = self.client.user_id().context("no user")?;
+        if uid.as_str() == me.as_str() {
+            let pl = room.power_levels().await.map_err(to_err)?;
+            let now: i64 = match pl.for_user(me) {
+                matrix_sdk::ruma::events::room::power_levels::UserPowerLevel::Int(i) => i.into(),
+                _ => 100,
+            };
+            anyhow::ensure!(level < now && level >= 0, "only a step down");
+        }
+        room.update_power_levels(vec![(&uid, matrix_sdk::ruma::Int::from(level as i32))])
+            .await
+            .map_err(to_err)?;
+        Ok(())
+    }
+
     /// Room switches kept in one state event: "sign" (channel posts show
     /// who wrote them) and "hide_members" (only admins see the list).
     pub async fn room_switch(&self, room_id: &RoomId, key: &str) -> bool {
@@ -4255,6 +6252,11 @@ impl Engine {
             return "{}".into();
         };
         let Ok(Some(raw)) = room.get_state_event(ROOM_CONFIG.into(), "").await else {
+            if room.join_rule()
+                == Some(matrix_sdk::ruma::events::room::join_rules::JoinRule::Public)
+            {
+                return serde_json::json!({ "new_media_days": NEW_MEDIA_DAYS_PUBLIC }).to_string();
+            }
             return "{}".into();
         };
         let json = match raw {
@@ -4269,10 +6271,16 @@ impl Engine {
             .ok()
             .and_then(|v| v.get("content").and_then(|c| c.as_object().cloned()))
             .unwrap_or_default();
-        let clean: serde_json::Map<String, serde_json::Value> = content
+        let mut clean: serde_json::Map<String, serde_json::Value> = content
             .into_iter()
             .filter(|(k, v)| check_room_config(k, v).is_ok())
             .collect();
+        if !clean.contains_key("new_media_days")
+            && room.join_rule()
+                == Some(matrix_sdk::ruma::events::room::join_rules::JoinRule::Public)
+        {
+            clean.insert("new_media_days".into(), NEW_MEDIA_DAYS_PUBLIC.into());
+        }
         serde_json::Value::Object(clean).to_string()
     }
 
@@ -4286,6 +6294,9 @@ impl Engine {
         if v.is_null() {
             content.remove(key);
         } else {
+            // Words people write go end-to-end encrypted (see "texts"); the
+            // old plain copies may only be removed.
+            anyhow::ensure!(!PLAIN_TEXT_KEYS.contains(&key), "encrypted only");
             check_room_config(key, &v)?;
             content.insert(key.to_owned(), v);
         }
@@ -4295,6 +6306,228 @@ impl Engine {
             .await
             .map_err(to_err)?;
         Ok(())
+    }
+
+    /// 이름 색 (v1): one of 8 colours, kept on each member event as
+    /// "app.burumy.color" so everyone in the room sees it.
+    pub const NAME_COLORS: [&'static str; 8] = [
+        "red", "orange", "yellow", "green", "teal", "blue", "purple", "pink",
+    ];
+
+    async fn my_member_content(
+        &self,
+        room: &matrix_sdk::Room,
+    ) -> Result<serde_json::Map<String, serde_json::Value>> {
+        let me = self.client.user_id().context("not logged in")?.to_owned();
+        let raw = room
+            .get_state_event(matrix_sdk::ruma::events::StateEventType::RoomMember, me.as_str())
+            .await
+            .map_err(to_err)?
+            .context("not a member")?;
+        let json = match raw {
+            matrix_sdk::deserialized_responses::RawAnySyncOrStrippedState::Sync(r) => {
+                r.json().get().to_owned()
+            }
+            matrix_sdk::deserialized_responses::RawAnySyncOrStrippedState::Stripped(r) => {
+                r.json().get().to_owned()
+            }
+        };
+        let content = serde_json::from_str::<serde_json::Value>(&json)
+            .ok()
+            .and_then(|v| v.get("content").and_then(|c| c.as_object().cloned()))
+            .unwrap_or_default();
+        anyhow::ensure!(
+            content.get("membership").and_then(|m| m.as_str()) == Some("join"),
+            "not joined"
+        );
+        Ok(content)
+    }
+
+    /// 방마다 다른 프로필 (v1): my name in this room only. Empty = back to my
+    /// usual name. `color`: one of [NAME_COLORS], "" = none, None = keep.
+    pub async fn set_my_room_look(
+        &self,
+        room_id: &RoomId,
+        name: Option<String>,
+        color: Option<String>,
+    ) -> Result<()> {
+        let room = self.client.get_room(room_id).context("unknown room")?;
+        let mut content = self.my_member_content(&room).await?;
+        if let Some(n) = name {
+            let n = n.trim().to_owned();
+            anyhow::ensure!(n.chars().count() <= 64, "name too long");
+            let n = if n.is_empty() {
+                self.client
+                    .account()
+                    .get_display_name()
+                    .await
+                    .map_err(to_err)?
+                    .unwrap_or_default()
+            } else {
+                n
+            };
+            if n.is_empty() {
+                content.remove("displayname");
+            } else {
+                content.insert("displayname".into(), n.into());
+            }
+        }
+        if let Some(c) = color {
+            if c.is_empty() {
+                content.remove("app.burumy.color");
+            } else {
+                anyhow::ensure!(Self::NAME_COLORS.contains(&c.as_str()), "unknown colour");
+                content.insert("app.burumy.color".into(), c.into());
+            }
+        }
+        let me = self.client.user_id().context("not logged in")?.to_owned();
+        room.send_state_event_raw("m.room.member", me.as_str(), serde_json::Value::Object(content))
+            .await
+            .map_err(to_err)?;
+        Ok(())
+    }
+
+    /// 멤버 태그 (tip 556): the short word I put next to my own name in this
+    /// room, kept on my member event as "app.burumy.tag" (rooms where the
+    /// admins allow it; a tag an admin gave me wins). "" removes it.
+    pub async fn set_my_room_tag(&self, room_id: &RoomId, tag: &str) -> Result<()> {
+        let room = self.client.get_room(room_id).context("unknown room")?;
+        let mut content = self.my_member_content(&room).await?;
+        let t = tag.trim();
+        anyhow::ensure!(t.chars().count() <= 16, "tag too long");
+        if t.is_empty() {
+            content.remove("app.burumy.tag");
+        } else {
+            content.insert("app.burumy.tag".into(), t.into());
+        }
+        let me = self.client.user_id().context("not logged in")?.to_owned();
+        room.send_state_event_raw("m.room.member", me.as_str(), serde_json::Value::Object(content))
+            .await
+            .map_err(to_err)?;
+        Ok(())
+    }
+
+    /// Tags people put on themselves in this room: (user, tag).
+    pub async fn member_tags(&self, room_id: &RoomId) -> Vec<(String, String)> {
+        let Some(room) = self.client.get_room(room_id) else {
+            return vec![];
+        };
+        let Ok(list) = room.get_state_events(matrix_sdk::ruma::events::StateEventType::RoomMember).await else {
+            return vec![];
+        };
+        let mut out = vec![];
+        for raw in list {
+            let json = match raw {
+                matrix_sdk::deserialized_responses::RawAnySyncOrStrippedState::Sync(r) => {
+                    r.json().get().to_owned()
+                }
+                matrix_sdk::deserialized_responses::RawAnySyncOrStrippedState::Stripped(r) => {
+                    r.json().get().to_owned()
+                }
+            };
+            let Ok(v) = serde_json::from_str::<serde_json::Value>(&json) else {
+                continue;
+            };
+            if v.pointer("/content/membership").and_then(|x| x.as_str()) != Some("join") {
+                continue;
+            }
+            let (Some(who), Some(t)) = (
+                v.get("state_key").and_then(|x| x.as_str()),
+                v.pointer("/content/app.burumy.tag").and_then(|x| x.as_str()),
+            ) else {
+                continue;
+            };
+            let t = t.trim();
+            if !t.is_empty() && t.chars().count() <= 16 {
+                out.push((who.to_owned(), t.to_owned()));
+            }
+        }
+        out
+    }
+
+    /// 누가 읽었는지 (tip 384): in a group of at most [GROUP_READS_MAX]
+    /// people, each other member's newest read receipt as (user, read up
+    /// to ms, when ms). Empty when the group is bigger, or when I hide my
+    /// own read ticks (the same fair rule as 1:1). People who hide theirs
+    /// send no public receipt, so they never show up.
+    pub const GROUP_READS_MAX: usize = 100;
+
+    pub async fn group_receipts(&self, room_id: &RoomId) -> Result<Vec<(String, u64, u64)>> {
+        use matrix_sdk::ruma::events::receipt::{ReceiptThread, ReceiptType};
+        let room = self.client.get_room(room_id).context("unknown room")?;
+        let me = self.client.user_id().context("no user")?.to_owned();
+        if !self.reads_shared(room_id).await {
+            return Ok(vec![]);
+        }
+        let members = room
+            .members(matrix_sdk::RoomMemberships::JOIN)
+            .await
+            .map_err(to_err)?;
+        if members.len() > Self::GROUP_READS_MAX {
+            return Ok(vec![]);
+        }
+        let mut out = vec![];
+        for m in members {
+            if m.user_id() == me {
+                continue;
+            }
+            let Some((eid, rcpt)) = room
+                .load_user_receipt(ReceiptType::Read, &ReceiptThread::Unthreaded, m.user_id())
+                .await
+                .map_err(to_err)?
+            else {
+                continue;
+            };
+            let upto = match room.event(&eid, None).await {
+                Ok(ev) => ev
+                    .raw()
+                    .deserialize()
+                    .ok()
+                    .map(|e| u64::from(e.origin_server_ts().get())),
+                Err(_) => None,
+            }
+            .or(rcpt.ts.map(|t| u64::from(t.get())))
+            .unwrap_or(0);
+            let at = rcpt.ts.map(|t| u64::from(t.get())).unwrap_or(upto);
+            if upto > 0 {
+                out.push((m.user_id().to_string(), upto, at));
+            }
+        }
+        Ok(out)
+    }
+
+    /// Name colours people picked in this room: (user, colour).
+    pub async fn name_colors(&self, room_id: &RoomId) -> Vec<(String, String)> {
+        let Some(room) = self.client.get_room(room_id) else {
+            return vec![];
+        };
+        let Ok(list) = room.get_state_events(matrix_sdk::ruma::events::StateEventType::RoomMember).await else {
+            return vec![];
+        };
+        let mut out = vec![];
+        for raw in list {
+            let json = match raw {
+                matrix_sdk::deserialized_responses::RawAnySyncOrStrippedState::Sync(r) => {
+                    r.json().get().to_owned()
+                }
+                matrix_sdk::deserialized_responses::RawAnySyncOrStrippedState::Stripped(r) => {
+                    r.json().get().to_owned()
+                }
+            };
+            let Ok(v) = serde_json::from_str::<serde_json::Value>(&json) else {
+                continue;
+            };
+            let (Some(who), Some(c)) = (
+                v.get("state_key").and_then(|x| x.as_str()),
+                v.pointer("/content/app.burumy.color").and_then(|x| x.as_str()),
+            ) else {
+                continue;
+            };
+            if Self::NAME_COLORS.contains(&c) {
+                out.push((who.to_owned(), c.to_owned()));
+            }
+        }
+        out
     }
 
     /// Bans someone (they can't come back until unbanned) or lifts it.
@@ -4341,6 +6574,151 @@ impl Engine {
         .into())
     }
 
+    /// Sets (or with no bytes, takes off) a group/channel photo. Admins only.
+    /// The photo is encrypted on this phone and its key travels inside the
+    /// room's encryption, so the server can't see it. A public room (anyone
+    /// may join) also gets the plain photo, for its link card and web page.
+    pub async fn set_room_photo(&self, room_id: &RoomId, mime: &str, data: Vec<u8>) -> Result<()> {
+        let room = self.client.get_room(room_id).context("unknown room")?;
+        if self.my_role(room_id).await? == "member" {
+            anyhow::bail!("not an admin");
+        }
+        let content = if data.is_empty() {
+            serde_json::json!({})
+        } else {
+            let mut cursor = std::io::Cursor::new(data.clone());
+            let file = self.client.upload_encrypted_file(&mut cursor).await.map_err(to_err)?;
+            serde_json::json!({ "photo": { "file": file, "mimetype": mime } })
+        };
+        room.send_raw(ROOM_PHOTO_TYPE, content).await.map_err(to_err)?;
+        let public = self.room_link(room_id).await.kind == "public";
+        self.plain_room_photo(room_id, public, Some((mime, data))).await
+    }
+
+    /// Keeps the plain (server-readable) copy of the room photo in step
+    /// with the link: only a public room has one, for its link card. A
+    /// private room's copy is taken off. [photo] None = use the current one.
+    pub(crate) async fn plain_room_photo(&self, room_id: &RoomId, public: bool, photo: Option<(&str, Vec<u8>)>) -> Result<()> {
+        let room = self.client.get_room(room_id).context("unknown room")?;
+        let photo = match photo {
+            Some((m, d)) => Some((m.to_owned(), d)),
+            None => match self.room_photo_event(&room).await {
+                Some((_, c)) if c.get("photo").is_some() => {
+                    let m = c.pointer("/photo/mimetype").and_then(|m| m.as_str()).unwrap_or("image/jpeg").to_owned();
+                    self.room_photo(room_id).await.ok().flatten().map(|d| (m, d))
+                }
+                _ => None,
+            },
+        };
+        match photo {
+            Some((m, d)) if public && !d.is_empty() => {
+                let m: mime::Mime = m.parse().map_err(to_err)?;
+                room.upload_avatar(&m, d, None).await.map_err(to_err)?;
+            }
+            _ if room.avatar_url().is_some() => {
+                room.remove_avatar().await.map_err(to_err)?;
+            }
+            _ => {}
+        }
+        Ok(())
+    }
+
+    /// The newest room photo event an admin sent: (time, content).
+    async fn room_photo_event(&self, room: &matrix_sdk::Room) -> Option<(u64, serde_json::Value)> {
+        let pl = room.power_levels().await.ok()?;
+        let (cache, _drop) = room.event_cache().await.ok()?;
+        let mut best: Option<(u64, serde_json::Value)> = None;
+        for e in cache.events().await.unwrap_or_default() {
+            // Only end-to-end encrypted ones (a server can't slip one in).
+            let Some(v) = trusted_json(&e) else {
+                continue;
+            };
+            if v.get("type").and_then(|t| t.as_str()) != Some(ROOM_PHOTO_TYPE) {
+                continue;
+            }
+            let Some(sender) = v.get("sender").and_then(|x| x.as_str()).and_then(|x| OwnedUserId::try_from(x).ok()) else {
+                continue;
+            };
+            let admin = match pl.for_user(&sender) {
+                matrix_sdk::ruma::events::room::power_levels::UserPowerLevel::Infinite => true,
+                matrix_sdk::ruma::events::room::power_levels::UserPowerLevel::Int(i) => i64::from(i) >= 50,
+                _ => false,
+            };
+            if !admin {
+                continue;
+            }
+            let ts = v.get("origin_server_ts").and_then(|t| t.as_u64()).unwrap_or(0);
+            if best.as_ref().is_none_or(|(t, _)| ts >= *t) {
+                best = Some((ts, v["content"].clone()));
+            }
+        }
+        best
+    }
+
+    /// A group/channel photo: the newest encrypted one an admin sent, else
+    /// a public room's plain photo. None = no photo.
+    pub async fn room_photo(&self, room_id: &RoomId) -> Result<Option<Vec<u8>>> {
+        use matrix_sdk::{
+            media::{MediaFormat, MediaRequestParameters},
+            ruma::events::room::{EncryptedFile, MediaSource},
+        };
+        let room = self.client.get_room(room_id).context("unknown room")?;
+        if let Some((_, c)) = self.room_photo_event(&room).await {
+            let Some(f) = c.pointer("/photo/file") else {
+                return Ok(None);
+            };
+            let file = serde_json::from_value::<EncryptedFile>(f.clone()).map_err(to_err)?;
+            let bytes = self
+                .client
+                .media()
+                .get_media_content(&MediaRequestParameters { source: MediaSource::Encrypted(Box::new(file)), format: MediaFormat::File }, true)
+                .await
+                .map_err(to_err)?;
+            return Ok(Some(bytes));
+        }
+        if self.room_link(room_id).await.kind != "public" {
+            return Ok(None);
+        }
+        room.avatar(MediaFormat::File).await.map_err(to_err)
+    }
+
+    /// An admin's phone sends the photo again after people joined since it
+    /// was set (new members can't open older encrypted messages). True when
+    /// it was sent again.
+    pub async fn reshare_room_photo(&self, room_id: &RoomId) -> Result<bool> {
+        use matrix_sdk::ruma::events::StateEventType;
+        let room = self.client.get_room(room_id).context("unknown room")?;
+        if self.my_role(room_id).await? == "member" {
+            return Ok(false);
+        }
+        let Some((ts, content)) = self.room_photo_event(&room).await else {
+            return Ok(false);
+        };
+        if content.get("photo").is_none() {
+            return Ok(false);
+        }
+        let mut newest_join = 0u64;
+        for raw in room.get_state_events(StateEventType::RoomMember).await.unwrap_or_default() {
+            let json = match raw {
+                matrix_sdk::deserialized_responses::RawAnySyncOrStrippedState::Sync(r) => r.json().get().to_owned(),
+                _ => continue,
+            };
+            let Ok(v) = serde_json::from_str::<serde_json::Value>(&json) else {
+                continue;
+            };
+            if v.pointer("/content/membership").and_then(|m| m.as_str()) == Some("join") {
+                newest_join = newest_join.max(v.get("origin_server_ts").and_then(|t| t.as_u64()).unwrap_or(0));
+            }
+        }
+        if newest_join <= ts {
+            return Ok(false);
+        }
+        let mut content = content;
+        content["again"] = serde_json::Value::Bool(true);
+        room.send_raw(ROOM_PHOTO_TYPE, content).await.map_err(to_err)?;
+        Ok(true)
+    }
+
     /// Whether I may write in this chat (false for channel subscribers).
     pub async fn can_post(&self, room_id: &RoomId) -> Result<bool> {
         use matrix_sdk::ruma::events::MessageLikeEventType;
@@ -4362,6 +6740,23 @@ impl Engine {
         }
     }
 
+    /// A reply with a link card set up by the sender (tips 400 + 401). Like
+    /// other replies it carries the chat timer.
+    pub async fn reply_link(&self, room_id: &RoomId, to_event: &str, text: &str, link: &LinkChoice) -> Result<String> {
+        use matrix_sdk::ruma::events::room::message::{AddMentions, ForwardThread, ReplyMetadata};
+        let room = self.client.get_room(room_id).context("unknown room")?;
+        if !room.latest_encryption_state().await.map_err(to_err)?.is_encrypted() {
+            bail!("refusing to send into a room without encryption");
+        }
+        let eid = matrix_sdk::ruma::EventId::parse(to_event)?;
+        let target = room.event(&eid, None).await.map_err(to_err)?;
+        let sender = target.raw().deserialize().map_err(to_err)?.sender().to_owned();
+        let content = RoomMessageEventContent::text_plain(text).make_reply_to(ReplyMetadata::new(&eid, &sender, None), ForwardThread::No, AddMentions::No);
+        let mut v = serde_json::to_value(content)?;
+        Box::pin(self.add_preview(&mut v, text, link)).await;
+        Box::pin(self.send_timed_value(&room, v)).await
+    }
+
     pub async fn reply(&self, room_id: &RoomId, to_event: &str, text: &str) -> Result<String> {
         use matrix_sdk::ruma::events::room::message::{AddMentions, ForwardThread, ReplyMetadata};
         let room = self.client.get_room(room_id).context("unknown room")?;
@@ -4378,8 +6773,35 @@ impl Engine {
             ForwardThread::No,
             AddMentions::No,
         );
-        let r = room.send(content).await.map_err(to_err)?;
-        Ok(r.response.event_id.to_string())
+        // Through the usual path so the chat timer and 보내는 이름 apply.
+        let v = serde_json::to_value(content)?;
+        Box::pin(self.send_timed_value(&room, v)).await
+    }
+
+    /// 부분 인용 답장 (Telegram tip 399): a reply that shows only the
+    /// picked part of `to_event`. With `to_event` empty it is "다른 대화에서
+    /// 답장": no link to the other chat's message (it lives in another
+    /// room); the copied words and the writer's name travel encrypted here.
+    pub async fn reply_quote(&self, room_id: &RoomId, to_event: &str, text: &str, quote: &str, quote_name: &str) -> Result<String> {
+        use matrix_sdk::ruma::events::room::message::{AddMentions, ForwardThread, ReplyMetadata};
+        let room = self.client.get_room(room_id).context("unknown room")?;
+        if !room.latest_encryption_state().await.map_err(to_err)?.is_encrypted() {
+            bail!("refusing to send into a room without encryption");
+        }
+        let mut content = RoomMessageEventContent::text_plain(text);
+        let name = if to_event.is_empty() { Some(quote_name) } else { None };
+        if !to_event.is_empty() {
+            let eid = matrix_sdk::ruma::EventId::parse(to_event)?;
+            let target = room.event(&eid, None).await.map_err(to_err)?;
+            let sender = target.raw().deserialize().map_err(to_err)?.sender().to_owned();
+            content = content.make_reply_to(ReplyMetadata::new(&eid, &sender, None), ForwardThread::No, AddMentions::No);
+        }
+        let mut v = serde_json::to_value(content)?;
+        if let Some(q) = quote_value(quote, name) {
+            v[QUOTE_FIELD] = q;
+        }
+        let id = Box::pin(self.send_timed_value(&room, v)).await?;
+        Ok(id)
     }
 
     /// "스레드로 답장": a message inside the thread that starts at `root`.
@@ -4403,6 +6825,18 @@ impl Engine {
         use matrix_sdk::ruma::events::room::message::ReplacementMetadata;
         let room = self.client.get_room(room_id).context("unknown room")?;
         let eid = matrix_sdk::ruma::EventId::parse(event_id)?;
+        let original = room.event(&eid, None).await.map_err(to_err)?;
+        let parsed = original.raw().deserialize().map_err(to_err)?;
+        anyhow::ensure!(
+            Some(parsed.sender()) == self.client.user_id(),
+            "only your own messages"
+        );
+        let sent: u64 = parsed.origin_server_ts().get().into();
+        let group = self.is_channel(room_id).await || room.joined_members_count() > 2;
+        anyhow::ensure!(
+            edit_window_open(group, sent, now_ms()),
+            "edit window closed"
+        );
         let content = RoomMessageEventContent::text_plain(text)
             .make_replacement(ReplacementMetadata::new(eid, None));
         room.send(content).await.map_err(to_err)?;
@@ -4473,6 +6907,9 @@ impl Engine {
         let room = self.client.get_room(room_id).context("unknown room")?;
         let eid = matrix_sdk::ruma::EventId::parse(event_id)?;
         room.redact(&eid, None, None).await.map_err(to_err)?;
+        if self.web_posts(room_id).await.iter().any(|(id, _)| id == event_id) {
+            let _ = self.web_unpost(room_id, event_id).await;
+        }
         Ok(())
     }
 
@@ -4649,6 +7086,27 @@ pub(crate) fn trusted_json(
 }
 
 #[cfg(test)]
+mod quote_tests {
+    use super::*;
+
+    #[test]
+    fn quote_cut_and_name() {
+        let long = "가".repeat(QUOTE_MAX + 50);
+        let v = quote_value(&long, Some("  에릭  ")).unwrap();
+        let (t, n) = read_quote(&v);
+        assert_eq!(t.unwrap().chars().count(), QUOTE_MAX);
+        assert_eq!(n.as_deref(), Some("에릭"));
+        // Same-chat reply: no name kept.
+        let (_, n) = read_quote(&quote_value("hi", None).unwrap());
+        assert!(n.is_none());
+        // Empty words = no quote at all (a name alone is dropped).
+        assert!(quote_value("   ", Some("x")).is_none());
+        assert_eq!(read_quote(&serde_json::json!({"name": "x"})), (None, None));
+        assert_eq!(read_quote(&serde_json::json!({"text": 5})), (None, None));
+    }
+}
+
+#[cfg(test)]
 mod trust_tests {
     use super::trusted_json;
     use matrix_sdk::deserialized_responses::TimelineEvent;
@@ -4703,6 +7161,22 @@ mod room_config_tests {
     #[test]
     fn only_known_keys_with_sane_values() {
         assert!(check_room_config("rules", &json!("1. 서로 존중해요")).is_ok());
+        assert!(check_room_config("join_questions", &json!(["왜 들어오고 싶어요?", {"q":"BPM?","choices":["a","b"],"right":1}])).is_ok());
+        assert!(check_room_config("join_questions", &json!([{"q":"BPM?","choices":["a"],"right":0}])).is_err());
+        assert!(check_room_config("join_questions", &json!([{"q":"BPM?","choices":["a","b"],"right":2}])).is_err());
+        assert!(check_room_config("join_questions", &json!(["", "x"])).is_err());
+        assert!(check_room_config("gate", &json!({"on":true,"need_answers":true,"words":["casino"],"ai":false,"about":"음악 만드는 사람"})).is_ok());
+        assert!(check_room_config("gate", &json!({"on":"yes"})).is_err());
+        assert!(check_room_config("gate", &json!({"token":"x"})).is_err());
+        // Batch #16 (groups): anonymous admins, own tags, anti-spam.
+        assert!(check_room_config("anon", &json!({"@a:x": [[1, 0]], "@b:x": [[1, 5], [9, 0]]})).is_ok());
+        assert!(check_room_config("anon", &json!({"nope": [[1, 0]]})).is_err());
+        assert!(check_room_config("anon", &json!({"@a:x": [[1]]})).is_err());
+        assert!(check_room_config("anon", &json!({"@a:x": [[1, -1]]})).is_err());
+        assert!(check_room_config("own_tags", &json!(true)).is_ok());
+        assert!(check_room_config("antispam", &json!("on")).is_err());
+        assert!(check_room_config("spam_ok", &json!(["@a:x"])).is_ok());
+        assert!(check_room_config("spam_ok", &json!(["a"])).is_err());
         assert!(check_room_config("rules", &json!("x".repeat(2001))).is_err());
         assert!(check_room_config("rules", &json!(5)).is_err());
         assert!(check_room_config("reactions", &json!("some")).is_ok());
@@ -4714,5 +7188,80 @@ mod room_config_tests {
         assert!(check_room_config("discussion", &json!("!abc:example.org")).is_ok());
         assert!(check_room_config("discussion", &json!("not a room")).is_err());
         assert!(check_room_config("password", &json!("x")).is_err());
+        let h = "ab".repeat(32);
+        assert!(check_room_config("texts", &json!({"h": h, "w": true, "r": false})).is_ok());
+        assert!(check_room_config("texts", &json!({"h": h})).is_ok());
+        assert!(check_room_config("topics", &json!({"h": h})).is_ok());
+        assert!(check_room_config("topics", &json!({"h": h, "on": true})).is_err());
+        assert!(check_room_config("topics", &json!({"list": ["plain"]})).is_err());
+        assert!(check_room_config("texts", &json!({"h": "zz"})).is_err());
+        assert!(check_room_config("texts", &json!({"w": true})).is_err());
+        assert!(check_room_config("texts", &json!({"h": h, "welcome": "plain"})).is_err());
+        assert!(check_room_config("texts", &json!({"h": h, "w": "yes"})).is_err());
+    }
+}
+
+#[cfg(test)]
+mod edit_rule_tests {
+    use super::*;
+
+    #[test]
+    fn what_an_edit_may_change() {
+        // Words stay words.
+        assert_eq!(edit_rule("text", "text", false, false), EditKind::Text);
+        // New words on the same photo: anywhere, also public rooms.
+        assert_eq!(edit_rule("image", "image", true, false), EditKind::Caption);
+        // A new photo, or a photo added to a text: only outside public rooms.
+        assert_eq!(edit_rule("image", "image", false, true), EditKind::Media);
+        assert_eq!(edit_rule("image", "video", false, true), EditKind::Media);
+        assert_eq!(edit_rule("text", "image", false, true), EditKind::Media);
+        assert_eq!(edit_rule("image", "image", false, false), EditKind::Refused);
+        assert_eq!(edit_rule("text", "image", false, false), EditKind::Refused);
+        // A photo never turns back into plain words; other kinds stay as sent.
+        assert_eq!(edit_rule("image", "text", false, true), EditKind::Refused);
+        assert_eq!(edit_rule("poll", "text", false, true), EditKind::Refused);
+        assert_eq!(edit_rule("text", "poll", false, true), EditKind::Refused);
+    }
+}
+
+#[cfg(test)]
+mod emoji_status_tests {
+    use super::{read_status, status_emoji_ok};
+    use serde_json::json;
+
+    #[test]
+    fn only_one_emoji_is_a_status() {
+        for ok in ["", "🏖️", "❤️", "👨‍💻", "🧑🏽‍🎓", "🇰🇷"] {
+            assert!(status_emoji_ok(ok), "{ok}");
+        }
+        for bad in ["hi", "🏖️ 휴가", "1", "<b>", "🏖️🏖️🏖️🏖️🏖️🏖️🏖️🏖️🏖️🏖️🏖️"] {
+            assert!(!status_emoji_ok(bad), "{bad}");
+        }
+    }
+
+    #[test]
+    fn a_status_ends_on_time() {
+        let now = 1_800_000_000_000u64;
+        assert_eq!(read_status(&json!({ "e": "🏖️", "until": 0 }), now), ("🏖️".into(), 0));
+        assert_eq!(read_status(&json!({ "e": "🏖️", "until": now + 1 }), now), ("🏖️".into(), now + 1));
+        assert_eq!(read_status(&json!({ "e": "🏖️", "until": now }), now), (String::new(), 0));
+        assert_eq!(read_status(&json!({ "e": "", "until": 0 }), now), (String::new(), 0));
+        assert_eq!(read_status(&json!({ "e": "hello" }), now), (String::new(), 0));
+    }
+}
+
+#[cfg(test)]
+mod post_as_tests {
+    use super::clean_post_as;
+    use serde_json::json;
+
+    #[test]
+    fn keeps_only_known_parts() {
+        assert_eq!(clean_post_as(&json!({"ch": true, "x": 1})).as_deref(), Some(r#"{"ch":true}"#));
+        let v: serde_json::Value = serde_json::from_str(&clean_post_as(&json!({"room": "!a:b", "addr": "news", "evil": "x"})).unwrap()).unwrap();
+        assert_eq!(v, json!({"room": "!a:b", "addr": "news"}));
+        assert_eq!(clean_post_as(&json!({"room": "@me:b"})), None);
+        assert_eq!(clean_post_as(&json!({"ch": false})), None);
+        assert_eq!(clean_post_as(&json!("x")), None);
     }
 }

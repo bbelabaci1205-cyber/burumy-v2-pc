@@ -7,6 +7,7 @@ import 'package:burumy/brand/brand.dart';
 import 'package:burumy/core/app_state.dart';
 import 'package:burumy/core/backend.dart';
 import 'package:burumy/main.dart';
+import 'package:burumy/ui/poll.dart';
 
 import 'dart:convert';
 import 'dart:io';
@@ -22,7 +23,7 @@ import 'package:burumy/ui/attach_sheet.dart';
 import 'package:burumy/ui/location.dart';
 import 'package:burumy/ui/bubbles.dart';
 import 'package:burumy/ui/common.dart' show Avatar, setMyPhotoFor, joinName;
-import 'package:burumy/ui/chat_list_page.dart' show ChatRowTile;
+import 'package:burumy/ui/chat_list_page.dart' show ChatRowTile, RowBubble;
 import 'package:burumy/ui/chat_page.dart' show ChatPage;
 
 import 'fake_backend.dart';
@@ -46,7 +47,7 @@ void main() {
         expect(find.text(ko ? '아이디로 시작해요' : 'Start with an ID'), findsOneWidget);
 
         // Weak password is refused with the rule text.
-        await t.enterText(find.byKey(const Key('auth-id')), 'eric');
+        await t.enterText(find.byKey(const Key('auth-id')), 'eric.kim');
         await t.enterText(find.byKey(const Key('auth-pw')), 'short');
         await t.tap(find.byKey(const Key('auth-submit')));
         await t.pump();
@@ -60,7 +61,7 @@ void main() {
         await t.tap(find.byKey(const Key('new-chat')));
         await t.pumpAndSettle();
         expect(find.text(ko ? '새 대화' : 'New Chat'), findsOneWidget);
-        await t.enterText(find.byType(CupertinoTextField).last, '@bob:test');
+        await t.enterText(find.byKey(const Key('new-chat-id')), '@bob:test');
         await t.tap(find.text(ko ? '시작' : 'Start'));
         await t.pumpAndSettle();
         expect(find.textContaining(ko ? '종단간 암호화' : 'end-to-end encrypted'), findsOneWidget);
@@ -187,7 +188,8 @@ void main() {
     await t.longPress(find.text('고친 답장'));
     await t.pumpAndSettle();
     await t.tap(find.byKey(const Key('menu-delete')));
-    for (var i = 0; i < 4; i++) {
+    // It turns to dust first (tip 365), then the row is gone.
+    for (var i = 0; i < 13; i++) {
       await t.pump(const Duration(milliseconds: 100));
     }
     expect(find.text('고친 답장'), findsNothing);
@@ -219,7 +221,16 @@ void main() {
     await t.tap(find.byKey(const Key('new-channel')));
     await t.pumpAndSettle();
     expect(find.textContaining('나만 글을 쓸 수 있어요'), findsOneWidget);
+    // 예약 이름: a channel can't be called after a company (or us).
+    await t.enterText(find.byKey(const Key('chat-name')), 'Samsung');
+    await t.tap(find.byKey(const Key('create-chat')));
+    await t.pumpAndSettle();
+    expect(find.byKey(const Key('chat-name-error')), findsOneWidget);
     await t.enterText(find.byKey(const Key('chat-name')), '부루미 소식');
+    await t.tap(find.byKey(const Key('create-chat')));
+    await t.pumpAndSettle();
+    expect(find.byKey(const Key('chat-name-error')), findsOneWidget);
+    await t.enterText(find.byKey(const Key('chat-name')), '우리 동네 소식');
     await t.tap(find.byKey(const Key('create-chat')));
     await t.pumpAndSettle();
     expect(find.byKey(const Key('composer')), findsOneWidget);
@@ -414,6 +425,9 @@ void main() {
     await t.longPress(find.text('좋은 소식이에요').last);
     await t.pumpAndSettle();
     await t.tap(find.byKey(const Key('menu-pin')));
+    await t.pumpAndSettle();
+    // v1: how long it stays pinned.
+    await t.tap(find.byKey(const Key('pin-for-0')));
     await t.pumpAndSettle();
     expect(find.byKey(const Key('pinned-bar')), findsOneWidget);
     expect(find.text('고정된 메시지'), findsOneWidget);
@@ -701,8 +715,9 @@ void main() {
     await t.pumpWidget(BurumyApp(state: state));
     await t.pumpAndSettle();
     // Far left: one long grey bar, letting go archives.
+    // Telegram: past 52.5 % of the row (the test screen is 800 wide).
     final g1 = await t.startGesture(t.getCenter(find.text('우리 팀')));
-    for (var i = 0; i < 10; i++) {
+    for (var i = 0; i < 16; i++) {
       await g1.moveBy(const Offset(-30, 0));
       await t.pump();
     }
@@ -712,7 +727,7 @@ void main() {
     expect(fake.archivedChats, contains(g));
     // Far right: long bar, letting go pins.
     final g2 = await t.startGesture(t.getCenter(find.text('bob')));
-    for (var i = 0; i < 10; i++) {
+    for (var i = 0; i < 16; i++) {
       await g2.moveBy(const Offset(30, 0));
       await t.pump();
     }
@@ -775,12 +790,27 @@ void main() {
     await t.tap(find.byKey(const Key('folder-save')));
     await t.pumpAndSettle();
     expect(find.byKey(const Key('side-menu')), findsOneWidget);
-    await t.tap(find.text('일'));
+    await t.tap(find.descendant(of: find.byKey(const Key('side-menu')), matching: find.text('일')));
     await t.pumpAndSettle();
     expect(find.text('우리 팀'), findsOneWidget);
     expect(find.text('@bob:test'), findsNothing);
     expect(find.text('공지'), findsWidgets);
     expect(g, isNotEmpty);
+
+    // Telegram folder tabs under the search once a folder exists.
+    expect(find.byKey(const Key('folder-tabs')), findsOneWidget);
+    await t.tap(find.byKey(const Key('tab-all')));
+    await t.pumpAndSettle();
+    expect(find.text('@bob:test'), findsOneWidget);
+    // Long press: 폴더 편집 / 읽지 않은 대화 보기 / 탭 재정렬.
+    await t.longPress(find.byKey(const Key('tab-all')));
+    await t.pumpAndSettle();
+    expect(find.text('탭 재정렬'), findsOneWidget);
+    await t.tap(find.text('읽지 않은 대화 보기'));
+    await t.pumpAndSettle();
+    expect(find.text('@bob:test'), findsNothing);
+    await t.tap(find.byKey(const Key('tab-all')));
+    await t.pumpAndSettle();
 
     // Chips on top when switched on.
     await state.setOn('list_top', true);
@@ -794,6 +824,37 @@ void main() {
     await t.pumpAndSettle();
     expect(find.byKey(const Key('chat-search')), findsNothing);
     expect(find.byKey(const Key('chip-all')), findsNothing);
+    state.stopLive();
+  });
+
+  testWidgets('veil: list and chat screen apart (ko)', (t) async {
+    final fake = FakeBackend();
+    final state = AppState(fake, locale: const Locale('ko'));
+    await fake.login(id: 'me', password: 'x');
+    final room = await fake.createDirectChat('@bob:test');
+    await fake.sendText(room, '비밀 이야기');
+    await state.refresh();
+    await t.pumpWidget(BurumyApp(state: state));
+    await t.pumpAndSettle();
+    expect(find.byKey(const Key('veil')), findsNothing);
+    // 대화 목록 가리기: the list preview hides, the chat stays open.
+    await state.setOn('veil_list', true);
+    await t.pumpAndSettle();
+    expect(find.byKey(const Key('veil')), findsOneWidget);
+    expect(veilOf(state, room), '');
+    // Hold the row: the peek's bubbles are covered too.
+    await t.longPress(find.text('@bob:test').first);
+    await t.pumpAndSettle();
+    expect(find.byKey(const Key('chat-peek')), findsOneWidget);
+    expect(find.descendant(of: find.byKey(const Key('chat-peek')), matching: find.byKey(const Key('veil'))), findsWidgets);
+    await t.tapAt(const Offset(5, 5));
+    await t.pumpAndSettle();
+    // 대화창 가리기 alone: the chat hides, the list does not.
+    await state.setOn('veil_list', false);
+    await state.setOn('veil_all', true);
+    await t.pumpAndSettle();
+    expect(find.byKey(const Key('veil')), findsNothing);
+    expect(veilOf(state, room), 'dots');
     state.stopLive();
   });
 
@@ -862,7 +923,12 @@ void main() {
     expect(state.chats.first.roomId, isNot(g));
     expect(find.byKey(const Key('pinned')), findsOneWidget);
     await act('우리 팀', 'menu-mute');
+    // Tip 106/330: the menu asks how long; 8 hours sets an end time.
+    await t.tap(find.byKey(const Key('mute-8h')));
+    await t.pumpAndSettle();
     expect(fake.mutedChats, contains(g));
+    expect(state.settings['mute_until:$g'], isNotNull);
+    await t.pump(const Duration(seconds: 4));
     expect(find.byKey(const Key('muted')), findsOneWidget);
 
     // Search finds by name.
@@ -875,9 +941,15 @@ void main() {
 
     await act('우리 팀', 'menu-archive');
     // Gone from the list; only named in the archive row.
+    // 보관함 starts hidden: pull the list down.
+    await t.dragFrom(const Offset(200, 420), const Offset(0, 300));
+    await t.pumpAndSettle();
     expect(find.descendant(of: find.byKey(const Key('archive-row')), matching: find.text('우리 팀')), findsOneWidget);
     expect(find.text('우리 팀'), findsOneWidget);
     await t.tap(find.byKey(const Key('archive-row')));
+    await t.pumpAndSettle();
+    // First visit: the archive explains itself once.
+    await t.tap(find.byKey(const Key('archive-intro-ok')));
     await t.pumpAndSettle();
     expect(find.text('우리 팀'), findsOneWidget);
     await act('우리 팀', 'menu-archive');
@@ -1171,7 +1243,7 @@ void main() {
     await t.pumpAndSettle();
     await t.tap(find.byKey(const Key('attach-library')));
     await t.pumpAndSettle();
-    await t.tap(find.byKey(const Key('attach-sel-0')));
+    await t.tap(find.byKey(const Key('attach-sel-check-0')));
     await t.pumpAndSettle();
     expect(find.text('1개 선택'), findsOneWidget);
     await t.tap(find.byKey(const Key('attach-once')));
@@ -1210,7 +1282,8 @@ void main() {
     await t.pumpAndSettle();
     await t.tap(find.byKey(const Key('attach-tab-file')));
     await t.pumpAndSettle();
-    await t.ensureVisible(find.byKey(Key('attach-recent-${again.id}')));
+    // Middle of the list: the bottom edge sits under the floating tab capsule.
+    await Scrollable.ensureVisible(t.element(find.byKey(Key('attach-recent-${again.id}'))), alignment: 0.5);
     await t.pumpAndSettle();
     await t.tap(find.byKey(Key('attach-recent-${again.id}')));
     await t.pumpAndSettle();
@@ -1414,6 +1487,12 @@ void main() {
     await t.pump();
     await t.enterText(find.byKey(const Key('poll-option-2')), '김밥');
     // Anonymous is on by default; switch it off for a public poll.
+    await t.scrollUntilVisible(
+      find.byKey(const Key('poll-anonymous')),
+      120,
+      scrollable: find.descendant(of: find.byType(CreatePollPage), matching: find.byType(Scrollable)).first,
+    );
+    await t.pumpAndSettle();
     await t.tap(find.byKey(const Key('poll-anonymous')));
     await t.pump();
     expect(find.textContaining('멤버 모두에게 보여요'), findsOneWidget);
@@ -1439,12 +1518,18 @@ void main() {
 
     await t.longPress(find.text('점심 뭐 먹을까요?'));
     await t.pumpAndSettle();
+    // The poll bubble is taller now (투표 결과 보기); the menu scrolls in this 800x600 test window.
+    await t.ensureVisible(find.byKey(const Key('menu-retract')));
+    await t.pumpAndSettle();
     await t.tap(find.byKey(const Key('menu-retract')));
     await t.pumpAndSettle();
     expect(find.text('2명 투표'), findsOneWidget);
     expect(find.byKey(const Key('poll-mine')), findsNothing);
 
     await t.longPress(find.text('점심 뭐 먹을까요?'));
+    await t.pumpAndSettle();
+    // The poll bubble is taller now (투표 결과 보기); the menu scrolls in this 800x600 test window.
+    await t.ensureVisible(find.byKey(const Key('menu-close-poll')));
     await t.pumpAndSettle();
     await t.tap(find.byKey(const Key('menu-close-poll')));
     await t.pumpAndSettle();
@@ -1463,15 +1548,15 @@ void main() {
     await t.pumpWidget(BurumyApp(state: state));
     await t.pumpAndSettle();
 
-    // The waiting bubble shows who, not what.
-    expect(find.byKey(const Key('bubble-strip')), findsOneWidget);
+    // The waiting bubble shows who, not what: a small drop in bob's row.
+    expect(find.byType(RowBubble), findsOneWidget);
     expect(find.text('🥳'), findsNothing);
     await t.tap(find.byType(SoapBubble).first);
     await t.pumpAndSettle();
     expect(find.byKey(const Key('bubble-emoji')), findsOneWidget);
     await t.tap(find.byKey(const Key('bubble-close')));
     await t.pumpAndSettle();
-    expect(find.byKey(const Key('bubble-strip')), findsNothing);
+    expect(find.byType(RowBubble), findsNothing);
     expect(await fake.pendingBubbles(), isEmpty);
 
     // Send one back.
@@ -1522,7 +1607,7 @@ void main() {
     await t.tap(find.byKey(const Key('attach-live-p2')));
     await t.pumpAndSettle();
     expect(find.text('2개 선택'), findsOneWidget);
-    await t.tap(find.byKey(const Key('attach-live-p2')));
+    await t.tap(find.byKey(const Key('attach-live-check-p2')));
     await t.pumpAndSettle();
     expect(find.text('1개 선택'), findsOneWidget);
     await t.tap(find.byKey(const Key('attach-send')));

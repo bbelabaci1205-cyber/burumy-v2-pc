@@ -7,6 +7,8 @@ import 'dart:math' as math;
 import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/gestures.dart' show LongPressGestureRecognizer, TapGestureRecognizer, kTouchSlop;
+import 'package:flutter/physics.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/services.dart' show HapticFeedback;
 
@@ -16,6 +18,8 @@ import '../brand/brand.dart';
 import '../design/tokens.dart';
 import '../l10n/app_localizations.dart';
 import 'chat_folders.dart';
+import 'chat_mute_sheet.dart';
+import 'chat_page.dart' show Veil, veilOf;
 import 'folders_page.dart';
 import 'common.dart';
 import 'glass.dart';
@@ -90,7 +94,9 @@ Future<void> runChatAction(BuildContext context, ChatPreview chat, String what) 
     case 'pin':
       await b.setChatPinned(chat.roomId, !chat.pinned);
     case 'mute':
-      await b.setChatMuted(chat.roomId, !chat.muted);
+      // Swipe: straight off (or back on); the long-press menu offers times.
+      chat.muted ? await app.unmuteChat(chat.roomId) : await app.muteChat(chat.roomId, null);
+      return;
     case 'archive':
       await b.setChatArchived(chat.roomId, !chat.archived);
     case 'hide':
@@ -102,6 +108,48 @@ Future<void> runChatAction(BuildContext context, ChatPreview chat, String what) 
       return;
   }
   await app.refresh();
+}
+
+/// Settings > 대화 > 대화 목록 밀기 (Telegram tip 260): the action at the
+/// outer end of each side, run by pulling the row all the way. Empty = the
+/// usual (Telegram iOS) buttons.
+const swipeRightPref = 'swipe_right', swipeLeftPref = 'swipe_left';
+
+/// What a swipe can do, in the settings order.
+const swipeActions = ['read', 'pin', 'mute', 'archive', 'delete'];
+
+/// One swipe button: id, word, icon, colour.
+(String, String, IconData, Color) swipeButton(BuildContext context, ChatPreview c, String id) {
+  final l = L.of(context);
+  final p = paletteOf(context);
+  return switch (id) {
+    'read' =>
+      c.unread > 0
+          ? ('read', l.markRead, CupertinoIcons.chat_bubble_fill, Palette.tileBlue)
+          : ('unread', l.swipeUnread, CupertinoIcons.chat_bubble_fill, Palette.tileBlue),
+    'pin' => ('pin', c.pinned ? l.swipeUnpin : l.swipePin, c.pinned ? CupertinoIcons.pin_slash_fill : CupertinoIcons.pin_fill, p.tileGreen),
+    'mute' => ('mute', c.muted ? l.swipeUnmute : l.swipeMute, c.muted ? CupertinoIcons.bell_fill : CupertinoIcons.bell_slash_fill, Palette.tileOrange),
+    'archive' => ('archive', c.archived ? l.swipeUnarchive : l.swipeArchive, CupertinoIcons.archivebox_fill, Palette.tileGrey),
+    _ => ('delete', l.delete, CupertinoIcons.trash_fill, Palette.tileRed),
+  };
+}
+
+/// Buttons for pulling right (read, pin) and left (mute, delete, archive);
+/// a chosen action goes to the outer end of its side and leaves the other.
+(List<(String, String, IconData, Color)>, List<(String, String, IconData, Color)>) swipeSides(BuildContext context, ChatPreview c) {
+  final s = AppScope.of(context);
+  final lead = s.pref(swipeRightPref, ''), trail = s.pref(swipeLeftPref, '');
+  final l = [
+    if (lead.isNotEmpty) lead,
+    for (final x in [if (c.unread > 0 || lead == 'read') 'read', 'pin'])
+      if (x != lead && x != trail) x,
+  ];
+  final r = [
+    for (final x in const ['mute', 'delete', 'archive'])
+      if (x != lead && x != trail) x,
+    if (trail.isNotEmpty) trail,
+  ];
+  return ([for (final x in l) swipeButton(context, c, x)], [for (final x in r) swipeButton(context, c, x)]);
 }
 
 /// A row that slides sideways to show Telegram-style buttons: read and pin
@@ -130,29 +178,27 @@ class _SwipeRowState extends State<SwipeRow> with SingleTickerProviderStateMixin
   late final anim = AnimationController.unbounded(vsync: this);
   double get dx => anim.value;
 
-  List<(String, String, IconData, Color)> left(L l, Palette p) =>
-      widget.leftItems ??
-      [
-        if (widget.chat!.unread > 0) ('read', l.markRead, CupertinoIcons.chat_bubble_fill, Palette.tileBlue),
-        ('pin', widget.chat!.pinned ? l.swipeUnpin : l.swipePin, widget.chat!.pinned ? CupertinoIcons.pin_slash_fill : CupertinoIcons.pin_fill, p.tileGreen),
-      ];
+  List<(String, String, IconData, Color)> left(L l, Palette p) => widget.leftItems ?? swipeSides(context, widget.chat!).$1;
 
-  List<(String, String, IconData, Color)> right(L l) =>
-      widget.rightItems ??
-      [
-        (
-          'mute',
-          widget.chat!.muted ? l.swipeUnmute : l.swipeMute,
-          widget.chat!.muted ? CupertinoIcons.bell_fill : CupertinoIcons.bell_slash_fill,
-          Palette.tileOrange,
-        ),
-        ('delete', l.delete, CupertinoIcons.trash_fill, Palette.tileRed),
-        ('archive', widget.chat!.archived ? l.swipeUnarchive : l.swipeArchive, CupertinoIcons.archivebox_fill, Palette.tileGrey),
-      ];
+  List<(String, String, IconData, Color)> right(L l) => widget.rightItems ?? swipeSides(context, widget.chat!).$2;
 
   void run(String id) => widget.onAction != null ? widget.onAction!(id) : runChatAction(context, widget.chat!, id);
 
-  void settle(double to) => anim.animateTo(to, duration: const Duration(milliseconds: 220), curve: Curves.easeOutCubic);
+  /// Telegram: a critically damped spring (about 0.5 s), carried on at the
+  /// finger's speed.
+  void settle(double to, [double velocity = 0]) {
+    const omega = 2 * math.pi / Tokens.rowResponse;
+    final spring = SpringDescription.withDampingRatio(mass: 1, stiffness: omega * omega, ratio: 1);
+    anim.animateWith(SpringSimulation(spring, dx, to, velocity, tolerance: const Tolerance(distance: 0.5, velocity: 5))).whenComplete(() {
+      if (mounted) anim.value = to; // land exactly (closed = 0)
+    });
+  }
+
+  /// Whether a long pull is armed (for the one tick when that changes).
+  bool armed = false;
+
+  /// The row's width, from the last layout.
+  double rowWidth = 393;
 
   @override
   void dispose() {
@@ -170,8 +216,16 @@ class _SwipeRowState extends State<SwipeRow> with SingleTickerProviderStateMixin
     // Pulled past the buttons: one long capsule, and letting go runs the
     // outer action (Telegram: archive on the right, the first on the left).
     // Read live (build() does not rerun while the row moves).
-    bool fullL() => dx > maxL + full;
-    bool fullR() => -dx > maxR + full;
+    // Telegram: past the buttons + 20 pt or 52.5 % of the row, whichever is
+    // more; a delete at the edge needs nearly the whole row (width − 29).
+    double longAt(double open, String edgeId) {
+      final w = rowWidth;
+      if (edgeId == 'delete') return math.max(open, w - Tokens.rowDeleteGap);
+      return math.min(w, math.max(open + Tokens.rowFullExtra, w * Tokens.rowFullShare));
+    }
+
+    bool fullL() => ls.isNotEmpty && dx > longAt(maxL, ls.first.$1);
+    bool fullR() => rs.isNotEmpty && -dx > longAt(maxR, rs.last.$1);
     Widget circle((String, String, IconData, Color) it) => GestureDetector(
       key: Key('swipe-${it.$1}'),
       behavior: HitTestBehavior.opaque,
@@ -245,18 +299,29 @@ class _SwipeRowState extends State<SwipeRow> with SingleTickerProviderStateMixin
     }
 
     void end(double v) {
+      armed = false;
       if (fullL() || fullR()) {
         final it = fullL() ? ls.first : rs.last;
-        settle(0);
+        settle(0, v);
         run(it.$1);
         return;
       }
-      if (dx > 0) settle(dx > maxL / 2 || v > 400 ? maxL : 0);
-      if (dx < 0) settle(dx < -maxR / 2 || v < -400 ? -maxR : 0);
+      // Telegram: a flick faster than 50 pt/s decides by its direction,
+      // otherwise past half the buttons opens.
+      if (dx > 0) settle((v.abs() > Tokens.rowFlick ? v > 0 : dx > maxL / 2) ? maxL : 0, v);
+      if (dx < 0) settle((v.abs() > Tokens.rowFlick ? v < 0 : dx < -maxR / 2) ? -maxR : 0, v);
     }
 
     double reach() => math.max((context.size?.width ?? 0) - Tokens.sideStrip, full * 3);
-    void move(double by) => anim.value = (dx + by).clamp(rs.isEmpty ? 0.0 : -math.max(reach(), maxR + full), ls.isEmpty ? 0.0 : math.max(reach(), maxL + full));
+    void move(double by) {
+      anim.value = (dx + by).clamp(rs.isEmpty ? 0.0 : -math.max(reach(), maxR + full), ls.isEmpty ? 0.0 : math.max(reach(), maxL + full));
+      // Telegram: one light tick when the long pull arms or lets go.
+      final now = fullL() || fullR();
+      if (now != armed) {
+        armed = now;
+        HapticFeedback.selectionClick();
+      }
+    }
 
     final r = Radius.circular(Tokens.radius[3]);
     // A strip that scrolls sideways (스토리, 비눗방울): pulled past its end,
@@ -270,58 +335,63 @@ class _SwipeRowState extends State<SwipeRow> with SingleTickerProviderStateMixin
       },
       child: widget.child,
     );
-    return GestureDetector(
-      // Telegram (Eric 2026-11-25 "여기까지 당겨 줘"): the row can be pulled
-      // almost all the way, leaving a side strip, and the capsule fills it.
-      onHorizontalDragUpdate: (d) => move(d.delta.dx),
-      onHorizontalDragEnd: (d) => end(d.primaryVelocity ?? 0),
-      child: AnimatedBuilder(
-        animation: anim,
-        builder: (_, child) => ClipRect(
-          child: Stack(
-            children: [
-              if (dx != 0)
-                Positioned.fill(
-                  // Only the opened strip, so things line up with the row edge.
-                  child: Align(
-                    alignment: dx > 0 ? Alignment.centerLeft : Alignment.centerRight,
-                    child: SizedBox(
-                      width: dx.abs(),
-                      child: buttons(dx > 0 ? ls : rs, start: dx > 0),
+    return LayoutBuilder(
+      builder: (context, box) {
+        if (box.maxWidth.isFinite) rowWidth = box.maxWidth;
+        return GestureDetector(
+          // Telegram (Eric 2026-11-25 "여기까지 당겨 줘"): the row can be pulled
+          // almost all the way, leaving a side strip, and the capsule fills it.
+          onHorizontalDragUpdate: (d) => move(d.delta.dx),
+          onHorizontalDragEnd: (d) => end(d.primaryVelocity ?? 0),
+          child: AnimatedBuilder(
+            animation: anim,
+            builder: (_, child) => ClipRect(
+              child: Stack(
+                children: [
+                  if (dx != 0)
+                    Positioned.fill(
+                      // Only the opened strip, so things line up with the row edge.
+                      child: Align(
+                        alignment: dx > 0 ? Alignment.centerLeft : Alignment.centerRight,
+                        child: SizedBox(
+                          width: dx.abs(),
+                          child: buttons(dx > 0 ? ls : rs, start: dx > 0),
+                        ),
+                      ),
+                    ),
+                  Transform.translate(
+                    offset: Offset(dx, 0),
+                    // The moving edge of the row is rounded while it is open.
+                    child: ClipRRect(
+                      borderRadius: dx == 0 ? BorderRadius.zero : (dx > 0 ? BorderRadius.horizontal(left: r) : BorderRadius.horizontal(right: r)),
+                      // Built here (not once outside) so it follows the live
+                      // offset: while open, a tap closes the row instead of
+                      // opening the chat.
+                      // Telegram: the pulled row turns light grey.
+                      child: ColoredBox(
+                        color: dx == 0 ? (widget.color ?? p.list) : Color.alphaBlend(p.incoming, p.list),
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.translucent,
+                          onTap: dx == 0 ? null : () => settle(0),
+                          child: AbsorbPointer(absorbing: dx != 0, child: child),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              Transform.translate(
-                offset: Offset(dx, 0),
-                // The moving edge of the row is rounded while it is open.
-                child: ClipRRect(
-                  borderRadius: dx == 0 ? BorderRadius.zero : (dx > 0 ? BorderRadius.horizontal(left: r) : BorderRadius.horizontal(right: r)),
-                  // Built here (not once outside) so it follows the live
-                  // offset: while open, a tap closes the row instead of
-                  // opening the chat.
-                  // Telegram: the pulled row turns light grey.
-                  child: ColoredBox(
-                    color: dx == 0 ? (widget.color ?? p.list) : Color.alphaBlend(p.incoming, p.list),
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.translucent,
-                      onTap: dx == 0 ? null : () => settle(0),
-                      child: AbsorbPointer(absorbing: dx != 0, child: child),
-                    ),
-                  ),
-                ),
+                ],
               ),
-            ],
+            ),
+            child: inner,
           ),
-        ),
-        child: inner,
-      ),
+        );
+      },
     );
   }
 }
 
 /// Telegram-style black banner above the tab bar: an (i), a title and one
 /// line under it; goes away by itself.
-void showInfoBanner(BuildContext context, String title, String body) {
+void showInfoBanner(BuildContext context, String title, String body, {IconData icon = CupertinoIcons.info_circle_fill}) {
   final o = Overlay.of(context, rootOverlay: true);
   final e = OverlayEntry(
     builder: (c) => Positioned(
@@ -334,7 +404,7 @@ void showInfoBanner(BuildContext context, String title, String body) {
         decoration: BoxDecoration(color: const Color(0xE6333333), borderRadius: BorderRadius.circular(Tokens.radius[3])),
         child: Row(
           children: [
-            const Icon(CupertinoIcons.info_circle_fill, color: Color(0xFFFFFFFF), size: 28),
+            Icon(icon, color: const Color(0xFFFFFFFF), size: 28),
             SizedBox(width: Tokens.space[3]),
             Expanded(
               child: Column(
@@ -345,10 +415,11 @@ void showInfoBanner(BuildContext context, String title, String body) {
                     title,
                     style: Tokens.preview.style.copyWith(color: const Color(0xFFFFFFFF), fontWeight: FontWeight.w500, decoration: TextDecoration.none),
                   ),
-                  Text(
-                    body,
-                    style: Tokens.preview.style.copyWith(color: const Color(0xFFFFFFFF), decoration: TextDecoration.none),
-                  ),
+                  if (body.isNotEmpty)
+                    Text(
+                      body,
+                      style: Tokens.preview.style.copyWith(color: const Color(0xFFFFFFFF), decoration: TextDecoration.none),
+                    ),
                 ],
               ),
             ),
@@ -367,7 +438,6 @@ void showInfoBanner(BuildContext context, String title, String body) {
 /// Telegram's swipe on the archive row, but it goes to the left menu).
 const archiveInMenuPref = 'archive_in_menu';
 const storiesInMenuPref = 'stories_in_menu';
-const bubblesInMenuPref = 'bubbles_in_menu';
 
 /// Bar above the tab bar while a chat waits to be deleted.
 class DeleteUndoBar extends StatelessWidget {
@@ -433,6 +503,7 @@ class ChatPressMenu extends StatelessWidget {
     final pick = await showMessageMenu(
       context,
       bubble: ChatPeek(chat: c, height: peek),
+      bubbleTouch: AppScope.of(context).on('veil_list') || veilOf(AppScope.of(context), c.roomId).isNotEmpty,
       mine: true,
       reactions: const [],
       iconsFirst: true,
@@ -460,6 +531,8 @@ class ChatPressMenu extends StatelessWidget {
         if (!context.mounted) return;
         final on = pick == 'hide-room' ? !hidden : !toDelete;
         showStoryToast(context, pick == 'hide-room' ? (on ? l.emergencyHidden : l.emergencyUnhidden) : (on ? l.emergencyRoomMarked : l.emergencyUnmarked));
+      case 'mute':
+        await openMuteSheet(context, c.roomId, muted: c.muted);
       case 'block':
         await b.block(c.peer, !blocked);
       case 'folder':
@@ -528,13 +601,92 @@ class ChatPressMenu extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) => GestureDetector(
-    onLongPress: () {
-      HapticFeedback.mediumImpact();
-      open(context);
-    },
-    child: child,
-  );
+  Widget build(BuildContext context) => PressLift(onLongPress: () => open(context), child: child);
+}
+
+/// iOS context-menu press (Eric 2026-11-26): the row turns light grey the
+/// moment a finger rests on it and slowly sinks while held; when the long
+/// press lands it springs back a little past full size and the menu opens.
+/// A scroll or an early lift just lets it go.
+class PressLift extends StatefulWidget {
+  const PressLift({super.key, required this.onLongPress, required this.child});
+  final Future<void> Function() onLongPress;
+  final Widget child;
+
+  /// How far the row sinks while held (4%; it pops back to 101%).
+  static const sink = 0.04;
+
+  @override
+  State<PressLift> createState() => _PressLiftState();
+}
+
+class _PressLiftState extends State<PressLift> with SingleTickerProviderStateMixin {
+  late final press = AnimationController(vsync: this, lowerBound: -1, upperBound: 1, value: 0);
+  bool down = false, fired = false;
+  Offset start = Offset.zero;
+
+  @override
+  void dispose() {
+    press.dispose();
+    super.dispose();
+  }
+
+  void letGo() {
+    if (!down || fired) return;
+    setState(() => down = false);
+    press.animateTo(0, duration: const Duration(milliseconds: 180), curve: Curves.easeOut);
+  }
+
+  Future<void> lift() async {
+    fired = true;
+    HapticFeedback.mediumImpact();
+    // Back up a little past full size, then settle (iOS context-menu pop).
+    await press.animateTo(-0.25, duration: const Duration(milliseconds: 130), curve: Curves.easeOut);
+    if (!mounted) return;
+    await press.animateTo(0, duration: const Duration(milliseconds: 150), curve: Curves.easeInOut);
+    if (!mounted) return;
+    await widget.onLongPress();
+    if (!mounted) return;
+    setState(() {
+      down = false;
+      fired = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final p = paletteOf(context);
+    return Listener(
+      onPointerDown: (e) {
+        start = e.position;
+        fired = false;
+        setState(() => down = true);
+        // Telegram: still for 0.12 s, then sinks over 0.2 s and the menu
+        // opens (0.32 s in all).
+        press.animateTo(
+          1,
+          duration: Tokens.holdTime,
+          curve: Interval(Tokens.holdWait.inMilliseconds / Tokens.holdTime.inMilliseconds, 1, curve: Curves.easeOut),
+        );
+      },
+      onPointerMove: (e) {
+        if ((e.position - start).distance > kTouchSlop) letGo();
+      },
+      onPointerUp: (_) => letGo(),
+      onPointerCancel: (_) => letGo(),
+      child: QuickHold(
+        onLongPress: lift,
+        child: AnimatedBuilder(
+          animation: press,
+          child: widget.child,
+          builder: (context, c) => Transform.scale(
+            scale: 1 - PressLift.sink * press.value,
+            child: AnimatedContainer(duration: const Duration(milliseconds: 120), color: down ? p.rowPressed : p.rowPressed.withValues(alpha: 0), child: c),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// The preview card: the last few messages of a chat.
@@ -562,6 +714,8 @@ class _ChatPeekState extends State<ChatPeek> {
     final p = paletteOf(context);
     final size = MediaQuery.sizeOf(context);
     final c = widget.chat;
+    final s = AppScope.of(context);
+    final veiled = s.on('veil_list') ? 'dots' : veilOf(s, c.roomId);
     return Container(
       key: const Key('chat-peek'),
       width: size.width - Tokens.space[2] * 2,
@@ -589,11 +743,19 @@ class _ChatPeekState extends State<ChatPeek> {
                         padding: EdgeInsets.symmetric(horizontal: Tokens.space[2], vertical: Tokens.space[1] - 2),
                         constraints: BoxConstraints(maxWidth: size.width * 0.6),
                         decoration: BoxDecoration(color: m.mine ? p.accent : p.incoming, borderRadius: BorderRadius.circular(Tokens.radius[2] + 2)),
-                        child: Text(
-                          m.viewOnce ? L.of(context).viewOncePhoto : previewText(context, kind: m.kind, body: m.body),
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                          style: Tokens.preview.style.copyWith(color: m.mine ? p.onAccent : p.label),
+                        // 가리기 on: the peek stays covered too (Telegram keeps
+                        // spoilers hidden in previews); hold a bubble to read it.
+                        child: Veil(
+                          mode: veiled,
+                          ink: m.mine ? p.onAccent : p.label,
+                          child: Text(
+                            m.viewOnce
+                                ? (m.kind == 'audio' ? L.of(context).onceVoice : L.of(context).viewOncePhoto)
+                                : previewText(context, kind: m.kind, body: m.body),
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                            style: Tokens.preview.style.copyWith(color: m.mine ? p.onAccent : p.label),
+                          ),
                         ),
                       ),
                     ),
@@ -634,4 +796,26 @@ class _ChatPeekState extends State<ChatPeek> {
       ),
     );
   }
+}
+
+/// A long press that lands after [Tokens.holdTime] (Telegram 0.32 s) instead
+/// of Flutter's 0.5 s. Taps and sideways drags around it still work.
+class QuickHold extends StatelessWidget {
+  const QuickHold({super.key, required this.child, this.onLongPress, this.onTap});
+  final Widget child;
+  final VoidCallback? onLongPress, onTap;
+
+  @override
+  Widget build(BuildContext context) => RawGestureDetector(
+    gestures: {
+      if (onLongPress != null)
+        LongPressGestureRecognizer: GestureRecognizerFactoryWithHandlers<LongPressGestureRecognizer>(
+          () => LongPressGestureRecognizer(duration: Tokens.holdTime, debugOwner: this),
+          (r) => r.onLongPress = onLongPress,
+        ),
+      if (onTap != null)
+        TapGestureRecognizer: GestureRecognizerFactoryWithHandlers<TapGestureRecognizer>(() => TapGestureRecognizer(debugOwner: this), (r) => r.onTap = onTap),
+    },
+    child: child,
+  );
 }

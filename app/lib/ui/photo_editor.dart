@@ -87,21 +87,72 @@ List<double> filterMatrix(String id) => switch (id) {
   _ => Cm.identity,
 };
 
+/// What the auto button needs to know about the photo: the darkest and
+/// brightest 1% and the middle of its brightness (0..255), measured on a
+/// small copy on this phone.
+class AutoStats {
+  const AutoStats(this.low, this.high, this.mean);
+  final double low, high, mean;
+
+  /// From RGBA bytes (any size).
+  static AutoStats of(Uint8List rgba) {
+    final hist = List<int>.filled(256, 0);
+    var n = 0;
+    var sum = 0.0;
+    for (var i = 0; i + 3 < rgba.length; i += 4) {
+      final y = (0.2126 * rgba[i] + 0.7152 * rgba[i + 1] + 0.0722 * rgba[i + 2]).round().clamp(0, 255);
+      hist[y]++;
+      sum += y;
+      n++;
+    }
+    if (n == 0) return const AutoStats(0, 255, 128);
+    double pct(double q) {
+      var acc = 0;
+      for (var v = 0; v < 256; v++) {
+        acc += hist[v];
+        if (acc >= n * q) return v.toDouble();
+      }
+      return 255;
+    }
+
+    return AutoStats(pct(0.01), pct(0.99), sum / n);
+  }
+}
+
+/// 자동 보정 (Telegram tip 70): one dial that stretches the light range,
+/// moves the middle towards normal and adds a little colour, all at once.
+/// [v] 0..1.
+List<double> autoMatrix(AutoStats s, double v) {
+  if (v <= 0) return Cm.identity;
+  final range = (s.high - s.low).clamp(40.0, 255.0);
+  final stretch = 1 + ((255 / range).clamp(1.0, 1.8) - 1) * v;
+  final low = s.low.clamp(0.0, 60.0) * v;
+  final mid = (s.mean - low) * stretch;
+  final lift = ((128 - mid) * 0.35 * v).clamp(-30.0, 30.0);
+  return Cm.all([Cm.scale(stretch, -low * stretch + lift), Cm.saturation(1 + 0.18 * v), Cm.contrast(1 + 0.06 * v)]);
+}
+
 /// Everything chosen in the editor.
 class EditState {
   String filter = 'none';
   final adjust = {for (final a in Adjust.values) a: 0.0};
+
+  /// 자동 보정 0..1 (needs [stats]; chat photo editor only).
+  double auto = 0;
+  AutoStats? stats;
 
   /// Straighten (degrees, -45..45) and quarter turns.
   double angle = 0;
   int quarter = 0;
   bool flipped = false;
 
-  bool get untouched => filter == 'none' && adjust.values.every((v) => v == 0) && angle == 0 && quarter == 0 && !flipped;
+  bool get untouched => auto == 0 && filter == 'none' && adjust.values.every((v) => v == 0) && angle == 0 && quarter == 0 && !flipped;
 
-  List<double> matrix() => Cm.all([filterMatrix(filter), for (final a in Adjust.values) adjustMatrix(a, adjust[a]!)]);
+  List<double> matrix() =>
+      Cm.all([if (stats != null) autoMatrix(stats!, auto), filterMatrix(filter), for (final a in Adjust.values) adjustMatrix(a, adjust[a]!)]);
 
   void reset() {
+    auto = 0;
     filter = 'none';
     for (final a in Adjust.values) {
       adjust[a] = 0;
@@ -188,18 +239,22 @@ class _PhotoEditorPageState extends State<PhotoEditorPage> {
                 children: [
                   CupertinoButton(
                     key: const Key('editor-cancel'),
+                    // Text-only bar button: no tall default padding (it cut the words off).
+                    padding: EdgeInsets.symmetric(horizontal: Tokens.space[3]),
                     onPressed: () => Navigator.pop(context),
                     child: Text(l.cancel, style: Tokens.body.style.copyWith(color: _white)),
                   ),
                   const Spacer(),
                   CupertinoButton(
                     key: const Key('editor-reset'),
+                    padding: EdgeInsets.symmetric(horizontal: Tokens.space[3]),
                     onPressed: st.untouched ? null : resetAll,
                     child: Text(l.editorReset, style: Tokens.body.style.copyWith(color: st.untouched ? _white.withValues(alpha: 0.35) : _gold)),
                   ),
                   const Spacer(),
                   CupertinoButton(
                     key: const Key('editor-done'),
+                    padding: EdgeInsets.symmetric(horizontal: Tokens.space[3]),
                     onPressed: saving ? null : done,
                     child: saving
                         ? const CupertinoActivityIndicator(color: _white)
@@ -263,7 +318,7 @@ class _PhotoEditorPageState extends State<PhotoEditorPage> {
             ),
           ),
         ),
-        // Dim outside the circle, thin ring on the edge (iOS contact photo).
+        // Dim outside the shapes, thin lines on their edges (iOS contact photo).
         IgnorePointer(
           child: CustomPaint(size: Size(box.maxWidth, box.maxHeight), painter: _CircleMask(d / 2)),
         ),
@@ -467,25 +522,25 @@ class _RoundIcon extends StatelessWidget {
   );
 }
 
+/// Both shapes a viewer may pick (Eric 2026-11-26, 설정 > 모양 > 프로필
+/// 모양): dark outside the rounded square, lightly dimmed corners that only
+/// the circle cuts off, and a thin line on each edge.
 class _CircleMask extends CustomPainter {
   _CircleMask(this.r);
   final double r;
   @override
   void paint(Canvas canvas, Size size) {
     final c = size.center(Offset.zero);
-    final outside = Path()
-      ..fillType = PathFillType.evenOdd
-      ..addRect(Offset.zero & size)
-      ..addOval(Rect.fromCircle(center: c, radius: r));
-    canvas.drawPath(outside, Paint()..color = const Color(0x99000000));
-    canvas.drawCircle(
-      c,
-      r,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1
-        ..color = const Color(0x80FFFFFF),
-    );
+    final box = Rect.fromCircle(center: c, radius: r);
+    final rounded = RoundedSuperellipseBorder(borderRadius: BorderRadius.circular(2 * r * Tokens.roomKakaoCorner)).getOuterPath(box);
+    final circle = Path()..addOval(box);
+    canvas.drawPath(Path.combine(PathOperation.difference, Path()..addRect(Offset.zero & size), rounded), Paint()..color = const Color(0x99000000));
+    canvas.drawPath(Path.combine(PathOperation.difference, rounded, circle), Paint()..color = const Color(0x40000000));
+    final line = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+    canvas.drawPath(rounded, line..color = const Color(0x4DFFFFFF));
+    canvas.drawCircle(c, r, line..color = const Color(0x80FFFFFF));
   }
 
   @override

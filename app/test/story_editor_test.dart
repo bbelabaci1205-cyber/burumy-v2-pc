@@ -36,7 +36,7 @@ void main() {
     await t.pumpAndSettle();
     expect(find.byKey(const Key('story-share')), findsNothing);
     await t.enterText(find.byKey(const Key('story-text-input')), '안녕 친구들');
-    await t.tap(find.byKey(const Key('story-color-ffe84c47')));
+    await t.tap(find.byKey(const Key('story-color-ffff383c')));
     await t.tap(find.byKey(const Key('story-text-box')));
     await t.pump();
     await t.tap(find.byKey(const Key('story-text-done')));
@@ -63,7 +63,8 @@ void main() {
               w is GestureDetector &&
               w.key is ValueKey &&
               '${(w.key as ValueKey).value}'.startsWith('sticker-') &&
-              !'${(w.key as ValueKey).value}'.startsWith('sticker-tab'),
+              !'${(w.key as ValueKey).value}'.startsWith('sticker-tab') &&
+              !'${(w.key as ValueKey).value}'.startsWith('sticker-feel'),
         )
         .first;
     await t.tap(first);

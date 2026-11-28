@@ -7,6 +7,7 @@ import '../core/app_state.dart';
 import '../core/backend.dart';
 import '../design/tokens.dart';
 import '../l10n/app_localizations.dart';
+import 'accounts_ui.dart';
 import 'common.dart';
 import 'ios.dart';
 import 'glass.dart';
@@ -41,7 +42,7 @@ class _AppLockPageState extends State<AppLockPage> {
 
   /// The normal password, once typed on this visit (kept only in memory).
   String? normal;
-  List<bool> extras = const [false, false];
+  List<bool> extras = const [false, false, false];
   List<List<String>> lists = const [[], []];
   bool hideSession = false;
   bool hideOn = false;
@@ -99,6 +100,7 @@ class _AppLockPageState extends State<AppLockPage> {
     final l = L.of(context);
     final p = paletteOf(context);
     final b = AppScope.of(context).backend;
+    final accounts = AppScope.of(context).accounts;
     final List<Widget> body;
     if (isSet == null) {
       body = const [];
@@ -141,14 +143,14 @@ class _AppLockPageState extends State<AppLockPage> {
         key: Key('lock-$role'),
         leading: iconTile(c, icon),
         title: Text(title),
-        additionalInfo: Text(extras[i] ? l.appLockOn : l.notSet),
+        additionalInfo: Text(extras.length > i && extras[i] ? l.appLockOn : l.notSet),
         trailing: const IosChevron(),
         onTap: () => push(
           PasswordPage(
             title: title,
             info: info,
             onSave: (pw) => b.setExtraPassword(n, role, pw),
-            onRemove: extras[i] ? () => b.setExtraPassword(n, role, null) : null,
+            onRemove: extras.length > i && extras[i] ? () => b.setExtraPassword(n, role, null) : null,
           ),
         ),
       );
@@ -193,6 +195,23 @@ class _AppLockPageState extends State<AppLockPage> {
             listRow(1, Palette.tileOrange, CupertinoIcons.person_crop_circle_badge_minus, l.deleteList),
           ],
         ),
+        // Fourth password: only with two or more accounts on this phone
+        // (or when it is already set).
+        if ((accounts?.several ?? false) || (extras.length > 2 && extras[2]))
+          IosSection(
+            footer: sectionFooter(context, l.accountPasswordInfo),
+            children: [
+              extraRow('account', 2, Palette.tileIndigo, CupertinoIcons.person_2, l.accountPassword, l.accountPasswordInfo),
+              IosTile(
+                key: const Key('lock-account-list'),
+                leading: iconTile(Palette.tileGrey, CupertinoIcons.person_crop_circle_badge_minus),
+                title: Text(l.accountEraseList),
+                additionalInfo: Text(accounts == null || accounts.toErase.isEmpty ? l.notSet : l.chooseCount(accounts.toErase.length)),
+                trailing: const IosChevron(),
+                onTap: accounts == null ? null : () => push(const AccountErasePage()),
+              ),
+            ],
+          ),
         IosSection(
           footer: sectionFooter(context, l.wipeAfterInfo),
           children: [
@@ -201,6 +220,8 @@ class _AppLockPageState extends State<AppLockPage> {
               title: Text(l.wipeAfter),
               trailing: IosSegmented<int>(
                 key: const Key('wipe-after'),
+                // Short choices so '틀리면 모두 지우기' shows in full (검수 2026-11-28).
+                itemWidth: 64,
                 groupValue: wipeN,
                 children: {5: Text(l.wipeTimes(5)), 10: Text(l.wipeTimes(10))},
                 onValueChanged: (v) async {
@@ -231,6 +252,12 @@ class _AppLockPageState extends State<AppLockPage> {
                     onTap: () async {
                       final st = AppScope.of(context);
                       await b.releaseHidden();
+                      // Hiding was on for every account on this phone.
+                      for (final o in st.accounts?.side.values ?? const <Backend>[]) {
+                        try {
+                          await o.releaseHidden();
+                        } catch (_) {}
+                      }
                       await st.refresh();
                       await refresh();
                     },

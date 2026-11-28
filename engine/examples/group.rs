@@ -70,6 +70,10 @@ async fn main() -> Result<()> {
         req.power_level_content_override = Some(Raw::from_json_string(
             r#"{"events_default":100}"#.to_owned(),
         )?);
+        // The mark our server reads (channel rules, subscribers hidden).
+        req.creation_content = Some(Raw::from_json_string(
+            r#"{"im.securemessenger.channel":true}"#.to_owned(),
+        )?);
     }
     req.initial_state = state;
     let room: OwnedRoomId = owner.client().create_room(req).await?.room_id().to_owned();
@@ -131,6 +135,29 @@ async fn main() -> Result<()> {
         }
     }
     if channel {
+        // Rule 12: a subscriber's phone only knows the owner and itself, but
+        // still shows the right subscriber count.
+        let sub = &members[0];
+        sub.sync_once().await?;
+        let seen = sub.members(&room).await?;
+        let me = sub.user_id().unwrap();
+        let mut ids: Vec<String> = seen.iter().map(|m| m.user_id.clone()).collect();
+        ids.sort();
+        let mut want = vec![owner.user_id().unwrap().to_string(), me.to_string()];
+        want.sort();
+        if ids != want {
+            bail!("a subscriber sees other subscribers: {ids:?}");
+        }
+        let count = sub.client().get_room(&room).map(|r| r.joined_members_count()).unwrap_or(0);
+        if count != n as u64 + 1 {
+            bail!("subscriber count {count}, want {}", n + 1);
+        }
+        println!("subscriber sees only owner + self, count {count}");
+        let all = owner.members(&room).await?.len();
+        if all != n + 1 {
+            bail!("owner sees {all} members, want {}", n + 1);
+        }
+        println!("owner sees all {all}");
         match members[0].send_text(&room, "구독자 글").await {
             Ok(_) => bail!("a subscriber could post in a channel"),
             Err(e) => println!("subscriber post refused: {e}"),

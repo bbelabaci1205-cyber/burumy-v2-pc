@@ -15,6 +15,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
 import '../core/app_state.dart';
+import '../core/looks.dart';
 import '../design/tokens.dart';
 import '../l10n/app_localizations.dart';
 import 'common.dart';
@@ -76,33 +77,62 @@ Uint8List? chatPhoto(AppState s) {
   }
 }
 
+/// The background text in use: [preview] if given, else this chat's own
+/// pick, else the group's / channel's background for all members, else my
+/// default (Settings > 모양).
+String wallSpecOf(AppState s, {String? roomId, String? roomWall, String? preview}) {
+  if (preview != null) return preview;
+  final here = roomId == null ? '' : s.pref('chat_theme:$roomId', '');
+  if (here.isNotEmpty) return here;
+  if (roomWall != null && roomWall.isNotEmpty) return roomWall;
+  return s.pref('chat_theme', 'plain');
+}
+
+/// 밤 밝기 (tip 387): how much a photo / colour background darkens when
+/// night mode is on, 0..0.8 (Settings > 모양 > 배경 고르기).
+double nightDim(AppState s) => (double.tryParse(s.pref('wall_dim', '')) ?? 0.3).clamp(0.0, 0.8);
+
 /// Paints the chosen background behind [child].
 class ChatWallpaper extends StatelessWidget {
-  const ChatWallpaper({super.key, required this.child, this.theme, this.roomId});
+  const ChatWallpaper({super.key, required this.child, this.theme, this.roomId, this.roomWall, this.still = false});
   final Widget child;
 
   /// A chat with its own background (chat info > "이 대화방 배경").
   final String? roomId;
 
-  /// Preview a theme that is not picked yet.
+  /// The group's / channel's background for all members (tip 412 / 429).
+  final String? roomWall;
+
+  /// Preview a background that is not picked yet (any [Wall] text).
   final String? theme;
+
+  /// Small previews: no swirl, no tilt.
+  final bool still;
 
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final p = paletteOf(context);
-    final here = roomId == null ? '' : s.pref('chat_theme:$roomId', '');
-    final id = theme ?? (here.isNotEmpty ? here : s.pref('chat_theme', 'plain'));
-    final photo = id == 'photo' ? chatPhoto(s) : null;
+    final wall = Wall.parse(wallSpecOf(s, roomId: roomId, roomWall: roomWall, preview: theme));
+    final photo = wall.kind == 'photo' ? chatPhoto(s) : null;
+    Widget art = WallArt(wall: wall, dark: p.dark, base: p.chatBackground, photo: photo, still: still || theme != null);
+    // Night mode: photos and own colours step down so bubbles stay calm.
+    if (p.dark && (wall.kind == 'photo' || wall.kind == 'color' || wall.kind == 'grad')) {
+      final dim = nightDim(s);
+      if (dim > 0) {
+        art = Stack(
+          fit: StackFit.expand,
+          children: [
+            art,
+            ColoredBox(color: Color.fromRGBO(0, 0, 0, dim)),
+          ],
+        );
+      }
+    }
     return Stack(
       children: [
         Positioned.fill(
-          child: TiltLayer(
-            on: theme == null && s.tiltOn,
-            child: photo != null
-                ? Image.memory(photo, fit: BoxFit.cover, gaplessPlayback: true)
-                : WallpaperArt(theme: ChatTheme.of(id), dark: p.dark, base: p.chatBackground),
-          ),
+          child: TiltLayer(on: theme == null && !still && (s.tiltOn || wall.motion), child: art),
         ),
         child,
       ],
@@ -110,11 +140,180 @@ class ChatWallpaper extends StatelessWidget {
   }
 }
 
+/// Draws one [Wall]: our themes, a photo (sharp or blurred), one colour or
+/// swirling colours, with icons over it.
+class WallArt extends StatelessWidget {
+  const WallArt({super.key, required this.wall, required this.dark, required this.base, this.photo, this.still = false});
+  final Wall wall;
+  final bool dark;
+  final Color base;
+  final Uint8List? photo;
+  final bool still;
+
+  @override
+  Widget build(BuildContext context) {
+    switch (wall.kind) {
+      case 'photo':
+        final b = photo;
+        if (b == null) return ColoredBox(color: base);
+        final img = Image.memory(b, fit: BoxFit.cover, gaplessPlayback: true);
+        if (!wall.blur) return img;
+        return ClipRect(
+          child: ImageFiltered(
+            imageFilter: ui.ImageFilter.blur(sigmaX: 14, sigmaY: 14, tileMode: TileMode.mirror),
+            child: Transform.scale(scale: 1.08, child: img),
+          ),
+        );
+      case 'color':
+        final c = wall.colors.first;
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            ColoredBox(color: c),
+            if (wall.pattern.isNotEmpty) PatternLayer(id: wall.pattern, on: c, strength: wall.strength),
+          ],
+        );
+      case 'grad':
+        final avg = wall.colors.reduce((a, b) => Color.lerp(a, b, .5)!);
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            SwirlArt(colors: wall.colors, still: still),
+            if (wall.pattern.isNotEmpty) PatternLayer(id: wall.pattern, on: avg, strength: wall.strength),
+          ],
+        );
+      default:
+        final t = ChatTheme.of(wall.id);
+        final art = WallpaperArt(theme: t, dark: dark, base: base, strength: wall.strength);
+        if (wall.pattern.isEmpty) return art;
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            art,
+            PatternLayer(id: wall.pattern, on: dark ? const Color(0xFF000000) : const Color(0xFFFFFFFF), strength: wall.strength < 0 ? 0.5 : wall.strength),
+          ],
+        );
+    }
+  }
+}
+
+/// The icons of a pattern id (see core/looks.dart Patterns).
+List<IconData> patternIcons(String id) => switch (id) {
+  'hearts' => const [CupertinoIcons.heart_fill, CupertinoIcons.heart, CupertinoIcons.suit_heart_fill],
+  'stars' => const [CupertinoIcons.star_fill, CupertinoIcons.sparkles, CupertinoIcons.moon_stars_fill],
+  'music' => const [CupertinoIcons.music_note, CupertinoIcons.music_note_2, CupertinoIcons.headphones],
+  'paws' => const [CupertinoIcons.paw_solid, CupertinoIcons.paw, CupertinoIcons.hare_fill],
+  'weather' => const [CupertinoIcons.sun_max_fill, CupertinoIcons.cloud_fill, CupertinoIcons.snow, CupertinoIcons.drop_fill],
+  'travel' => const [CupertinoIcons.airplane, CupertinoIcons.globe, CupertinoIcons.car_fill, CupertinoIcons.camera_fill],
+  'games' => const [CupertinoIcons.gamecontroller_fill, CupertinoIcons.sportscourt_fill, CupertinoIcons.flag_fill, CupertinoIcons.rocket_fill],
+  'nature' => const [CupertinoIcons.tree, CupertinoIcons.leaf_arrow_circlepath, CupertinoIcons.ant_fill, CupertinoIcons.tortoise_fill],
+  _ => const <IconData>[],
+};
+
+/// Icons scattered over a background; ink follows the colour under it.
+class PatternLayer extends StatelessWidget {
+  const PatternLayer({super.key, required this.id, required this.on, this.strength = 0.5, this.step = 64});
+  final String id;
+  final Color on;
+  final double strength;
+  final double step;
+
+  @override
+  Widget build(BuildContext context) {
+    final icons = patternIcons(id);
+    if (icons.isEmpty || strength <= 0) return const SizedBox.shrink();
+    final darkUnder = on.computeLuminance() < 0.4;
+    final ink = darkUnder ? Color.fromRGBO(255, 255, 255, 0.06 + strength * 0.3) : Color.fromRGBO(0, 0, 0, 0.04 + strength * 0.22);
+    return CustomPaint(
+      painter: _Pattern(icons, ink, step: step),
+      size: Size.infinite,
+    );
+  }
+}
+
+/// Bumped each time I send in a chat: swirling backgrounds turn a little
+/// (tip 281: "colours move as you send messages").
+final wallSpin = ValueNotifier<int>(0);
+
+/// Four soft colour spots that sit around the middle and turn an eighth of
+/// a circle (smoothly) each time I send.
+class SwirlArt extends StatefulWidget {
+  const SwirlArt({super.key, required this.colors, this.still = false});
+  final List<Color> colors;
+  final bool still;
+  @override
+  State<SwirlArt> createState() => _SwirlArtState();
+}
+
+class _SwirlArtState extends State<SwirlArt> with SingleTickerProviderStateMixin {
+  late final AnimationController turn = AnimationController(vsync: this, duration: Tokens.swirlTurn);
+  double from = 0, to = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    from = to = widget.still ? 0 : wallSpin.value.toDouble();
+    wallSpin.addListener(_spin);
+  }
+
+  void _spin() {
+    if (widget.still || !mounted) return;
+    from = _now;
+    to = wallSpin.value.toDouble();
+    turn.forward(from: 0);
+  }
+
+  double get _now => from + (to - from) * Curves.easeInOutCubic.transform(turn.value);
+
+  @override
+  void dispose() {
+    wallSpin.removeListener(_spin);
+    turn.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: turn,
+    builder: (_, _) => CustomPaint(painter: SwirlPainter(widget.colors, _now), size: Size.infinite),
+  );
+}
+
+class SwirlPainter extends CustomPainter {
+  SwirlPainter(this.colors, this.phase);
+  final List<Color> colors;
+
+  /// In eighths of a turn.
+  final double phase;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final r = Offset.zero & size;
+    final c = colors.length >= 4 ? colors : [...colors, ...colors].take(4).toList();
+    final avg = Color.lerp(Color.lerp(c[0], c[1], .5), Color.lerp(c[2], c[3], .5), .5)!;
+    canvas.drawRect(r, Paint()..color = avg);
+    final mid = r.center;
+    final reach = Offset(size.width * .42, size.height * .38);
+    final radius = r.longestSide * .62;
+    for (var i = 0; i < 4; i++) {
+      final a = (i * 90 + 45 + phase * 45) * math.pi / 180;
+      final at = mid + Offset(math.cos(a) * reach.dx, -math.sin(a) * reach.dy);
+      canvas.drawRect(r, Paint()..shader = ui.Gradient.radial(at, radius, [c[i], c[i].withValues(alpha: 0)]));
+    }
+  }
+
+  @override
+  bool shouldRepaint(SwirlPainter o) => o.phase != phase || o.colors != colors;
+}
+
 class WallpaperArt extends StatelessWidget {
-  const WallpaperArt({super.key, required this.theme, required this.dark, required this.base});
+  const WallpaperArt({super.key, required this.theme, required this.dark, required this.base, this.strength = -1});
   final ChatTheme theme;
   final bool dark;
   final Color base;
+
+  /// 무늬 강도 0..1; below 0 = the theme's own.
+  final double strength;
 
   @override
   Widget build(BuildContext context) {
@@ -125,19 +324,28 @@ class WallpaperArt extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: colors),
       ),
-      child: CustomPaint(painter: _Pattern(theme.icons, Color(dark || theme.id == 'hiphop' ? 0x1FFFFFFF : 0x1A000000)), size: Size.infinite),
+      child: CustomPaint(
+        painter: _Pattern(
+          theme.icons,
+          strength < 0
+              ? Color(dark || theme.id == 'hiphop' ? 0x1FFFFFFF : 0x1A000000)
+              : (dark ? Color.fromRGBO(255, 255, 255, 0.04 + strength * 0.24) : Color.fromRGBO(0, 0, 0, 0.03 + strength * 0.2)),
+        ),
+        size: Size.infinite,
+      ),
     );
   }
 }
 
 class _Pattern extends CustomPainter {
-  _Pattern(this.icons, this.color);
+  _Pattern(this.icons, this.color, {this.step = 64});
   final List<IconData> icons;
   final Color color;
+  final double step;
 
   @override
   void paint(Canvas canvas, Size size) {
-    const step = 64.0;
+    final scale = step / 64;
     final rnd = math.Random(7);
     var n = 0;
     for (var y = -step / 2; y < size.height + step; y += step) {
@@ -147,12 +355,12 @@ class _Pattern extends CustomPainter {
         final tp = TextPainter(
           text: TextSpan(
             text: String.fromCharCode(icon.codePoint),
-            style: TextStyle(fontFamily: icon.fontFamily, package: icon.fontPackage, fontSize: 22 + rnd.nextDouble() * 6, color: color),
+            style: TextStyle(fontFamily: icon.fontFamily, package: icon.fontPackage, fontSize: (22 + rnd.nextDouble() * 6) * scale, color: color),
           ),
           textDirection: TextDirection.ltr,
         )..layout();
         canvas.save();
-        canvas.translate(x + rnd.nextDouble() * 10, y + rnd.nextDouble() * 10);
+        canvas.translate(x + rnd.nextDouble() * 10 * scale, y + rnd.nextDouble() * 10 * scale);
         canvas.rotate((rnd.nextDouble() - .5) * .7);
         tp.paint(canvas, Offset(-tp.width / 2, -tp.height / 2));
         canvas.restore();
@@ -161,7 +369,7 @@ class _Pattern extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_Pattern o) => o.color != color || o.icons != icons;
+  bool shouldRepaint(_Pattern o) => o.color != color || o.icons != icons || o.step != step;
 }
 
 /// The hip-hop wallpaper: four soft colour spots (top right, top left,

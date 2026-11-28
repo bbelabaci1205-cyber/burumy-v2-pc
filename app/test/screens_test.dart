@@ -77,7 +77,12 @@ void main() {
           await state.refresh();
           await t.pumpAndSettle();
           await expectLater(find.byType(CupertinoApp), matchesGoldenFile('shots/${tag}_2_chats.png'));
+          // 보관함 starts hidden: pull the list down.
+          await t.dragFrom(const Offset(200, 420), const Offset(0, 300));
+          await t.pumpAndSettle();
           await t.tap(find.byKey(const Key('archive-row')));
+          await t.pumpAndSettle();
+          await t.tap(find.byKey(const Key('archive-intro-ok')));
           await t.pumpAndSettle();
           await expectLater(find.byType(CupertinoApp), matchesGoldenFile('shots/${tag}_13_archive.png'));
           Navigator.of(t.element(find.byType(ArchivePage)), rootNavigator: true).pop();
@@ -172,9 +177,11 @@ void main() {
           await t.pumpAndSettle();
 
           final news = find.text(ko ? '부루미 소식' : 'Burumy News');
-          if (news.evaluate().isEmpty) {
+          {
             final list = find.byWidgetPredicate((w) => w is Scrollable && w.axisDirection == AxisDirection.down).first;
             await t.scrollUntilVisible(news, 200, scrollable: list);
+            // Clear of the floating tab bar.
+            await t.drag(list, const Offset(0, -120));
             await t.pumpAndSettle();
           }
           await t.tap(news);

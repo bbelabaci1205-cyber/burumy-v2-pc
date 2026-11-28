@@ -46,6 +46,94 @@
       var s = getComputedStyle(p);
       return [parseFloat(s.paddingTop) || 0, parseFloat(s.paddingBottom) || 0];
     };
+    // Share sheet for the app (poster, invite link). Falls back to a
+    // download (picture) or the clipboard (words).
+    window.burumyShare = async function (text, bytes, name, mime, saveOnly) {
+      var file = bytes ? new File([bytes], name, { type: mime }) : null;
+      if (!saveOnly && navigator.share) {
+        var data = {};
+        if (text) data.text = text;
+        if (file && navigator.canShare && navigator.canShare({ files: [file] })) data.files = [file];
+        if (data.text || data.files) {
+          try { await navigator.share(data); return 'shared'; }
+          catch (e) { if (e && e.name === 'AbortError') return 'shared'; }
+        }
+      }
+      if (file) {
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(file);
+        a.download = name;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+        return 'saved';
+      }
+      if (text && navigator.clipboard) { await navigator.clipboard.writeText(text); return 'copied'; }
+      return 'failed';
+    };
+
+    // Video editor strip (Telegram tip 56): small JPEG pictures from along
+    // a video, made in this browser from a hidden <video> and a canvas.
+    window.burumyVideoFrames = async function (bytes, mime, count, height) {
+      var url = URL.createObjectURL(new Blob([bytes], { type: mime }));
+      var v = document.createElement('video');
+      v.muted = true; v.playsInline = true; v.preload = 'auto'; v.src = url;
+      function wait(ev) { return new Promise(function (ok, bad) {
+        var t = setTimeout(function () { bad(new Error('timeout')); }, 8000);
+        v.addEventListener(ev, function () { clearTimeout(t); ok(); }, { once: true });
+        v.addEventListener('error', function () { clearTimeout(t); bad(new Error('video')); }, { once: true });
+      }); }
+      var out = [];
+      try {
+        // iPhone Safari loads nothing until a (muted) play starts.
+        var ready = wait('loadeddata');
+        try { await v.play(); } catch (e) {}
+        await ready; v.pause();
+        var d = v.duration, w = Math.max(1, Math.round(height * v.videoWidth / Math.max(1, v.videoHeight)));
+        var c = document.createElement('canvas'); c.width = w; c.height = height;
+        var g = c.getContext('2d');
+        for (var i = 0; i < count; i++) {
+          v.currentTime = Math.min(d - 0.05, (d * (i + 0.5)) / count);
+          await wait('seeked');
+          g.drawImage(v, 0, 0, w, height);
+          var blob = await new Promise(function (ok) { c.toBlob(ok, 'image/jpeg', 0.7); });
+          out.push(new Uint8Array(await blob.arrayBuffer()));
+        }
+      } catch (e) {} finally { URL.revokeObjectURL(url); v.removeAttribute('src'); }
+      return out;
+    };
+  </script>
+
+  <!-- One plain page colour behind the app (white / black in dark mode), and
+       a page that never scrolls itself: Safari iOS 26 hazes the top edge when
+       the page moves under the status bar (Eric 2026-11-26). -->
+  <style>
+    html, body { margin: 0; height: 100%; overflow: hidden; overscroll-behavior: none; background: #ffffff; }
+    @media (prefers-color-scheme: dark) { html, body { background: #000000; } }
+  </style>
+  <!-- iPhone: a swipe from the left edge belongs to the app (back to the
+       chat list). Without this Safari / the home-screen app takes it as the
+       browser's own "back" and slides the whole page away over a white
+       snapshot (Eric 2026-11-28). Pointer events still reach the app. -->
+  <script>
+    document.addEventListener('touchstart', function (e) {
+      var t = e.touches && e.touches[0];
+      if (t && (t.pageX < 24 || t.pageX > window.innerWidth - 24)) e.preventDefault();
+    }, { passive: false, capture: true });
+    // When the keyboard goes away, put the page back at the top: iOS can
+    // leave it pushed up, and then the chat jumps back to that height.
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', function () {
+        if (window.visualViewport.height >= window.innerHeight - 1 && (window.scrollY || document.documentElement.scrollTop)) window.scrollTo(0, 0);
+      });
+    }
+  </script>
+  <script>
+    window.burumyPageColor = function (c) {
+      document.documentElement.style.background = c;
+      if (document.body) document.body.style.background = c;
+      var m = document.querySelector('meta[name="theme-color"]');
+      if (m && m.getAttribute('content') !== c) m.setAttribute('content', c);
+    };
   </script>
 
   <!-- iOS meta tags & icons -->
@@ -71,5 +159,27 @@
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
   <script src="flutter_bootstrap.js" async></script>
+  <!-- New version check: an iPhone home-screen app keeps the old page in
+       memory, so coming back to it never loads a new deploy. When the app
+       comes back to the front, ask for the build stamp (main.dart.js?v=…)
+       and reload if it changed. -->
+  <script>
+    (function () {
+      var stamp = function (t) { var m = /main\.dart\.js\?v=([\w]+)/.exec(t || ''); return m ? m[1] : null; };
+      var mine = null, last = 0;
+      var ask = function () {
+        return fetch('flutter_bootstrap.js', { cache: 'no-store' }).then(function (r) { return r.ok ? r.text() : ''; }).then(stamp).catch(function () { return null; });
+      };
+      ask().then(function (v) { mine = v; });
+      var check = function () {
+        if (document.visibilityState !== 'visible' || !mine || Date.now() - last < 10000) return;
+        last = Date.now();
+        ask().then(function (v) { if (v && v !== mine) location.reload(); });
+      };
+      document.addEventListener('visibilitychange', check);
+      window.addEventListener('pageshow', check);
+      window.addEventListener('focus', check);
+    })();
+  </script>
 </body>
 </html>

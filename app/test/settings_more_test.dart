@@ -149,10 +149,15 @@ void main() {
     await start(t);
     await openSettingsRow(t, 'data-row');
     expect(find.text('3.0 MB'), findsOneWidget);
-    await t.tap(find.byKey(const Key('clear-cache')));
+    await t.tap(find.byKey(const Key('storage-row')));
+    await t.pumpAndSettle();
+    await t.ensureVisible(find.byKey(const Key('storage-clear')));
+    await t.tap(find.byKey(const Key('storage-clear')));
+    await t.pump(const Duration(seconds: 6));
     await t.pumpAndSettle();
     expect(cleared, isTrue);
-    expect(find.text('0 B'), findsOneWidget);
+    await t.pump(const Duration(seconds: 5));
+    await t.pumpAndSettle();
   });
 
   testWidgets('who may call me: choose, then always allow someone from contacts', (t) async {
@@ -196,6 +201,7 @@ void main() {
     expect(s.settings.entries.where((e) => e.key.startsWith('notify_group:') && e.value == '0'), isNotEmpty);
     await t.tap(find.byKey(const Key('back')).last);
     await t.pumpAndSettle();
+    await t.scrollUntilVisible(find.byKey(const Key('focus-row')), 200, scrollable: find.byType(Scrollable).last);
     await t.tap(find.byKey(const Key('focus-row')));
     await t.pumpAndSettle();
     await t.tap(find.byKey(const Key('pref-focus_on')));
@@ -204,6 +210,9 @@ void main() {
     await t.pumpAndSettle();
     expect(s.pref('focus_days', ''), '123456');
     await t.tap(find.byKey(const Key('back')).last);
+    await t.pumpAndSettle();
+    await t.scrollUntilVisible(find.byKey(const Key('in-app-row')), -200, scrollable: find.byType(Scrollable).last);
+    await t.drag(find.byType(Scrollable).last, const Offset(0, 300));
     await t.pumpAndSettle();
     await t.tap(find.byKey(const Key('in-app-row')));
     await t.pumpAndSettle();

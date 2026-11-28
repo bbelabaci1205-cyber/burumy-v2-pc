@@ -26,6 +26,9 @@ pub struct DeviceRow {
 
 const SAVED: &str = "im.burumy.saved";
 
+/// Account data our server reads: "아이디 검색 막기" (no_id_search).
+const PRIVACY: &str = "app.burumy.privacy";
+
 impl Engine {
     fn password_auth(&self, password: &str) -> Result<AuthData> {
         let me = self.client.user_id().context("no user")?;
@@ -148,5 +151,68 @@ impl Engine {
             .await
             .map_err(to_err)?;
         Ok(Some(id))
+    }
+
+    /// "아이디 검색 막기": strangers can't find me by ID or name; people
+    /// who share a room still can. Our server reads it from my account.
+    pub async fn set_id_search_hidden(&self, on: bool) -> Result<()> {
+        self.set_privacy_value("no_id_search", serde_json::json!(on)).await
+    }
+
+    /// My privacy settings that live in my account (all my devices and our
+    /// server read them): no_id_search, device_idle_days (오래 안 쓴 기기
+    /// 자동 로그아웃, done by our server), no_call_devices (devices that
+    /// don't ring for calls).
+    pub async fn privacy(&self) -> serde_json::Value {
+        self.client
+            .account()
+            .account_data_raw(GlobalAccountDataEventType::from(PRIVACY))
+            .await
+            .ok()
+            .flatten()
+            .and_then(|r| r.deserialize_as::<serde_json::Value>().ok())
+            .filter(|v| v.is_object())
+            .unwrap_or_else(|| serde_json::json!({}))
+    }
+
+    /// [Self::set_privacy_value] with the value as JSON text (app bridge).
+    pub async fn set_privacy_json(&self, key: &str, value_json: &str) -> Result<()> {
+        self.set_privacy_value(key, serde_json::from_str(value_json)?).await
+    }
+
+    /// Changes one of [Self::privacy] (null removes it); the rest stays.
+    pub async fn set_privacy_value(&self, key: &str, value: serde_json::Value) -> Result<()> {
+        anyhow::ensure!(
+            matches!(key, "no_id_search" | "device_idle_days" | "no_call_devices"),
+            "unknown privacy setting"
+        );
+        // Read the server's copy: the local one only catches up on sync, so
+        // two quick changes would lose the first.
+        let fresh = self
+            .client
+            .account()
+            .fetch_account_data(GlobalAccountDataEventType::from(PRIVACY))
+            .await
+            .ok()
+            .flatten()
+            .and_then(|r| r.deserialize_as::<serde_json::Value>().ok())
+            .filter(|v| v.is_object());
+        let mut all = match fresh {
+            Some(v) => v,
+            None => self.privacy().await,
+        };
+        let map = all.as_object_mut().context("privacy is an object")?;
+        if value.is_null() {
+            map.remove(key);
+        } else {
+            map.insert(key.to_owned(), value);
+        }
+        let content = Raw::from_json_string(all.to_string())?;
+        self.client
+            .account()
+            .set_account_data_raw(GlobalAccountDataEventType::from(PRIVACY), content)
+            .await
+            .map_err(to_err)?;
+        Ok(())
     }
 }

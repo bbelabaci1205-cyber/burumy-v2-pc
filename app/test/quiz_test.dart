@@ -4,6 +4,7 @@ import 'package:burumy/core/app_state.dart';
 import 'package:burumy/core/backend.dart';
 import 'package:burumy/demo/demo_backend.dart';
 import 'package:burumy/main.dart';
+import 'package:burumy/ui/poll.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -36,7 +37,7 @@ void main() {
     await t.enterText(find.byKey(const Key('poll-question')), '2+2는?');
     await t.enterText(find.byKey(const Key('poll-option-0')), '3');
     await t.enterText(find.byKey(const Key('poll-option-1')), '4');
-    await t.ensureVisible(find.byKey(const Key('poll-quiz')));
+    await t.scrollUntilVisible(find.byKey(const Key('poll-quiz')), 120, scrollable: find.descendant(of: find.byType(CreatePollPage), matching: find.byType(Scrollable)).first);
     await t.pumpAndSettle();
     await t.tap(find.byKey(const Key('poll-quiz')));
     await t.pumpAndSettle();
@@ -45,14 +46,14 @@ void main() {
     await t.tap(find.byKey(const Key('poll-create')), warnIfMissed: false);
     await t.pumpAndSettle();
     expect(fake.rooms[team]!.where((m) => m.kind == 'poll'), isEmpty);
-    expect(find.byKey(const Key('poll-question')), findsOneWidget);
-    await t.ensureVisible(find.byKey(const Key('quiz-correct-1')));
+    expect(find.byType(CreatePollPage), findsOneWidget, reason: 'still writing');
+    await t.scrollUntilVisible(find.byKey(const Key('quiz-correct-1')), -120, scrollable: find.descendant(of: find.byType(CreatePollPage), matching: find.byType(Scrollable)).first);
     await t.pumpAndSettle();
     await t.tap(find.byKey(const Key('quiz-correct-1')));
-    await t.ensureVisible(find.byKey(const Key('quiz-explain')));
+    await t.scrollUntilVisible(find.byKey(const Key('quiz-explain')), 120, scrollable: find.descendant(of: find.byType(CreatePollPage), matching: find.byType(Scrollable)).first);
     await t.pumpAndSettle();
     await t.enterText(find.byKey(const Key('quiz-explain')), '2 더하기 2는 4');
-    await t.ensureVisible(find.byKey(const Key('poll-deadline')));
+    await t.scrollUntilVisible(find.byKey(const Key('poll-deadline')), 120, scrollable: find.descendant(of: find.byType(CreatePollPage), matching: find.byType(Scrollable)).first);
     await t.tap(find.byKey(const Key('poll-deadline')));
     await t.pumpAndSettle();
     await t.tap(find.byKey(const Key('deadline-2')));

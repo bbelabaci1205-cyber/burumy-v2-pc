@@ -8,15 +8,17 @@ import 'package:flutter/services.dart';
 import '../brand/brand.dart';
 import '../brand/mark.dart';
 import '../core/app_state.dart';
-import '../core/qr.dart';
 import '../design/tokens.dart';
 import '../l10n/app_localizations.dart';
 import 'common.dart';
 import 'ios.dart';
 import 'ios_route.dart';
 import 'settings_kit.dart';
+import 'qr_page.dart';
+export 'qr_page.dart' show QrPainter, userLink;
 import 'settings_page.dart';
 import 'settings_pages.dart';
+import '../core/licenses.dart';
 
 const appVersion = '1.0.0';
 
@@ -87,7 +89,7 @@ class _SecurityCheckCardState extends State<SecurityCheckCard> {
                     children: [
                       Text(
                         l.securityCheck(done, 2),
-                        style: Tokens.body.style.copyWith(color: p.label, fontWeight: FontWeight.w600),
+                        style: Tokens.body.style.copyWith(color: p.label, fontWeight: Tokens.semi),
                       ),
                       const SizedBox(height: 2),
                       Text(all ? l.securityAllDone : l.securityLeft(2 - done), maxLines: 2, style: Tokens.caption.style.copyWith(color: p.secondaryLabel)),
@@ -176,7 +178,9 @@ class _SecurityCheckPageState extends State<SecurityCheckPage> {
               await load();
             },
       child: Padding(
-        padding: IosTile.iconedPad.add(EdgeInsets.symmetric(vertical: Tokens.space[3])),
+        // iOS two-line cell: 12 pt above and below, 2 pt between the title
+        // and its description (Eric 2026-11-26 "여백이 많아 보인다").
+        padding: IosTile.iconedPad.add(EdgeInsets.symmetric(vertical: Tokens.space[2])),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -190,7 +194,7 @@ class _SecurityCheckPageState extends State<SecurityCheckPage> {
                     title,
                     style: Tokens.body.style.copyWith(color: p.label, fontWeight: FontWeight.w500),
                   ),
-                  SizedBox(height: Tokens.space[1]),
+                  const SizedBox(height: Tokens.subtitleGap),
                   Text(info, style: Tokens.caption.style.copyWith(color: p.secondaryLabel)),
                 ],
               ),
@@ -470,7 +474,10 @@ class AboutPage extends StatelessWidget {
   }
 }
 
-/// Every package's licence text, grouped by package.
+/// 설정 > 오픈소스·출처: first where data and parts come from (MET Norway,
+/// Google ML Kit, Pretendard, PDQ: IP review 2026-11-27), then every
+/// package's licence text (Dart from Flutter, Rust from cargo-about,
+/// core/licenses.dart), grouped by package.
 class LicensesPage extends StatefulWidget {
   const LicensesPage({super.key});
   @override
@@ -480,14 +487,19 @@ class LicensesPage extends StatefulWidget {
 class _LicensesPageState extends State<LicensesPage> {
   Map<String, List<String>>? byPackage;
 
+  /// Packages that have their own row under 출처.
+  static const _credited = {'MET Norway (weather data)', 'Google ML Kit (Android)', 'Pretendard', 'PDQ (Meta)'};
+
   @override
   void initState() {
     super.initState();
+    registerExtraLicenses();
     LicenseRegistry.licenses
         .fold<Map<String, List<String>>>({}, (m, e) {
           final text = e.paragraphs.map((p) => p.text).join('\n\n');
           for (final pkg in e.packages) {
-            (m[pkg] ??= []).add(text);
+            final list = m[pkg] ??= [];
+            if (!list.contains(text)) list.add(text);
           }
           return m;
         })
@@ -496,141 +508,86 @@ class _LicensesPageState extends State<LicensesPage> {
         });
   }
 
+  Widget _text(BuildContext c, String title, String? intro, String body) => SettingsScaffold(
+    title: title,
+    children: [
+      if (intro != null)
+        Padding(
+          padding: EdgeInsets.fromLTRB(Tokens.space[3], Tokens.space[3], Tokens.space[3], 0),
+          child: Text(intro, style: Tokens.body.style.copyWith(color: paletteOf(c).label)),
+        ),
+      Padding(
+        padding: EdgeInsets.all(Tokens.space[3]),
+        child: Text(
+          body,
+          style: Tokens.caption.style.copyWith(color: paletteOf(c).secondaryLabel, fontFamily: 'monospace'),
+        ),
+      ),
+    ],
+  );
+
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
     final m = byPackage;
-    final names = (m?.keys.toList() ?? [])..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    final names = (m?.keys.where((k) => !_credited.contains(k)).toList() ?? [])..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    String body(String pkg, String fallback) => m?[pkg]?.join('\n\n────────\n\n') ?? fallback;
     return SettingsScaffold(
       title: l.openSourceLicenses,
       children: [
+        group(context, header: l.creditsHeader, footer: l.creditsFooter, [
+          NavRow(
+            key: const Key('credit-weather'),
+            color: Palette.tileBlue,
+            icon: CupertinoIcons.cloud_sun_fill,
+            title: l.creditWeather,
+            subtitle: l.creditWeatherSub,
+            page: (c) => _text(c, l.creditWeather, l.creditWeatherInfo, metNorwayNotice),
+          ),
+          NavRow(
+            key: const Key('credit-google'),
+            color: Palette.tileOrange,
+            icon: CupertinoIcons.globe,
+            title: l.creditGoogle,
+            subtitle: l.creditGoogleSub,
+            page: (c) => _text(c, l.creditGoogle, l.creditGoogleInfo, mlKitNotice),
+          ),
+          NavRow(
+            key: const Key('credit-font'),
+            color: Palette.tileIndigo,
+            icon: CupertinoIcons.textformat,
+            title: l.creditFont,
+            subtitle: l.creditFontSub,
+            page: (c) => _text(c, l.creditFont, l.creditFontInfo, body('Pretendard', 'SIL Open Font License 1.1')),
+          ),
+          NavRow(
+            key: const Key('credit-pdq'),
+            color: Palette.tileTeal,
+            icon: CupertinoIcons.shield_lefthalf_fill,
+            title: l.creditPdq,
+            subtitle: l.creditPdqSub,
+            page: (c) => _text(c, l.creditPdq, l.creditPdqInfo, pdqNotice),
+          ),
+        ]),
         if (m == null)
           const Padding(padding: EdgeInsets.all(40), child: CupertinoActivityIndicator())
         else
-          group(context, [
-            for (final n in names)
-              NavRow(
-                title: n,
-                page: (c) => SettingsScaffold(
-                  title: n,
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.all(Tokens.space[3]),
-                      child: Text(
-                        m[n]!.join('\n\n────────\n\n'),
-                        style: Tokens.caption.style.copyWith(color: paletteOf(c).secondaryLabel, fontFamily: 'monospace'),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+          group(context, header: l.partsHeader(names.length), [
+            for (final n in names) NavRow(key: Key('license-$n'), title: n, page: (c) => _text(c, n, null, body(n, ''))),
           ]),
       ],
     );
   }
 }
 
-/// The link a QR code carries for me. The web address waits for the domain.
-String userLink(String id) => 'burumy://u/$id';
-
-/// Settings > QR button: my ID as a QR code on a white card.
-class MyQrPage extends StatefulWidget {
+/// Settings > QR button: the themed QR page (qr_page.dart, tips 316/368).
+class MyQrPage extends StatelessWidget {
   const MyQrPage({super.key, this.userId, this.title});
 
   /// Someone else's code (from their profile); mine when null.
   final String? userId;
   final String? title;
-  @override
-  State<MyQrPage> createState() => _MyQrPageState();
-}
-
-class _MyQrPageState extends State<MyQrPage> {
-  bool copied = false;
 
   @override
-  Widget build(BuildContext context) {
-    final l = L.of(context);
-    final p = paletteOf(context);
-    final id = displayId(widget.userId ?? AppScope.of(context).backend.userId ?? '');
-    final code = QrCode.encode(userLink(id));
-    return SettingsScaffold(
-      title: widget.title ?? l.myQr,
-      children: [
-        SizedBox(height: Tokens.space[3]),
-        Center(
-          child: Container(
-            key: const Key('my-qr-code'),
-            width: 260,
-            padding: const EdgeInsets.all(22),
-            decoration: ShapeDecoration(
-              color: const Color(0xFFFFFFFF),
-              shape: RoundedSuperellipseBorder(borderRadius: BorderRadius.circular(30)),
-              shadows: const [BoxShadow(color: Color(0x14000000), blurRadius: 24, offset: Offset(0, 6))],
-            ),
-            child: Column(
-              children: [
-                if (code != null) AspectRatio(aspectRatio: 1, child: CustomPaint(painter: QrPainter(code, const Color(0xFF16241B)))),
-                const SizedBox(height: 14),
-                Text(
-                  id,
-                  style: Tokens.body.style.copyWith(color: const Color(0xFF16241B), fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
-          ),
-        ),
-        Padding(
-          padding: EdgeInsets.fromLTRB(Tokens.space[5], Tokens.space[3], Tokens.space[5], 0),
-          child: Text(
-            l.myQrInfo,
-            textAlign: TextAlign.center,
-            style: Tokens.caption.style.copyWith(color: p.secondaryLabel),
-          ),
-        ),
-        group(context, [
-          IosTile(
-            key: const Key('qr-copy'),
-            leading: iconTile(Palette.tileBlue, CupertinoIcons.doc_on_doc_fill),
-            title: Text(copied ? l.copied : l.copy),
-            onTap: () {
-              Clipboard.setData(ClipboardData(text: id));
-              setState(() => copied = true);
-            },
-          ),
-        ]),
-      ],
-    );
-  }
-}
-
-class QrPainter extends CustomPainter {
-  QrPainter(this.code, this.color);
-  final QrCode code;
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final cell = size.width / code.size;
-    final paint = Paint()..color = color;
-    bool finder(int x, int y) => (x < 7 && y < 7) || (x >= code.size - 7 && y < 7) || (x < 7 && y >= code.size - 7);
-    for (var y = 0; y < code.size; y++) {
-      for (var x = 0; x < code.size; x++) {
-        if (finder(x, y) || !code.dark(x, y)) continue;
-        // Soft round dots (still read fine: centres stay dark).
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(Rect.fromLTWH(x * cell + cell * .06, y * cell + cell * .06, cell * .88, cell * .88), Radius.circular(cell * .3)),
-          paint,
-        );
-      }
-    }
-    // The three corner eyes, rounded.
-    for (final (fx, fy) in [(0, 0), (code.size - 7, 0), (0, code.size - 7)]) {
-      final o = Rect.fromLTWH(fx * cell, fy * cell, cell * 7, cell * 7);
-      canvas.drawDRRect(RRect.fromRectAndRadius(o, Radius.circular(cell * 2.2)), RRect.fromRectAndRadius(o.deflate(cell), Radius.circular(cell * 1.5)), paint);
-      canvas.drawRRect(RRect.fromRectAndRadius(o.deflate(cell * 2), Radius.circular(cell * 1.1)), paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(QrPainter o) => o.code != code || o.color != color;
+  Widget build(BuildContext context) => QrPage(userId: userId, title: title);
 }

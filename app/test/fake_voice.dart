@@ -28,6 +28,10 @@ class FakeRecorder implements VoiceRecorder {
 }
 
 class FakePlayer implements VoicePlayer {
+  double speed = 1;
+  @override
+  Future<void> setSpeed(double v) async => speed = v;
+
   static int plays = 0;
   final _pos = StreamController<Duration>.broadcast();
   final _playing = StreamController<bool>.broadcast();
@@ -40,6 +44,13 @@ class FakePlayer implements VoicePlayer {
 
   @override
   Future<void> pause() async => _playing.add(false);
+  Duration? seekedTo;
+  @override
+  Future<void> seek(Duration at) async {
+    seekedTo = at;
+    _pos.add(at);
+  }
+
   @override
   Stream<Duration> get position => _pos.stream;
   @override

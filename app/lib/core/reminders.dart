@@ -76,3 +76,14 @@ Future<List<Reminder>> takeDueReminders(AppState s, DateTime now) async {
     ]);
   return due;
 }
+
+/// Takes the reminder for this message (or plan) off, if there is one.
+Future<void> removeReminder(AppState s, String msgId) async {
+  final all = reminders(s);
+  final gone = all.where((x) => x.msgId == msgId).toList();
+  if (gone.isEmpty) return;
+  for (final r in gone) {
+    unawaited(cancelReminder?.call(r));
+  }
+  await _save(s, all.where((x) => x.msgId != msgId).toList());
+}

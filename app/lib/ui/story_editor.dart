@@ -4,6 +4,7 @@
 // Everything can be moved, pinched bigger or smaller and turned; drag it
 // onto the bin at the bottom to remove it. On share it all becomes part of
 // one picture, made on the phone.
+import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
@@ -15,8 +16,12 @@ import '../l10n/app_localizations.dart';
 import '../stickers/catalog.dart';
 import 'common.dart';
 import 'glass.dart';
+import 'photo_stickers.dart';
 import 'sticker_panel.dart';
+import 'story_keep.dart';
 import 'story_more.dart';
+import 'translate_ui.dart' show trNotice;
+import 'video_note.dart';
 import 'wide.dart';
 
 /// Colours to pick from: white, black, then iOS colours and our green.
@@ -33,12 +38,16 @@ List<Color> storyColors(Palette p) => [
 ];
 
 class StoryItem {
-  StoryItem.text(this.text, this.color, this.boxed) : sticker = null;
-  StoryItem.sticker(this.sticker) : text = null, color = const Color(0xFFFFFFFF), boxed = false;
+  StoryItem.text(this.text, this.color, this.boxed) : sticker = null, pic = null;
+  StoryItem.sticker(this.sticker) : text = null, color = const Color(0xFFFFFFFF), boxed = false, pic = null;
+
+  /// 사진 오려 붙이기 (tip 416): a picture from the gallery, cut out on tap.
+  StoryItem.pic(PhotoSticker this.pic) : text = null, sticker = null, color = const Color(0xFFFFFFFF), boxed = false;
   String? text;
   Color color;
   bool boxed;
   final String? sticker;
+  final PhotoSticker? pic;
   Offset at = Offset.zero; // from the centre
   double scale = 1, turn = 0;
 }
@@ -52,8 +61,22 @@ class StoryStroke {
 
 /// The picture with its decorations, and the tools at the top right.
 class StoryDecor extends StatefulWidget {
-  const StoryDecor({super.key, required this.bytes, this.onBusy});
-  final Uint8List bytes;
+  const StoryDecor({super.key, this.bytes, this.background, this.liveOnly = false, this.layers = '', this.live = const [], this.onBusy, this.plainStickers = false});
+
+  /// Only our stickers in the sticker sheet (a GIF's layer, tip 558: no
+  /// polls, music or other live parts).
+  final bool plainStickers;
+
+  /// The photo; or [background] (a playing video, a channel post card).
+  final Uint8List? bytes;
+  final Widget? background;
+
+  /// A video: only live parts (stickers that are not baked into a picture).
+  final bool liveOnly;
+
+  /// Words / drawing / stickers to start from (changing a story, tip 393).
+  final String layers;
+  final List<StoryLive> live;
 
   /// True while a tool is open (the composer hides its own buttons).
   final ValueChanged<bool>? onBusy;
@@ -80,11 +103,90 @@ class StoryDecorState extends State<StoryDecor> {
   bool boxed = false;
   double width = 6;
   StoryItem? moving;
+
+  /// The picture whose menu is open (삭제 · 뒤집기 · 복제 · 오려내기).
+  StoryItem? chosen;
   bool overBin = false;
   Offset startAt = Offset.zero;
   double startScale = 1, startTurn = 0;
 
   bool get edited => items.isNotEmpty || strokes.isNotEmpty;
+
+  /// The box size the layers were placed in (positions scale with it).
+  Size box = Size.zero;
+  Size? _loadedFrom;
+  Map<String, dynamic>? _pending;
+
+  @override
+  void initState() {
+    super.initState();
+    live.addAll(widget.live);
+    try {
+      final j = widget.layers.isEmpty ? null : jsonDecode(widget.layers);
+      if (j is Map<String, dynamic>) _pending = j;
+    } catch (_) {}
+  }
+
+  /// Words, drawing and stickers as JSON, kept only on this phone so the
+  /// story can be changed later (tip 393).
+  String layersJson() => jsonEncode({
+    'w': box.width,
+    'h': box.height,
+    'items': [
+      for (final it in items)
+        {
+          if (it.text != null) 't': it.text,
+          if (it.sticker != null) 's': it.sticker,
+          'c': it.color.toARGB32(),
+          'b': it.boxed,
+          'x': it.at.dx,
+          'y': it.at.dy,
+          'k': it.scale,
+          'r': it.turn,
+        },
+    ],
+    'strokes': [
+      for (final st in strokes)
+        {
+          'c': st.color.toARGB32(),
+          'w': st.width,
+          'p': [
+            for (final o in st.points) ...[o.dx, o.dy],
+          ],
+        },
+    ],
+  });
+
+  void _restore(Size now) {
+    final j = _pending;
+    if (j == null || now.isEmpty) return;
+    _pending = null;
+    _loadedFrom = now;
+    final w = j['w'], h = j['h'];
+    final f = w is num && w > 0 ? now.width / w : 1.0;
+    final fy = h is num && h > 0 ? now.height / h : f;
+    double n(Object? v) => v is num && v.isFinite ? v.toDouble() : 0;
+    for (final x in (j['items'] as List? ?? const [])) {
+      if (x is! Map) continue;
+      final t = x['t'], st = x['s'];
+      final it = t is String ? StoryItem.text(t, Color(n(x['c']).toInt()), x['b'] == true) : (st is String ? StoryItem.sticker(st) : null);
+      if (it == null) continue;
+      it
+        ..at = Offset(n(x['x']) * f, n(x['y']) * fy)
+        ..scale = n(x['k']) == 0 ? 1 : n(x['k'])
+        ..turn = n(x['r']);
+      items.add(it);
+    }
+    for (final x in (j['strokes'] as List? ?? const [])) {
+      if (x is! Map) continue;
+      final st = StoryStroke(Color(n(x['c']).toInt()), n(x['w']) == 0 ? 6 : n(x['w']));
+      final pts = x['p'] as List? ?? const [];
+      for (var i = 0; i + 1 < pts.length; i += 2) {
+        st.points.add(Offset(n(pts[i]) * f, n(pts[i + 1]) * fy));
+      }
+      strokes.add(st);
+    }
+  }
 
   @override
   void dispose() {
@@ -97,11 +199,15 @@ class StoryDecorState extends State<StoryDecor> {
     widget.onBusy?.call(t != _Tool.none);
   }
 
-  /// The decorated picture as one PNG, about 1080 wide.
-  Future<Uint8List?> flatten() async {
+  /// The decorated picture as one PNG, about [width] wide.
+  Future<Uint8List?> flatten({double width = 1080}) async {
+    if (chosen != null) {
+      setState(() => chosen = null);
+      await WidgetsBinding.instance.endOfFrame;
+    }
     final b = paper.currentContext?.findRenderObject() as RenderRepaintBoundary?;
     if (b == null) return null;
-    final img = await b.toImage(pixelRatio: 1080 / b.size.width);
+    final img = await b.toImage(pixelRatio: width / b.size.width);
     final data = await img.toByteData(format: ui.ImageByteFormat.png);
     return data?.buffer.asUint8List();
   }
@@ -143,7 +249,7 @@ class StoryDecorState extends State<StoryDecor> {
       context: context,
       builder: (c) => Container(
         key: const Key('story-sticker-sheet'),
-        height: 360,
+        height: 464,
         decoration: BoxDecoration(
           color: paletteOf(c).card,
           borderRadius: BorderRadius.vertical(top: Radius.circular(Tokens.radius[2])),
@@ -151,37 +257,81 @@ class StoryDecorState extends State<StoryDecor> {
         padding: EdgeInsets.only(top: Tokens.space[2]),
         child: Column(
           children: [
-            // Our live parts first (answers come back in 1:1 chats).
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: Tokens.space[3]),
-              child: Row(
-                children: [
-                  for (final (k, label, icon) in [
-                    ('poll', L.of(c).storyPoll, CupertinoIcons.chart_bar_alt_fill),
-                    ('question', L.of(c).storyQuestion, CupertinoIcons.question_circle_fill),
-                    ('plan', L.of(c).storyPlan, CupertinoIcons.calendar),
-                  ]) ...[
-                    if (k != 'poll') SizedBox(width: Tokens.space[1]),
-                    Expanded(
-                      child: GestureDetector(
-                        key: Key('story-live-$k'),
-                        onTap: () => Navigator.pop(c, 'live:$k'),
-                        child: Container(
-                          height: Tokens.closeButton,
-                          decoration: BoxDecoration(color: paletteOf(c).background, borderRadius: BorderRadius.circular(Tokens.capsule)),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(icon, size: Tokens.listIcon, color: paletteOf(c).accent),
-                              SizedBox(width: Tokens.space[0]),
-                              Text(label, style: Tokens.preview.style.copyWith(color: paletteOf(c).label)),
-                            ],
+            // Our live parts first (answers come back in 1:1 chats), then
+            // weather, a place tag and a link (tip 467).
+            for (final row in [
+              if (!widget.plainStickers) [
+                ('poll', L.of(c).storyPoll, CupertinoIcons.chart_bar_alt_fill),
+                ('question', L.of(c).storyQuestion, CupertinoIcons.question_circle_fill),
+                ('plan', L.of(c).storyPlan, CupertinoIcons.calendar),
+              ],
+              if (!widget.plainStickers) [
+                ('weather', L.of(c).stkWeather, CupertinoIcons.cloud_sun_fill),
+                ('place', L.of(c).stkPlace, CupertinoIcons.location_solid),
+                ('link', L.of(c).stkLink, CupertinoIcons.link),
+              ],
+              // Tips 395 / 408: a reaction, my own music, a round video.
+              if (!widget.plainStickers) [
+                ('react', L.of(c).skReact, CupertinoIcons.heart_fill),
+                ('music', L.of(c).skMusic, CupertinoIcons.music_note_2),
+                ('round', L.of(c).skRoundShort, CupertinoIcons.videocam_circle_fill),
+              ],
+            ]) ...[
+              if (row.first.$1 != 'poll') SizedBox(height: Tokens.space[1]),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: Tokens.space[3]),
+                child: Row(
+                  children: [
+                    for (final (k, label, icon) in row) ...[
+                      if (k != row.first.$1) SizedBox(width: Tokens.space[1]),
+                      Expanded(
+                        child: GestureDetector(
+                          key: Key('story-live-$k'),
+                          onTap: () => Navigator.pop(c, 'live:$k'),
+                          child: Container(
+                            height: Tokens.closeButton,
+                            decoration: BoxDecoration(color: paletteOf(c).background, borderRadius: BorderRadius.circular(Tokens.capsule)),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(icon, size: Tokens.listIcon, color: paletteOf(c).accent),
+                                SizedBox(width: Tokens.space[0]),
+                                Flexible(
+                                  child: Text(
+                                    label,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: Tokens.preview.style.copyWith(color: paletteOf(c).label),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
+                    ],
                   ],
-                ],
+                ),
+              ),
+            ],
+            SizedBox(height: Tokens.space[1]),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: Tokens.space[3]),
+              child: GestureDetector(
+                key: const Key('story-photo-cut'),
+                onTap: () => Navigator.pop(c, 'photo'),
+                child: Container(
+                  height: Tokens.closeButton,
+                  decoration: BoxDecoration(color: paletteOf(c).background, borderRadius: BorderRadius.circular(Tokens.capsule)),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(CupertinoIcons.scissors, size: Tokens.listIcon, color: paletteOf(c).accent),
+                      SizedBox(width: Tokens.space[0]),
+                      Text(L.of(c).stkPhotoCut, style: Tokens.preview.style.copyWith(color: paletteOf(c).label)),
+                    ],
+                  ),
+                ),
               ),
             ),
             SizedBox(height: Tokens.space[1]),
@@ -191,26 +341,68 @@ class StoryDecorState extends State<StoryDecor> {
       ),
     );
     if (id == null) return;
+    if (id == 'photo') {
+      final bytes = await pickStickerPhoto();
+      if (bytes == null || !mounted) return;
+      final it = StoryItem.pic(PhotoSticker.photo(bytes));
+      setState(() {
+        items.add(it);
+        chosen = it;
+      });
+      return;
+    }
     if (id.startsWith('live:')) {
       if (!mounted) return;
-      final it = await editLive(context, id.substring(5));
-      if (it != null) setState(() => live.add(it));
+      final kind = id.substring(5);
+      final it = switch (kind) {
+        'react' => await _react(),
+        'music' => await pickStoryMusic(context),
+        'round' => await _round(),
+        _ => await editLive(context, kind),
+      };
+      if (it != null && mounted) setState(() => live.add(it));
       return;
     }
     if (stickerAsset(id) == null) return;
     setState(() => items.add(StoryItem.sticker(id)));
   }
 
-  /// Polls, questions and plans as JSON for the story (empty = none).
+  Future<void> cutOut(PhotoSticker p) async {
+    final ok = await cutOutSticker(context, p, () {
+      if (mounted) setState(() {});
+    });
+    if (!ok && mounted) trNotice(context, L.of(context).cutoutFail);
+  }
+
+  Future<StoryLive?> _react() async {
+    final e = await pickStoryReaction(context);
+    return e == null ? null : StoryLive(kind: 'react', q: e, at: const Offset(.5, .62));
+  }
+
+  /// A round selfie video on top (tip 408), recorded like a chat one.
+  Future<StoryLive?> _round() async {
+    StoryLive? out;
+    await openSheet<bool>(
+      context,
+      (_) => VideoNotePage(
+        roomId: '',
+        onRecorded: (bytes, mime) async => out = StoryLive(kind: 'round', mime: mime, bytes: bytes, at: const Offset(.72, .3)),
+      ),
+    );
+    return out;
+  }
+
+  /// Live parts as JSON for the story (empty = none).
   String liveJson() => encodeLive(live);
 
   Widget itemView(StoryItem it) {
     if (it.sticker != null) return Image.asset(stickerAsset(it.sticker!)!, width: 140, height: 140);
+    if (it.pic != null) return PhotoStickerView(s: it.pic!, side: 140);
     final dark = it.color.computeLuminance() > .5;
     final style = TextStyle(
       fontSize: 28,
       height: 1.25,
-      fontWeight: FontWeight.w600,
+      fontWeight: Tokens.semi,
       color: it.boxed ? (dark ? const Color(0xFF000000) : const Color(0xFFFFFFFF)) : it.color,
     );
     return Container(
@@ -232,6 +424,8 @@ class StoryDecorState extends State<StoryDecor> {
     const white = Color(0xFFFFFFFF);
     return LayoutBuilder(
       builder: (context, box) {
+        this.box = box.biggest;
+        if (_pending != null && _loadedFrom == null) _restore(box.biggest);
         final centre = box.biggest.center(Offset.zero);
         final bin = Offset(centre.dx, box.maxHeight - 56);
         return Stack(
@@ -242,7 +436,7 @@ class StoryDecorState extends State<StoryDecor> {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  Image.memory(widget.bytes, fit: BoxFit.cover, gaplessPlayback: true),
+                  if (widget.bytes != null) Image.memory(widget.bytes!, fit: BoxFit.cover, gaplessPlayback: true) else ?widget.background,
                   CustomPaint(painter: _Ink(strokes)),
                   for (final it in items)
                     Positioned(
@@ -252,9 +446,10 @@ class StoryDecorState extends State<StoryDecor> {
                         translation: const Offset(-.5, -.5),
                         child: GestureDetector(
                           key: Key('story-item-${items.indexOf(it)}'),
-                          onTap: it.text != null ? () => openText(it) : null,
+                          onTap: it.text != null ? () => openText(it) : (it.pic != null ? () => setState(() => chosen = chosen == it ? null : it) : null),
                           onScaleStart: (d) {
                             moving = it;
+                            chosen = null;
                             startAt = it.at;
                             startScale = it.scale;
                             startTurn = it.turn;
@@ -281,6 +476,34 @@ class StoryDecorState extends State<StoryDecor> {
                 ],
               ),
             ),
+            if (chosen != null && moving == null && items.contains(chosen))
+              Positioned(
+                left: 0,
+                right: 0,
+                top: (centre.dy + chosen!.at.dy - 140 * 1.3 * chosen!.scale / 2 - 48).clamp(0.0, box.maxHeight - 40),
+                child: Align(
+                  alignment: Alignment(((centre.dx + chosen!.at.dx) / box.maxWidth * 2 - 1).clamp(-1.0, 1.0), 0),
+                  child: StickerMenu(
+                    key: const Key('story-pic-menu'),
+                    s: chosen!.pic!,
+                    onDelete: () => setState(() {
+                      items.remove(chosen);
+                      chosen = null;
+                    }),
+                    onFlip: () => setState(() => chosen!.pic!.flipped = !chosen!.pic!.flipped),
+                    onCopy: () => setState(() {
+                      final it = chosen!;
+                      final c = StoryItem.pic(it.pic!.copy())
+                        ..at = it.at + const Offset(24, 24)
+                        ..scale = it.scale
+                        ..turn = it.turn;
+                      items.add(c);
+                      chosen = c;
+                    }),
+                    onCut: chosen!.pic!.cut == null && !chosen!.pic!.cutting ? () => cutOut(chosen!.pic!) : null,
+                  ),
+                ),
+              ),
             for (final it in live)
               Positioned(
                 left: it.at.dx * box.maxWidth,
@@ -290,6 +513,12 @@ class StoryDecorState extends State<StoryDecor> {
                   child: GestureDetector(
                     key: Key('story-live-item-${live.indexOf(it)}'),
                     onTap: () async {
+                      if (it.kind == 'react') {
+                        final e = await pickStoryReaction(context);
+                        if (e != null) setState(() => it.q = e);
+                        return;
+                      }
+                      if (it.isMedia) return;
                       final x = await editLive(context, it.kind, it);
                       if (x != null) setState(() => live[live.indexOf(it)] = x);
                     },
@@ -312,7 +541,9 @@ class StoryDecorState extends State<StoryDecor> {
                     }),
                     child: Transform.scale(
                       scale: overBin && movingLive == it ? it.scale * .5 : it.scale,
-                      child: AbsorbPointer(child: StoryLiveCard(item: it)),
+                      child: AbsorbPointer(
+                        child: it.isMedia ? StoryMediaPart(item: it, muted: true) : StoryLiveCard(item: it),
+                      ),
                     ),
                   ),
                 ),
@@ -345,21 +576,23 @@ class StoryDecorState extends State<StoryDecor> {
                 right: Tokens.space[2],
                 child: Row(
                   children: [
-                    GlassCircle(
-                      key: const Key('story-tool-text'),
-                      onTap: openText,
-                      child: Text(
-                        'Aa',
-                        style: Tokens.body.style.copyWith(color: white, fontWeight: FontWeight.w600),
+                    if (!widget.liveOnly) ...[
+                      GlassCircle(
+                        key: const Key('story-tool-text'),
+                        onTap: openText,
+                        child: Text(
+                          'Aa',
+                          style: Tokens.body.style.copyWith(color: white, fontWeight: Tokens.semi),
+                        ),
                       ),
-                    ),
-                    SizedBox(width: Tokens.space[1]),
-                    GlassCircle(
-                      key: const Key('story-tool-draw'),
-                      onTap: () => setTool(_Tool.draw),
-                      child: const Icon(CupertinoIcons.scribble, color: white, size: Tokens.closeIcon),
-                    ),
-                    SizedBox(width: Tokens.space[1]),
+                      SizedBox(width: Tokens.space[1]),
+                      GlassCircle(
+                        key: const Key('story-tool-draw'),
+                        onTap: () => setTool(_Tool.draw),
+                        child: const Icon(CupertinoIcons.scribble, color: white, size: Tokens.closeIcon),
+                      ),
+                      SizedBox(width: Tokens.space[1]),
+                    ],
                     GlassCircle(
                       key: const Key('story-tool-sticker'),
                       onTap: addSticker,
@@ -433,7 +666,7 @@ class StoryDecorState extends State<StoryDecor> {
                                 style: TextStyle(
                                   fontSize: 28,
                                   height: 1.25,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: Tokens.semi,
                                   color: boxed ? (pen.computeLuminance() > .5 ? const Color(0xFF000000) : white) : pen,
                                 ),
                               ),
@@ -455,7 +688,7 @@ class StoryDecorState extends State<StoryDecor> {
                                 decoration: boxed ? BoxDecoration(color: white, borderRadius: BorderRadius.circular(Tokens.radius[0])) : null,
                                 child: Text(
                                   'A',
-                                  style: Tokens.body.style.copyWith(color: boxed ? const Color(0xFF000000) : white, fontWeight: FontWeight.w600),
+                                  style: Tokens.body.style.copyWith(color: boxed ? const Color(0xFF000000) : white, fontWeight: Tokens.semi),
                                 ),
                               ),
                             ),
@@ -525,7 +758,7 @@ class _DoneButton extends StatelessWidget {
         decoration: BoxDecoration(color: p.accent, borderRadius: BorderRadius.circular(Tokens.capsule)),
         child: Text(
           text,
-          style: Tokens.body.style.copyWith(color: p.onAccent, fontWeight: FontWeight.w600),
+          style: Tokens.body.style.copyWith(color: p.onAccent, fontWeight: Tokens.semi),
         ),
       ),
     );

@@ -21,7 +21,7 @@ Future<(FakeBackend, String)> start(WidgetTester t, {void Function(FakeBackend b
   await s.refresh();
   await t.pumpWidget(BurumyApp(state: s));
   await t.pumpAndSettle();
-  await t.tap(find.byWidgetPredicate((w) => w is Text && (w.data == '안녕' || w.data == '보안 코드 확인 요청')).first);
+  await t.tap(find.byKey(const Key('list-preview')).first);
   await t.pumpAndSettle();
   return (b, room);
 }

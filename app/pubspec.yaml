@@ -58,6 +58,18 @@ dependencies:
   video_player: ^2.14.1
   crypto: ^3.0.8
   sensors_plus: ^7.1.1
+  flutter_math_fork: ^0.7.4
+  gal: ^3.0.1
+  image: ^4.13.1
+  # Reading zip exports (대화 가져오기). MIT.
+  archive: ^4.0.0
+  zxing2: ^0.2.4
+  pdfrx: ^3.2.0
+  # 읽기 모드 (tip 475): reading a web page into an article, on the phone. MIT.
+  html: ^0.15.7
+  lottie: ^3.3.1
+  # PC app updates: checks Eric's signature on update.json (Ed25519). MIT.
+  pinenacl: ^0.6.0
 
 dev_dependencies:
   flutter_test:
@@ -90,11 +102,18 @@ flutter:
     - assets/stickers/mongi/
     - assets/stickers/duru/
     - assets/stickers/burumi/
+    - assets/stickers/hip/
+    - assets/stickers/dandy/
+    - assets/stickers/emoji/
+    - assets/stickers/react/
+    - assets/animated_emoji/
     - assets/demo/
     - assets/brand/
     - assets/app_icons/
     - assets/sounds/
     - assets/wallpaper/
+    - assets/licenses/
+    - assets/fonts/Pretendard-OFL.txt
   fonts:
     - family: Pretendard
       fonts:

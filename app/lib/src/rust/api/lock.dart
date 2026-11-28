@@ -19,7 +19,7 @@ Future<LockOutcome> lockUnlock({required String file, required String pw}) => Ru
 Future<String> lockSetExtra({required String file, required String normal, required String role, String? pw}) =>
     RustLib.instance.api.crateApiLockLockSetExtra(file: file, normal: normal, role: role, pw: pw);
 
-/// (hide set, delete set) — needs the normal password.
+/// [hide set, delete set, account set] — needs the normal password.
 Future<List<bool>> lockExtras({required String file, required String normal}) => RustLib.instance.api.crateApiLockLockExtras(file: file, normal: normal);
 
 Future<String> lockChangeNormal({required String file, required String old, required String new_}) =>
@@ -35,7 +35,7 @@ class LockOutcome {
   /// Save this (wrong tries are counted inside).
   final String file;
 
-  /// "normal", "hide", "delete" or None (wrong password).
+  /// "normal", "hide", "delete", "account" or None (wrong password).
   final String? role;
   final int fails;
 

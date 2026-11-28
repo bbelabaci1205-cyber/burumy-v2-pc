@@ -47,6 +47,23 @@
   "settingsSecurity": "보안",
   "makeRecoveryKey": "대화 복구 키 만들기",
   "copied": "복사했어요",
+  "copyCodeButton": "코드 복사 · {code}",
+  "@copyCodeButton": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "codeCopied": "코드를 복사했어요. 1분 뒤 지워져요.",
+  "codeCopyFailed": "복사하지 못했어요. 코드: {code}",
+  "@codeCopyFailed": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
   "logOut": "로그아웃",
   "myId": "내 아이디",
   "contactsEmpty": "아직 연락처가 없어요",
@@ -121,7 +138,7 @@
     }
   },
   "streaks": "스트릭",
-  "streakInfo": "1:1 대화에서 둘 다 3일 넘게 매일 메시지를 보내면 이름 옆에 불꽃이 생겨요. 계산은 휴대폰 안에서만 해요.",
+  "streakInfo": "1:1 대화에서 둘 다 3일 넘게 매일 메시지를 보내면 이름 옆에 불꽃이 생겨요. 그룹은 매일 멤버 절반(2~5명) 이상이 말하면 생겨요. 계산은 휴대폰 안에서만 해요.",
   "sticker": "스티커",
   "stickers": "스티커",
   "pin": "고정",
@@ -163,7 +180,8 @@
   "@membersCount": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -203,6 +221,68 @@
       }
     }
   },
+  "codeBlockCopied": "코드를 복사했어요",
+  "codeBlockCopy": "코드 복사",
+  "dateMarkAdd": "날짜 넣기",
+  "dateMarkTime": "시간",
+  "fmtDate": "날짜",
+  "dateCopy": "날짜 복사",
+  "dateCopied": "날짜를 복사했어요",
+  "dateToCalendar": "캘린더에 추가",
+  "dateRemind": "알림 설정",
+  "dateInMyZone": "내 시간대({zone}) 기준이에요",
+  "@dateInMyZone": {
+    "placeholders": {
+      "zone": {
+        "type": "String"
+      }
+    }
+  },
+  "dateCalendarFailed": "캘린더를 열지 못했어요",
+  "tomorrow": "내일",
+  "sendAtTime": "{date} {time}에 보내기",
+  "@sendAtTime": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "scheduleTitle": "메시지 예약",
+  "reschedule": "시간 바꾸기",
+  "scheduledTitle": "예약된 메시지",
+  "scheduledEmpty": "예약된 메시지가 없어요",
+  "scheduledFor": "{date}에 보낼 메시지",
+  "@scheduledFor": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "scheduledDeleted": "{left}초 뒤 예약을 지워요",
+  "@scheduledDeleted": {
+    "placeholders": {
+      "left": {
+        "type": "int"
+      }
+    }
+  },
+  "linkOptionsTitle": "링크 미리보기 설정",
+  "linkOptionsPick": "링크를 누르면 그 링크로 미리보기를 만들어요",
+  "replyOptionsTitle": "답장 설정",
+  "linkMoveUp": "위로 옮기기",
+  "linkMoveDown": "아래로 옮기기",
+  "linkPhotoSmall": "사진 작게",
+  "linkPhotoBig": "사진 크게",
+  "applyChanges": "적용",
+  "linkNoPreview": "미리보기 안 함",
+  "tabReply": "답장",
+  "tabLink": "링크",
+  "linkBarLoading": "미리보기를 만드는 중이에요",
   "linkPreviews": "링크 미리보기",
   "linkPreviewInfo": "링크를 보낼 때 내 휴대폰이 그 페이지의 제목과 사진을 가져와 메시지에 암호화해 넣어요. 받는 사람은 그 사이트에 접속하지 않아요.",
   "voiceHoldHint": "길게 눌러 음성 메시지를 녹음해요",
@@ -238,6 +318,161 @@
       }
     }
   },
+  "stickerRecent": "최근 사용",
+  "stickerPhrases": "빠른 답장 문구",
+  "stickerNone": "맞는 스티커가 없어요",
+  "segStickers": "스티커",
+  "segEmoji": "이모지",
+  "emoji_smileys": "스마일리 및 사람",
+  "emoji_people": "손과 사람",
+  "emoji_animals": "동물 및 자연",
+  "emoji_food": "음식 및 음료",
+  "emoji_activity": "활동",
+  "emoji_travel": "여행 및 장소",
+  "emoji_objects": "사물",
+  "emoji_symbols": "기호",
+  "stickerTileMake": "스티커\n만들기",
+  "stickerMine": "내 스티커",
+  "emojiNone": "맞는 이모지가 없어요",
+  "emojiPickTitle": "이모지 고르기",
+  "emojiSearchHint": "하트, 웃음, 축하처럼 찾아요",
+  "emojiSetStatus": "상태로",
+  "reactAllEmoji": "모든 이모지",
+  "suggestEmoji": "단어로 이모지 추천",
+  "suggestStickers": "이모지로 스티커 추천",
+  "suggestInfo": "입력창에 ':웃음'처럼 쓰면 이모지가, 이모지 하나만 쓰면 어울리는 스티커가 위에 나와요. 모두 이 폰 안에서만 찾아요.",
+  "setsTitle": "내 스티커 묶음",
+  "setsHeader": "내가 만든 스티커로 묶음을 만들어 친구와 나눠요. 그림은 암호화된 채로만 오가서 서버도 볼 수 없어요.",
+  "setsMakeInfo": "묶음 하나에 스티커를 50개까지 넣을 수 있어요.",
+  "setsNew": "새 묶음 만들기",
+  "setsAdded": "추가한 묶음",
+  "setsBrowse": "스티커 묶음 둘러보기",
+  "setsBurumyPacks": "부루미 스티커",
+  "setsBurumyInfo": "끈 묶음은 스티커 창에 나오지 않아요.",
+  "setsSeen": "대화에서 본 묶음",
+  "setsSeenInfo": "친구들이 대화에 보낸 묶음이에요. 많이 본 순서로 보여요. 이 목록은 이 폰에만 있어요.",
+  "setsSeenNone": "친구가 대화에 묶음을 보내면 여기에 모여요.",
+  "setSeenCount": "스티커 {n}개 · {times}번 봤어요",
+  "@setSeenCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "times": {
+        "type": "int"
+      }
+    }
+  },
+  "setEdit": "묶음 고치기",
+  "setName": "묶음 이름",
+  "setNameHint": "예: 우리 강아지",
+  "setNameNeeded": "묶음 이름을 써 주세요",
+  "setStickers": "스티커 {n}/{max}",
+  "@setStickers": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "setEmpty": "스티커를 하나 이상 넣어 주세요",
+  "setOrderInfo": "스티커를 누르면 순서를 바꾸거나 이모지를 정할 수 있어요. 이모지를 정하면 입력창에 그 이모지를 쓸 때 추천돼요.",
+  "setItemEmoji": "이모지 정하기",
+  "setItemEmojiNow": "이모지 바꾸기 ({emoji})",
+  "@setItemEmojiNow": {
+    "placeholders": {
+      "emoji": {
+        "type": "String"
+      }
+    }
+  },
+  "setItemFirst": "맨 앞으로",
+  "setItemLeft": "앞으로",
+  "setItemRight": "뒤로",
+  "setItemRemove": "묶음에서 빼기",
+  "setPickTitle": "스티커 고르기",
+  "setPicked": "{n}개 골랐어요",
+  "@setPicked": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "setShare": "묶음 나누기",
+  "setShareInfo": "대화에 보내거나 링크로 나눠요. 받은 사람은 그대로 추가해 쓸 수 있어요.",
+  "setShareSheetInfo": "묶음은 이 폰에서 암호화돼 올라가요. 열쇠는 대화나 링크 안에만 있어서 서버는 그림도 이름도 볼 수 없어요.",
+  "setShareToChat": "대화에 보내기",
+  "setCopyLink": "링크 복사",
+  "setSent": "묶음을 보냈어요",
+  "setLinkCopied": "링크를 복사했어요",
+  "setDelete": "묶음 지우기",
+  "setDeleteInfo": "이 폰에서 묶음을 지워요. 이미 나눈 링크로는 계속 열 수 있어요.",
+  "setOpenFailed": "묶음을 열 수 없어요. 링크가 잘렸거나 지워진 묶음일 수 있어요.",
+  "setPrivateInfo": "이 묶음은 암호화된 채로만 오갔어요. 서버는 누가 어떤 묶음을 쓰는지 몰라요.",
+  "setAddCount": "스티커 {n}개 추가하기",
+  "@setAddCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "setRemove": "묶음 빼기 ({n}개)",
+  "@setRemove": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "setAdded": "'{name}' 묶음을 추가했어요",
+  "@setAdded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "setRemoved": "묶음을 뺐어요",
+  "setAddShort": "추가",
+  "setAddedShort": "추가됨",
+  "setCardKind": "스티커 묶음",
+  "setCardView": "보기",
+  "setCardHave": "추가됨 · 보기",
+  "statusTitle": "이모지 상태",
+  "statusInfo": "이름 옆에 지금 상태를 이모지로 보여줘요. 1:1 대화를 하는 친구에게만 암호화돼 전해져요.",
+  "statusOther": "다른 이모지 고르기",
+  "statusClear": "상태 지우기",
+  "statusCleared": "상태를 지웠어요",
+  "statusHowLong": "얼마 동안 보여줄까요?",
+  "statusFor1h": "1시간",
+  "statusFor2h": "2시간",
+  "statusFor8h": "8시간",
+  "statusFor2d": "2일",
+  "statusForEver": "직접 지울 때까지",
+  "statusSet": "{emoji} 상태를 달았어요",
+  "@statusSet": {
+    "placeholders": {
+      "emoji": {
+        "type": "String"
+      }
+    }
+  },
+  "statusRow": "이모지 상태",
+  "stickerMakeTitle": "스티커 만들기",
+  "stickerMakeCut": "오려내기",
+  "stickerMakeOutline": "흰 테두리",
+  "stickerMakeText": "글자 넣기",
+  "stickerMakeRound": "둥근 네모",
+  "stickerMakeCircle": "동그라미",
+  "stickerMakeWorking": "오려내는 중…",
+  "stickerMakeInfo": "사진은 이 휴대폰 안에서만 처리돼요. 눌러서 다른 사진을 골라요.",
+  "stickerMakeNoCut": "이 기기에서는 자동으로 오려낼 수 없어서 사진을 모양 안에 넣었어요.",
+  "stickerTileBubble": "비눗방울\n보내기",
   "attachBubble": "비눗방울",
   "bubbleSendTitle": "비눗방울 보내기",
   "bubbleSendInfo": "{name}님 홈 화면에 방울이 떠요. 안에 무엇이 들었는지는 보이지 않고, 터뜨리면 한 번만 열려요.",
@@ -533,7 +768,7 @@
       }
     }
   },
-  "onceOnInfo": "받는 사람이 한 번만 볼 수 있어요",
+  "onceOnInfo": "한 번만 볼 수 있고, 24시간 안에 안 열면 사라져요",
   "onceNoCaption": "한 번만 보기에는 설명을 붙이지 않아요",
   "captionHint": "설명 넣기",
   "checklist": "체크리스트",
@@ -589,7 +824,8 @@
   "@subscribersCount": {
     "placeholders": {
       "count": {
-        "type": "int"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -667,6 +903,51 @@
   "accountManage": "계정 관리",
   "accountManageInfo": "아이디, 비밀번호, 로그인한 기기와 암호화 키를 한곳에서 관리해요.",
   "faq": "자주 묻는 질문",
+  "feedbackTitle": "버그·제안 보내기",
+  "feedbackHeader": "고장 난 곳이나 바라는 기능을 알려 주세요. 운영팀이 직접 읽고, 고친 소식은 부루미 소식 채널에 올려요.",
+  "feedbackBug": "버그",
+  "feedbackIdea": "제안",
+  "feedbackWhat": "내용",
+  "feedbackSubject": "한 줄 요약",
+  "feedbackBodyBug": "무엇을 했더니 어떻게 됐나요?",
+  "feedbackBodyIdea": "어떤 기능이 있으면 좋을까요?",
+  "feedbackBugHint": "예: 사진을 보내려고 + 를 눌렀더니 화면이 하얘졌어요.",
+  "feedbackIdeaHint": "예: 채널 글을 예약해서 올리고 싶어요.",
+  "feedbackNeedWords": "요약과 내용을 모두 적어 주세요.",
+  "feedbackGoesTo": "받는 곳",
+  "feedbackTeam": "부루미 운영팀",
+  "feedbackSentTitle": "보냈어요",
+  "feedbackSentBody": "알려 줘서 고마워요. 고치면 부루미 소식 채널에 알려 드려요.",
+  "feedbackFailed": "보내지 못했어요. 잠시 뒤 다시 해 주세요.",
+  "feedbackMine": "내가 보낸 의견",
+  "feedbackMineInfo": "이 목록은 이 폰에만 있어요.",
+  "feedbackPrivacy": "함께 가는 것: 버그·제안, 적은 글, 기기 종류({device}), 앱 버전. 대화 내용·연락처·사진은 절대 붙지 않아요. 암호화된 1:1 메시지로 가요.",
+  "@feedbackPrivacy": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "feedbackAttachLog": "오류 기록 붙이기 · {count}개",
+  "@feedbackAttachLog": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "feedbackDate": "{month}월 {day}일",
+  "@feedbackDate": {
+    "placeholders": {
+      "month": {
+        "type": "int"
+      },
+      "day": {
+        "type": "int"
+      }
+    }
+  },
   "featureTour": "부루미 기능 소개",
   "featureTourInfo": "부루미에서 할 수 있는 일을 한눈에 볼 수 있어요.",
   "aboutApp": "소개",
@@ -678,7 +959,7 @@
       }
     }
   },
-  "openSourceLicenses": "오픈소스 라이선스",
+  "openSourceLicenses": "오픈소스·출처",
   "aboutInfo": "부루미는 대화 내용을 아무도 볼 수 없는 메신저예요. 운영자도 서버도 내용을 볼 수 없어요.",
   "powerMode": "절전 모드",
   "powerBelowValue": "{pct}% 미만일 때",
@@ -732,7 +1013,7 @@
   "undoSend": "보내기 취소 (5초)",
   "undoSendInfo": "보낸 뒤 5초 동안은 실제로 전송되지 않아서 취소할 수 있어요.",
   "sendingIn": "{n}초 뒤에 보내요",
-  "veilAll": "모든 대화방 가리기",
+  "veilAll": "대화창 가리기",
   "veilAllInfo": "모든 대화방의 메시지가 가려져서 누르고 있는 동안만 보여요. 옆 사람이 볼 수 없어요. 이 기기에만 적용돼요.",
   "panic": "패닉 동작",
   "panicInfo": "두 손가락으로 두 번 톡톡 치면 바로 잠겨요. 소리와 진동은 없어요. 앱 잠금이 켜져 있어야 해요.",
@@ -752,6 +1033,16 @@
   "themePhoto": "내 사진",
   "myPhotoBackground": "내 사진으로 배경 바꾸기",
   "myColor": "내 색상",
+  "avatarShape": "프로필 모양",
+  "avatarShapePeople": "개인",
+  "avatarShapeGroups": "그룹",
+  "avatarShapeChannels": "채널",
+  "shapeCircle": "동그라미",
+  "shapeRounded": "둥근 사각",
+  "avatarShapeInfo": "보는 모양만 바뀌어요. 사진은 그대로예요.",
+  "tabEditFolder": "폴더 편집",
+  "tabShowUnread": "읽지 않은 대화 보기",
+  "tabReorder": "탭 재정렬",
   "glassEffect": "유리 효과",
   "glassClear": "맑게",
   "glassNormal": "기본",
@@ -760,6 +1051,161 @@
   "autoNight": "자동 야간 모드",
   "autoNightOff": "끔",
   "autoNightSystem": "휴대폰 설정 따르기",
+  "roomThemeMine": "내 설정",
+  "autoNightRange": "{from}~{to}",
+  "@autoNightRange": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "autoNightInfo": "‘휴대폰 설정 따르기’는 휴대폰이 어두운 화면일 때 같이 어두워져요. ‘시간 정하기’는 정한 시간 동안만 야간 모드가 켜져요.",
+  "autoNightSchedule": "시간 정하기",
+  "autoNightTimes": "시간",
+  "autoNightFrom": "켜는 시간",
+  "autoNightTo": "끄는 시간",
+  "autoNightScheduleInfo": "시간은 이 휴대폰에만 저장돼요. 해 지는 시간에 맞추려면 위치가 필요해서 넣지 않았어요.",
+  "timerYears": "{n}년",
+  "@timerYears": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "timerMonths": "{n}달",
+  "@timerMonths": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "timerWeeks": "{n}주",
+  "@timerWeeks": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "timerDays": "{n}일",
+  "@timerDays": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "timerHours": "{n}시간",
+  "@timerHours": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "timerMinutes": "{n}분",
+  "@timerMinutes": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "timerOther": "다른 시간",
+  "timerUnitHours": "시간",
+  "@timerUnitHours": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "timerUnitDays": "일",
+  "@timerUnitDays": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "timerUnitWeeks": "주",
+  "@timerUnitWeeks": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "timerUnitMonths": "달",
+  "@timerUnitMonths": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "timerUnitYears": "년",
+  "@timerUnitYears": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "defaultTimerHeader": "정한 시간이 지나면 메시지가 양쪽 휴대폰에서 지워져요. 1시간부터 1년까지 고를 수 있어요.",
+  "defaultTimerNew": "새 대화",
+  "timerApply": "기존 대화에 적용",
+  "timerApplyInfo": "고른 대화 모두에 같은 시간이 바로 적용돼요. 대화방 안에도 ‘자동 삭제를 바꿨어요’가 보여요.",
+  "timerApplyGo": "적용",
+  "timerApplyGoN": "{n}개 적용",
+  "@timerApplyGoN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "timerApplyTime": "적용할 시간",
+  "timerApplyPick": "대화 고르기",
+  "timerSelectAll": "모두 고르기",
+  "timerDeselectAll": "모두 풀기",
+  "timerApplied": "대화 {n}개에 자동 삭제 {time} 켰어요",
+  "@timerApplied": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "timerAppliedOff": "대화 {n}개에서 자동 삭제를 껐어요",
+  "@timerAppliedOff": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "qrTheme": "테마",
+  "qrShort": "5분짜리 QR",
+  "qrShortFooter": "켜면 QR이 5분 뒤 쓸 수 없게 바뀌고, 아이디도 카드에 적지 않아요. 사진으로 찍혀 퍼져도 나중엔 못 써요.",
+  "qrShortInfo": "이 QR은 5분 동안만 쓸 수 있어요.",
+  "qrShortOver": "시간이 지났어요",
+  "qrShortAgain": "새 QR 만들기",
+  "roomThemeBoth": "상대방 화면에도 적용",
+  "roomThemeBothInfo": "켜면 고른 배경이 상대방 휴대폰에도 바로 바뀌어요. 어떤 배경인지는 암호화돼서 서버도 몰라요. 내 사진 배경은 내 휴대폰에만 있어요.",
+  "roomThemeByOther": "지금 배경은 상대방이 골랐어요. 다시 고르면 내 선택으로 바뀌어요.",
+  "roomThemeSent": "상대방 화면에도 바꿨어요",
+  "roomThemeSample1": "오늘 몇 시에 만나요?",
+  "roomThemeSample2": "7시 좋아요 🙂",
   "textSizeDefault": "기본",
   "textSizePreview": "어제 회의에서 왼쪽 길로 가자고 했나, 오른쪽 길로 가자고 했나?",
   "textSizePreviewReply": "오른쪽이요. 확실해요.",
@@ -811,6 +1257,124 @@
   },
   "whoExceptionsInfo": "사람을 예외로 넣으면 위 설정보다 먼저 적용돼요. 모두 이 휴대폰에서 지켜요.",
   "bigEmoji": "큰 이모지",
+  "fxAdd": "효과 넣기",
+  "fxMore": "효과 더 보기",
+  "fxSearch": "효과 찾기",
+  "fxNothing": "맞는 효과가 없어요",
+  "fxReplay": "효과 다시 보기",
+  "fxSendWith": "{name} 효과로 보내기",
+  "@fxSendWith": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fxQuietWith": "{name} 효과로 조용히 보내기",
+  "@fxQuietWith": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "diceBull": "한가운데!",
+  "diceMissed": "빗나갔어요",
+  "diceScore": "{n}점",
+  "@diceScore": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "diceGoal": "골인!",
+  "diceAlmost": "아깝다",
+  "diceStrike": "스트라이크!",
+  "dicePins": "핀 {n}개",
+  "@dicePins": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "diceJackpot": "잭팟!",
+  "diceTry": "{emoji} 하나만 보내면 나도 해 볼 수 있어요",
+  "@diceTry": {
+    "placeholders": {
+      "emoji": {
+        "type": "String"
+      }
+    }
+  },
+  "diceTrySend": "보내기",
+  "cxStill": "가만히",
+  "cxBounce": "통통",
+  "cxSpin": "빙글",
+  "cxWiggle": "흔들",
+  "cxBeat": "두근",
+  "cxFloat": "둥실",
+  "cxJelly": "말랑",
+  "cxSparkle": "반짝",
+  "cxMakeTitle": "이모지 만들기",
+  "cxWordsHint": "글자를 쓰면 바로 이모지가 돼요",
+  "cxPhotoHint": "사진을 고르면 이모지로 만들어요",
+  "cxSample": "오늘 최고",
+  "cxFromPhoto": "사진으로",
+  "cxFromWords": "글자로",
+  "cxWordsPlaceholder": "1~4글자 (예: 굿, ㅋㅋ, 최고)",
+  "cxMotionTitle": "움직임",
+  "cxBaseTitle": "대신 보일 이모지",
+  "cxBaseInfo": "대화 목록이나 알림처럼 그림을 못 그리는 곳에서는 이 이모지가 보여요.",
+  "cxGroupSection": "{name} 이모지",
+  "@cxGroupSection": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cxMineSection": "내 이모지",
+  "cxIsMine": "내 이모지에 있어요",
+  "cxSaveInfo": "내 이모지에 저장하면 어느 대화에서나 쓸 수 있어요",
+  "cxSave": "내 이모지에 저장",
+  "cxRemove": "내 이모지에서 빼기",
+  "cxGroupTitle": "그룹 이모지",
+  "cxGroupAdminInfo": "고른 이모지는 이 그룹 모든 사람의 이모지 칸 맨 위에 보여요. 그림은 암호화돼서 서버는 볼 수 없어요.",
+  "cxGroupInfo": "관리자가 고른 이 그룹의 이모지예요. 눌러서 내 이모지에 저장할 수 있어요.",
+  "cxGroupEmptyAdmin": "먼저 이모지를 만들어 주세요. 만든 이모지 중에서 골라요.",
+  "cxGroupEmpty": "아직 그룹 이모지가 없어요",
+  "cxGroupCount": "{n}/{max}개 골랐어요",
+  "@cxGroupCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "cxSaveAll": "모두 내 이모지에 저장",
+  "cxAllSaved": "모두 저장했어요",
+  "gifSave": "GIF 저장",
+  "gifSaved": "내 GIF에 저장했어요",
+  "gifMine": "내 GIF",
+  "gifEmpty": "저장한 GIF가 없어요.\n대화에서 GIF를 꾹 누르고 'GIF 저장'을 눌러 보세요.",
+  "gifWithCaption": "설명 붙여 보내기",
+  "gifEdit": "편집해서 보내기",
+  "gifRemove": "내 GIF에서 빼기",
+  "gifRemoveIn": "{n}초 뒤 내 GIF에서 빠져요",
+  "@gifRemoveIn": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "gifCaptionHint": "설명 추가…",
+  "gifTrim": "자르기",
   "bigEmojiInfo": "이모지 1~3개만 보내면 말풍선 없이 크게 보여요.",
   "burumyStickers": "부루미 스티커",
   "stickerCount": "스티커 {n}개",
@@ -839,7 +1403,7 @@
   "autoDownload": "미디어 자동 다운로드",
   "autoDlCell": "셀룰러 데이터 사용 시",
   "autoDlWifi": "Wi-Fi 사용 시",
-  "autoDownloadInfo": "끄면 사진을 누를 때 받아요. 절전 모드에서는 늘 누를 때 받아요.",
+  "autoDownloadInfo": "미리 받지 않는 사진·동영상·파일은 누를 때 받아요. 절전 모드에서는 늘 누를 때 받아요.",
   "autoplayGif": "GIF 자동 재생",
   "autoplayGifInfo": "끄면 GIF가 첫 장면에 멈춰 있어요.",
   "powerJobs": "배터리를 많이 쓰는 기능",
@@ -882,13 +1446,13 @@
   "toolsStats": "기록과 통계",
   "roomRules": "모임 규칙",
   "roomRulesHint": "예: 1. 서로 존중해요\n2. 광고 금지\n3. 사진은 출처를 밝혀요",
-  "roomRulesInfo": "규칙은 들어오기 전에도 보여요. 비밀 내용은 쓰지 마세요.",
+  "roomRulesInfo": "멤버라면 누구나 볼 수 있어요.",
   "rulesAgree": "규칙 동의 받기",
   "rulesAgreeInfo": "새로 들어온 사람은 규칙에 동의해야 글을 쓸 수 있어요.",
   "agreeRules": "규칙을 지킬게요",
   "welcomeMessage": "환영 인사",
   "welcomeHint": "예: 반가워요! 공지부터 한번 봐 주세요 😊",
-  "welcomeInfo": "새 멤버가 처음 들어왔을 때 한 번 보여요.",
+  "welcomeInfo": "새 멤버가 들어왔을 때 그 사람에게만 한 번 보여요.",
   "reactionsSetting": "반응",
   "reactionsAll": "모든 반응",
   "reactionsSome": "일부 반응",
@@ -897,6 +1461,10 @@
   "reactionsMax": "글마다 최대 반응 수",
   "reactionsMaxInfo": "한 메시지에 붙을 수 있는 반응 종류의 수예요.",
   "reactionsPick": "쓸 수 있는 반응",
+  "reactionsPreview": "미리보기",
+  "reactionsPreviewPost": "오늘 저녁 8시에 새 소식을 올려요 🎉",
+  "reactionsNoneInfo": "아무도 반응을 달 수 없어요. 서버도 새 반응을 받지 않아요.",
+  "reactionHiddenMine": "방 규칙으로 숨겨진 내 반응이에요. 누르면 거둬요.",
   "hideCounts": "반응·투표 숫자 숨기기",
   "hideCountsInfo": "구독자에게는 숫자가 안 보여요. 관리자는 계속 볼 수 있어요.",
   "autoMod": "자동 관리",
@@ -1254,10 +1822,13 @@
   "remindDue": "알림 받기로 정한 메시지예요",
   "remindChannel": "메시지 알림 받기",
   "remindOn": "알림 정함",
-  "emergencyDelete": "비상 시 삭제",
+  "emergencyDelete": "이 메시지 비상 시 삭제",
   "emergencyDeleteOff": "비상 시 삭제 취소",
   "emergencyHideRoom": "이 대화방 비상 시 숨김",
   "emergencyHideRoomOff": "비상 시 숨김 취소",
+  "emergencyHideMsg": "이 메시지 비상 시 숨김",
+  "emergencyHideMsgOff": "비상 시 숨김 취소",
+  "emergencyMsgHidden": "숨김 비밀번호로 열면 이 메시지가 사라져요",
   "emergencyMarked": "삭제 비밀번호로 열면 이 메시지가 지워져요",
   "emergencyUnmarked": "비상 시 삭제에서 뺐어요",
   "emergencyHidden": "숨김 비밀번호로 열면 이 대화방이 사라져요",
@@ -1386,6 +1957,77 @@
   },
   "threadPlaceholder": "스레드에 답장",
   "threadEmpty": "아직 답글이 없어요",
+  "suggestPost": "글 제안",
+  "suggestHint": "이 채널에 올릴 글을 제안해 보세요",
+  "suggestBarButton": "글 제안하기",
+  "suggestTextHint": "올리고 싶은 글을 써 주세요",
+  "suggestPhoto": "사진 넣기",
+  "suggestPhotoRemove": "사진 빼기",
+  "suggestTime": "올릴 때",
+  "suggestAnyTime": "아무 때나",
+  "suggestTimeInfo": "원하는 시간이 있으면 골라 주세요. 관리자가 바꿀 수도 있어요.",
+  "suggestSend": "제안 보내기",
+  "suggestFree": "돈은 들지 않아요. 제안한 글과 사진은 끝까지 암호화돼서 이 채널 관리자만 봐요.",
+  "suggestCardTitle": "글 제안",
+  "suggestWantsAt": "원하는 시간: {when}",
+  "suggestWaiting": "관리자 답을 기다리고 있어요",
+  "suggestAccept": "올리기",
+  "suggestDecline": "거절",
+  "suggestAcceptTitle": "채널에 올리기",
+  "suggestNow": "지금 바로",
+  "suggestTheirTime": "원하는 시간 ({when})",
+  "suggestOtherTime": "다른 시간 정하기",
+  "suggestCredit": "제안한 사람 이름 함께 올리기",
+  "suggestCreditLine": "✍️ {name}님이 제안했어요",
+  "suggestNote": "거절 이유 (안 써도 돼요)",
+  "suggestDeclineSend": "거절하기",
+  "suggestDealAccepted": "합의됐어요!",
+  "suggestDealNow": "채널에 바로 올렸어요.",
+  "suggestDealAt": "{when}에 자동으로 올라가요.",
+  "suggestDealFree": "무료 제안이라 오간 돈은 없어요.",
+  "suggestDealCredit": "제안한 사람 이름이 함께 올라가요.",
+  "suggestDealDeclined": "제안이 거절됐어요",
+  "suggestDealNote": "이유: {note}",
+  "suggestSent": "제안을 보냈어요",
+  "suggestPublished": "채널에 올렸어요",
+  "suggestScheduled": "{when}에 올라가도록 예약했어요",
+  "suggestDeclinedNotice": "제안을 거절했어요",
+  "suggestPhoneOn": "예약한 글은 이 폰에서 올라가요. 그때 앱이 한 번 열려 있어야 해요.",
+  "suggestNoRight": "이 채널에 글을 올릴 권한이 없어요",
+  "topics": "주제",
+  "topicsInfo": "큰 그룹 대화를 주제별 방으로 나눠요. 어떤 글이 어느 주제인지도 끝까지 암호화돼서 서버는 몰라요.",
+  "topicsOn": "주제 켜기",
+  "topicsView": "보이는 모양",
+  "topicsViewTabs": "탭",
+  "topicsViewList": "목록",
+  "topicsViewInfo": "모든 멤버에게 같은 모양으로 보여요.",
+  "topicsList": "주제 목록",
+  "topicsListInfo": "주제 이름과 아이콘도 암호화돼서 관리자 폰에서 멤버 폰으로 바로 전해져요. 관리자만 주제를 만들고 닫을 수 있어요.",
+  "topicGeneral": "일반",
+  "topicAll": "모두",
+  "topicNew": "새 주제",
+  "topicEdit": "주제 수정",
+  "topicName": "주제 이름",
+  "topicNameHint": "예: 공지, 잡담, 맛집",
+  "topicIcon": "아이콘",
+  "topicColor": "색",
+  "topicCreate": "만들기",
+  "topicDone": "완료",
+  "topicClose": "주제 닫기",
+  "topicReopen": "주제 다시 열기",
+  "topicClosedBar": "닫힌 주제예요. 관리자만 쓸 수 있어요.",
+  "topicHideGeneral": "탭에서 일반 숨기기",
+  "topicMessageIn": "{name}에 메시지",
+  "topicCount": "주제 {n}개",
+  "topicOffInfo": "끄면 모든 글이 한 대화로 보여요. 주제는 남아 있어서 다시 켜면 그대로예요.",
+  "topicCreated": "‘{name}’ 주제를 만들었어요",
+  "topicClosedNotice": "주제를 닫았어요",
+  "topicReopenedNotice": "주제를 다시 열었어요",
+  "topicSwitchBar": "탭 위치 바꾸기",
+  "topicNoMessages": "아직 글이 없어요",
+  "topicNoIcon": "글자",
+  "topicSaved": "주제를 저장했어요",
+  "topicNameNeeded": "주제 이름을 써 주세요",
   "packDynamic": "묶음 정렬 유연하게",
   "packDynamicInfo": "최근에 쓴 스티커 묶음이 앞에 나와요.",
   "packOrderInfo": "오른쪽 줄 세 개를 끌어서 순서를 바꿔요. 끈 묶음은 스티커 칸에서 빠지고, 받은 스티커는 그대로 보여요.",
@@ -1417,6 +2059,7 @@
   "markAllRead": "모두 읽음",
   "archiveShort": "보관",
   "chatLocked": "끝까지 잠김",
+  "chatGuarded": "공개방 · 지킴이 검사",
   "storyMine": "내 스토리",
   "storyReplyPrefix": "스토리에 답장:",
   "storyReplied": "답장을 보냈어요",
@@ -1598,6 +2241,108 @@
   "swipeUnmute": "알림 켬",
   "swipeArchive": "보관",
   "swipeUnarchive": "보관 해제",
+  "muteSoundOff": "소리 끄기",
+  "muteSoundOn": "소리 켜기",
+  "muteFor": "{time} 동안 끄기",
+  "@muteFor": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "muteHours": "{n}시간",
+  "@muteHours": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "muteDays": "{n}일",
+  "@muteDays": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "muteCustom": "직접 정하기",
+  "muteUntilTitle": "언제까지 끌까요?",
+  "muteEndsAt": "다시 켜지는 때: {time}",
+  "@muteEndsAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "mutedToast": "알림이 꺼졌어요",
+  "unmutedToast": "알림이 켜졌어요",
+  "mutedForToast": "{time} 동안 알림이 꺼져요",
+  "@mutedForToast": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "mutedUntilToast": "알림이 꺼져요. 다시 켜지는 때: {time}",
+  "@mutedUntilToast": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "soundOffToast": "알림이 소리 없이 와요",
+  "soundOnToast": "알림 소리가 다시 나요",
+  "pinnedMany": "대화 {n}개를 고정했어요",
+  "@pinnedMany": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "unpinnedMany": "대화 {n}개의 고정을 풀었어요",
+  "@unpinnedMany": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "mutedMany": "대화 {n}개의 알림을 껐어요",
+  "@mutedMany": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "unmutedMany": "대화 {n}개의 알림을 켰어요",
+  "@unmutedMany": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "swipeUnread": "안 읽음",
+  "swipeSettings": "대화 목록 밀기",
+  "swipeToRight": "오른쪽으로 밀기",
+  "swipeToLeft": "왼쪽으로 밀기",
+  "swipeDefault": "기본",
+  "swipeSettingsInfo": "대화를 옆으로 밀면 나오는 버튼 중 맨 끝 버튼을 골라요. 끝까지 쭉 밀면 그 버튼이 바로 실행돼요.",
+  "swipeSampleName": "부루미",
+  "swipeSampleText": "옆으로 밀어서 바로 정리해 보세요",
+  "folderDefaultInfo": "맨 앞에 둔 폴더가 앱을 열 때 먼저 보여요. '모든 대화'도 옮길 수 있어요.",
+  "iconBadgeHeader": "배지 숫자",
+  "iconBadgeChannels": "채널 포함",
+  "iconBadgeMuted": "알림 끈 대화 포함",
+  "iconBadgeMessages": "안 읽은 메시지 수로 세기",
+  "iconBadgeInfo": "대화 탭과 앱 아이콘의 빨간 숫자예요. '안 읽은 메시지 수로 세기'를 끄면 안 읽은 대화 수로 세요. 숫자는 휴대폰에서만 세고 서버는 몰라요.",
   "chatsHeaderInfo": "메시지 표시 방법, 답장, 스티커와 이모지, 이 휴대폰 안에서만 처리되는 AI 기능처럼 대화방에서 쓰는 기능을 정해요.",
   "faqHeaderInfo": "부루미를 쓰면서 자주 궁금해하는 내용을 모았어요. 인터넷에 연결되지 않아도 볼 수 있어요.",
   "devicesHeaderInfo": "내 계정에 로그인된 기기를 모두 볼 수 있어요. 모르는 기기가 있으면 여기서 바로 로그아웃시킬 수 있어요.",
@@ -1663,7 +2408,9 @@
   "undoSendSub": "보낸 뒤 5초 안에는 취소할 수 있어요",
   "sendReadSub": "끄면 상대에게 내 읽음 표시가 가지 않아요",
   "sendTypingSub": "끄면 상대에게 입력 중 표시가 가지 않아요",
-  "veilAllSub": "누르고 있는 동안만 메시지가 보여요",
+  "veilAllSub": "대화방 안 메시지를 누르고 있는 동안만 보여요",
+  "veilList": "대화 목록 가리기",
+  "veilListSub": "목록의 마지막 메시지를 누르고 있는 동안만 보여요",
   "panicSub": "두 손가락으로 두 번 톡톡 치면 바로 잠겨요",
   "birthdayAlertSub": "친구 생일 아침 9시에 이 휴대폰이 알려 줘요",
   "showErrorsSub": "문의할 때 보낼 오류 내용을 이 휴대폰에 모아요",
@@ -1725,6 +2472,9 @@
   "kindArchived": "보관됨",
   "folderIcon": "폴더 아이콘",
   "folderIconNone": "없음",
+  "folderIconFavourites": "폴더용 추천",
+  "folderIconOnly": "아이콘만 보기",
+  "folderIconOnlyInfo": "대화 목록 위 폴더 탭에 이름 없이 이모지만 보여요.",
   "newFolderTitle": "새 폴더",
   "exceptionsCount": "{n}개 예외",
   "@exceptionsCount": {
@@ -1793,5 +2543,3786 @@
   "storiesMovedTitle": "스토리를 왼쪽 메뉴로 옮겼어요",
   "bubblesMovedTitle": "비눗방울을 왼쪽 메뉴로 옮겼어요",
   "storiesPinnedTitle": "스토리를 대화 목록에 고정했어요",
-  "bubblesPinnedTitle": "비눗방울을 대화 목록에 고정했어요"
+  "bubblesPinnedTitle": "비눗방울을 대화 목록에 고정했어요",
+  "trustOfficial": "공식 계정",
+  "trustOfficialInfo": "부루미가 확인한 공식 계정이에요",
+  "trustChecking": "확인 중",
+  "trustFake": "가짜",
+  "trustNotOfficial": "{name} 공식 계정이 아니에요",
+  "@trustNotOfficial": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "trustCheckingInfo": "사칭 신고가 여러 번 들어와서 운영자가 확인하고 있어요",
+  "trustFakeInfo": "운영자가 확인한 사칭 계정이에요. 돈이나 인증번호를 보내지 마세요",
+  "firstTitle": "처음 메시지를 보낸 사람이에요",
+  "firstJoined": "가입",
+  "ageWeek": "7일 안",
+  "ageMonth": "한 달 안",
+  "ageYear": "1년 안",
+  "ageOlder": "1년 넘음",
+  "ageUnknown": "알 수 없음",
+  "firstRenamed": "이름 변경",
+  "firstRenamedRecent": "최근 7일 안에 바꿨어요",
+  "firstRenamedNo": "최근엔 없어요",
+  "firstCommon": "함께 있는 대화방",
+  "firstCommonCount": "{count}개",
+  "@firstCommonCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "firstVerified": "공식 인증",
+  "firstVerifiedYes": "됨",
+  "firstVerifiedNo": "안 됨",
+  "firstTip": "아는 사람이 아니면 돈, 인증번호, 비밀번호를 보내지 마세요.",
+  "firstAccept": "수락",
+  "firstBlock": "차단",
+  "firstReport": "신고",
+  "firstMediaHidden": "수락하면 보여요",
+  "reportImpersonation": "사칭이에요",
+  "reportImpTitle": "사칭 신고",
+  "reportImpInfo": "다른 사람인 척하는 계정을 알려 주세요. 프로필만 운영자에게 가고, 대화 내용은 가지 않아요.",
+  "reportImpWho": "누구인 척하나요?",
+  "reportImpWhoHint": "이름 또는 ID",
+  "reportImpNote": "더 알려 줄 내용 (선택)",
+  "reportImpSend": "신고하기",
+  "reportImpDone": "신고했어요. 운영자가 확인할게요",
+  "badgeRow": "공식 배지",
+  "badgeTitle": "공식 배지",
+  "badgeInfo": "유명인, 회사, 큰 채널이 사칭을 막을 수 있게 이름 옆에 배지를 붙여요. 신분증은 받지 않아요.",
+  "badgeStep": "아래 확인 문구를 공식 인스타그램·유튜브·홈페이지에 잠깐 올리거나 회사 메일 주소로 보내고, 올린 곳 주소를 적어 주세요.",
+  "badgeCode": "확인 문구",
+  "badgeCopy": "복사",
+  "badgeCopied": "복사했어요",
+  "badgeKind": "종류",
+  "badgeKindPerson": "사람",
+  "badgeKindBrand": "회사·브랜드",
+  "badgeKindChannel": "채널",
+  "badgeName": "배지에 쓸 이름",
+  "badgeProof": "문구를 올린 곳 (주소 또는 메일)",
+  "badgeSend": "신청하기",
+  "badgeSent": "신청했어요. 확인되면 이름 옆에 배지가 붙어요.",
+  "badgeHave": "공식 배지가 있어요",
+  "badgeRenameNote": "이름을 바꾸면 배지가 꺼지고 다시 확인해요.",
+  "badgeFailed": "지금은 신청할 수 없어요. 잠시 뒤에 다시 해 주세요.",
+  "nameMarkRefused": "이름에 체크 표시는 넣을 수 없어요",
+  "nameReservedRefused": "공식 계정만 쓸 수 있는 말이 들어 있어요",
+  "idReservedRefused": "이 ID는 예약돼 있어요. 진짜 주인이면 가입한 뒤 공식 배지를 신청해 주세요.",
+  "idLookalikeRefused": "공식 계정과 너무 비슷한 ID예요. 다른 ID를 써 주세요.",
+  "accountsAdd": "계정 추가",
+  "accountsLimitTitle": "계정을 더 쓰려면",
+  "accountsLimitInfo": "계정 1개는 무료예요. 2번째 계정은 Plus에 들어 있고, 3번째 계정은 따로 살 수 있어요. 결제는 출시 후에 열려요.",
+  "accountsAlready": "이미 이 휴대폰에 있는 계정이에요",
+  "accountPassword": "계정 삭제 비밀번호",
+  "accountPasswordInfo": "이 비밀번호로 열면 고른 계정이 이 휴대폰에서 조용히 사라지고, 남은 계정만 열려요. 서버의 계정은 그대로라 친구에게는 아무것도 보이지 않아요. 나중에 아이디와 백업 비밀번호로 다시 로그인할 수 있어요.",
+  "accountEraseList": "지울 계정",
+  "accountEraseListInfo": "모든 계정을 고를 수는 없어요. 하나는 남아야 해요.",
+  "editFirstWords": "처음 보낸 글",
+  "reportIllegal": "불법 촬영물·성착취물 (합성 포함)",
+  "reportHiddenNow": "신고가 모여 이 글은 모든 사람에게 가려졌어요",
+  "reportHiddenLine": "신고나 자동 검사로 가려진 글이에요. 운영자가 확인하고 있어요.",
+  "guardNotice": "공개방이에요. 누구나 들어올 수 있어서, 운영자의 공개방 지킴이가 불법 사진과 스팸을 걸러요. 1:1 대화와 비공개 방은 그대로 종단간 암호화돼요.",
+  "newMediaWait": "이 방은 들어온 지 {days}일이 지나야 사진·영상·링크를 보낼 수 있어요",
+  "@newMediaWait": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "newMediaHidden": "새 멤버가 보낸 사진·영상·링크는 가려져요",
+  "newMediaTitle": "새 멤버 사진·영상·링크 제한",
+  "newMediaInfo": "방에 들어온 지 얼마 안 된 사람은 글만 쓸 수 있어요. 자동 계정이 들어와 나쁜 사진을 올리는 걸 막아요.",
+  "newMediaFooter": "방장·관리자는 제한이 없어요. 제한 기간에 올라온 사진·영상·링크는 다른 멤버에게 가려져요. 공개방은 처음부터 7일로 켜져 있어요.",
+  "newMediaDays": "{days}일",
+  "@newMediaDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "toolsSafety": "안전",
+  "toolsSafetyInfo": "예전 글을 몰래 고쳐 나쁜 사진을 숨기고 앱을 신고하는 협박 공격을 막아요.",
+  "lateEditTitle": "늦게 수정된 글",
+  "lateEditInfo": "보낸 지 1시간이 지난 글을 누가 고치면 여기에 모여요. 그룹·채널의 글은 24시간이 지나면 고칠 수 없고, 사진·영상은 수정으로 바꿀 수 없어요.",
+  "lateEditEmpty": "늦게 수정된 글이 없어요",
+  "lateEditLine": "처음: {first}\n지금: {now}\n보냄 {sent} · 수정 {edited}",
+  "@lateEditLine": {
+    "placeholders": {
+      "first": {
+        "type": "String"
+      },
+      "now": {
+        "type": "String"
+      },
+      "sent": {
+        "type": "String"
+      },
+      "edited": {
+        "type": "String"
+      }
+    }
+  },
+  "lateEditBanner": "오래된 글 {count}개가 수정됐어요",
+  "@lateEditBanner": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "extortionRow": "협박받았어요",
+  "extortionTitle": "협박 신고",
+  "extortionInfo": "\"돈을 안 보내면 방을 신고하겠다\" 같은 연락을 받았나요? 돈을 보내지 마세요. 운영자에게 알리면 그 계정을 막고, 이 방에 올라오는 불법 글을 먼저 살펴볼게요. 위험하면 경찰(112)에도 신고해 주세요.",
+  "extortionWho": "협박한 사람",
+  "extortionWhoHint": "아이디 (예: @abc)",
+  "extortionNote": "받은 말",
+  "extortionNoteHint": "받은 말을 그대로 붙여 넣어 주세요",
+  "extortionSend": "운영자에게 보내기",
+  "extortionDone": "운영자에게 보냈어요. 돈은 보내지 마세요.",
+  "wipeUser": "글 모두 지우고 내보내기",
+  "logLateEdit": "{name}님이 오래된 글을 수정함",
+  "@logLateEdit": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "logWiped": "{name}님의 글 {count}개를 지우고 내보냄",
+  "@logWiped": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "logExtortion": "협박 신고함 ({name})",
+  "@logExtortion": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "linkTitle": "초대 링크",
+  "linkKind": "링크 종류",
+  "linkPrivate": "비공개 링크",
+  "linkPublic": "공개 주소",
+  "linkPrivateInfo": "링크를 받은 사람만 들어올 수 있어요. 링크 속 코드는 서버에 남지 않아요.",
+  "linkPublicInfo": "누구나 주소로 들어올 수 있어요. 링크를 붙이면 카드에 이름과 소개가 보여요.",
+  "linkAddress": "주소",
+  "linkChecking": "확인하는 중…",
+  "linkFree": "쓸 수 있는 주소예요",
+  "linkTaken": "이미 쓰고 있는 주소예요",
+  "linkBadAddress": "영문 소문자로 시작해 5~32자로 써 주세요. 숫자와 _도 쓸 수 있어요.",
+  "linkReserved": "쓸 수 없는 단어가 들어 있어요",
+  "linkShare": "공유",
+  "linkShareText": "같이 들어와요",
+  "linkApproval": "승인 후 참여",
+  "linkApprovalInfo": "켜면 링크로 온 사람이 가입 요청을 보내고, 관리자가 받아 줘야 들어와요.",
+  "linkReset": "새 링크 만들기",
+  "linkResetInfo": "지금 링크는 더 이상 쓸 수 없어요. 새 링크를 다시 보내 주세요.",
+  "linkFailed": "링크를 바꾸지 못했어요. 잠시 뒤 다시 해 주세요.",
+  "joinRequests": "가입 요청",
+  "joinRequestsNone": "아직 가입 요청이 없어요",
+  "joinRequestsInfo": "받으면 바로 들어와요. 거절해도 상대에게 따로 알리지 않아요.",
+  "joinAccept": "받기",
+  "joinDecline": "거절",
+  "posterMake": "홍보 이미지 만들기",
+  "posterTitle": "홍보 이미지",
+  "posterTall": "세로",
+  "posterSquare": "정사각",
+  "posterColor": "색",
+  "posterSave": "사진에 저장",
+  "posterSaved": "사진에 저장했어요",
+  "posterScan": "카메라로 찍으면 바로 들어와요",
+  "posterInfo": "링크를 새로 만들면 예전 이미지의 QR은 더 이상 열리지 않아요.",
+  "webPage": "공개 웹페이지",
+  "webPageInfo": "켜면 이제부터 올리는 글이 웹페이지에 보여요. 웹페이지 글은 암호화되지 않고, 검색에 나올 수 있어요. 끄면 웹페이지 글을 모두 내려요.",
+  "webPageNeedsPublic": "공개 주소로 바꾸면 켤 수 있어요.",
+  "webPageAddress": "웹페이지 주소",
+  "webPageOn": "웹페이지를 켤까요?",
+  "webPageOnBody": "이제부터 올리는 글과 사진은 암호화 밖으로 나가서 누구나 볼 수 있어요. 예전 글은 올라가지 않아요.",
+  "webPageTurnOn": "켜기",
+  "joinByLink": "링크로 들어가기",
+  "joinByLinkHint": "초대 링크 붙여 넣기",
+  "joinByLinkBad": "초대 링크가 아니에요",
+  "joinPublicChannel": "공개 채널",
+  "joinPublicGroup": "공개 그룹",
+  "joinPrivateChannel": "비공개 채널",
+  "joinPrivateGroup": "비공개 그룹",
+  "joinSubscribe": "구독하기",
+  "joinGroup": "참여하기",
+  "joinAsk": "가입 요청 보내기",
+  "joinAsked": "가입 요청을 보냈어요. 관리자가 받아 주면 들어가요.",
+  "joinPrivateNote": "들어가기 전에는 멤버 수와 소개를 볼 수 없어요.",
+  "joinNotFound": "링크가 없거나 새 링크로 바뀌었어요",
+  "joinUnnamed": "초대받은 모임",
+  "remoteWipe": "원격 비상 삭제",
+  "remoteWipeInfo": "휴대폰을 잃어버리거나 빼앗겼을 때, 내가 고른 믿는 친구가 삭제 코드를 보내면 이 휴대폰의 대화가 조용히 지워져요.",
+  "wipeFriends": "믿는 친구",
+  "wipeFriendsPick": "친구 고르기 (최대 3명)",
+  "wipeFriendsInfo": "1:1 대화가 있는 친구만 고를 수 있어요. 친구에게 삭제 코드를 직접 알려 주세요.",
+  "wipeCode": "삭제 코드",
+  "wipeCodeChange": "삭제 코드 바꾸기",
+  "wipeCodeInfo": "6자 이상. 코드는 이 휴대폰에 암호처럼 바꿔서만 남고, 서버는 몰라요.",
+  "wipeCodeRule": "삭제 코드는 6자 이상으로 정해 주세요",
+  "wipeCodeSaved": "삭제 코드를 정했어요",
+  "wipeTwo": "두 명이 요청해야 삭제",
+  "wipeTwoInfo": "켜면 믿는 친구 두 명이 24시간 안에 코드를 보내야 지워져요.",
+  "wipeLastMsg": "마지막 메시지",
+  "wipeLastMsgInfo": "지우기 직전에 믿는 친구에게 이 글을 보내요. 비워 두면 아무것도 안 보내요.",
+  "wipeLastMsgHint": "예: 휴대폰을 잃어버렸어요. 새 번호로 연락할게요.",
+  "savedShort": "저장했어요",
+  "decoyTip": "도움말: 평소에 거의 안 쓰는 두 번째 계정(미끼 계정)을 만들어 두면, 누가 억지로 앱을 열게 할 때 그 계정을 보여 줄 수 있어요.",
+  "daysN": "{n}일",
+  "@daysN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "idleWipe": "미접속 자동 삭제",
+  "idleWipeInfo": "이 기간 동안 앱을 한 번도 열지 않으면 다음에 열 때 모든 대화가 먼저 지워져요. 하루 전에 평범한 알림이 와요.",
+  "idleReminderTitle": "부루미",
+  "idleReminderBody": "오랜만이에요. 한번 열어 볼까요?",
+  "wipeRequest": "비상 삭제 요청",
+  "wipeRequestInfo": "{name}님이 알려 준 삭제 코드를 넣으면 그 휴대폰의 대화가 지워져요. 나를 믿는 친구로 정해 둔 경우에만 돼요.",
+  "@wipeRequestInfo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "wipeRequestNote": "요청은 끝에서 끝까지 암호화돼 가요. 맞았는지 틀렸는지는 알려 주지 않아요.",
+  "wipeRequestSend": "지우기 요청 보내기",
+  "wipeRequestSent": "요청을 보냈어요",
+  "wipeTrustOn": "비상 삭제 요청할 사람으로 지정",
+  "wipeTrustOff": "비상 삭제 요청할 사람에서 빼기",
+  "wipeTrustAdded": "믿는 친구로 정했어요. 설정에서 삭제 코드도 정해 주세요.",
+  "wipeTrustRemoved": "믿는 친구에서 뺐어요",
+  "wipeFriendsFull": "믿는 친구는 3명까지예요",
+  "emergencyHeader": "잠금과 비상 삭제",
+  "autoLock": "자동 잠금",
+  "autoLockInfo": "앱을 떠난 뒤 이 시간이 지나면 다시 비밀번호를 물어요. 앱 잠금이 켜져 있을 때만 적용돼요.",
+  "autoLockNow": "바로",
+  "autoLock1m": "1분 뒤",
+  "autoLock5m": "5분 뒤",
+  "autoLock1h": "1시간 뒤",
+  "protect": "공유 비활성화",
+  "protectInfo": "켜면 이 대화방에서는 전달, 저장, 복사가 안 되고 화면 캡처도 막아요. 아이폰은 녹화할 때 화면을 가려요.",
+  "protectOn": "공유 비활성화 켜기",
+  "protectOff": "공유 비활성화 끄기",
+  "protectOnDone": "이 대화방에서 전달·저장·복사·캡처를 막았어요",
+  "protectOffDone": "공유 비활성화를 껐어요",
+  "idReservedOwner": "진짜 주인을 위해 맡아 둔 ID예요. 주인이면 '예약 아이디 받기'로 받은 코드를 넣어 주세요.",
+  "roomReservedOwner": "회사·기관·유명인 같은 주인이 있는 이름이라 공식 배지가 있어야 채널 이름으로 쓸 수 있어요",
+  "idReservedSale": "4글자 이하 ID와 인기 단어 ID는 따로 받을 수 있어요. 코드가 있으면 넣어 주세요.",
+  "claimHaveCode": "받은 코드가 있어요",
+  "claimCodeHint": "코드 (BRM-로 시작)",
+  "claimCodeHelp": "이 ID를 받을 때 메일로 온 코드예요. 30일 안에 한 번만 쓸 수 있어요.",
+  "claimCodeWrong": "코드가 맞지 않거나 이미 썼어요. 받은 메일의 ID와 코드를 다시 확인해 주세요.",
+  "ruleSecs": "{n}초",
+  "@ruleSecs": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "ruleMins": "{n}분",
+  "@ruleMins": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "ruleHours": "{n}시간",
+  "@ruleHours": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "permText": "글 보내기",
+  "permMedia": "사진·영상·파일",
+  "permSticker": "스티커·GIF",
+  "permPoll": "투표",
+  "permLink": "링크",
+  "permInvite": "멤버 초대",
+  "permPin": "메시지 고정",
+  "permInfo": "그룹 정보 바꾸기",
+  "rightInfo": "그룹 정보 바꾸기",
+  "rightDelete": "다른 사람 글 지우기",
+  "rightBan": "멤버 내보내기·차단",
+  "rightInvite": "초대 링크 만들기",
+  "rightPin": "메시지 고정",
+  "rightMute": "메시지 금지",
+  "rightAddAdmin": "관리자 추가",
+  "memberPerms": "멤버 권한",
+  "memberPermsHeader": "멤버가 할 수 있는 일",
+  "memberPermsInfo": "끄면 일반 멤버는 그 기능을 쓸 수 없어요. 방장과 관리자는 늘 쓸 수 있어요.",
+  "adminRights": "관리자 권한",
+  "adminRightsInfo": "이 관리자가 할 수 있는 일을 하나씩 고를 수 있어요. 방장 넘기기와 그룹 삭제는 방장만 할 수 있어요.",
+  "slowMode": "슬로 모드",
+  "slowModeInfo": "켜면 멤버는 메시지를 보낸 뒤 정한 시간이 지나야 다시 보낼 수 있어요. 방장과 관리자는 제한이 없어요.",
+  "memberTag": "멤버 태그",
+  "memberTagInfo": "이름 옆에 보이는 짧은 글이에요 (최대 16자). 비우면 태그가 사라져요.",
+  "memberTagHint": "예: 디자이너",
+  "muteMember": "다음 동안 메시지 금지",
+  "unmuteMember": "메시지 금지 풀기",
+  "muteFor1h": "1시간",
+  "muteFor1d": "1일",
+  "muteFor7d": "7일",
+  "muteForever": "풀 때까지",
+  "mutedRole": "메시지 금지",
+  "mutedForever": "관리자가 이 방에서 메시지를 막았어요",
+  "mutedUntil": "관리자가 {time}까지 메시지를 막았어요",
+  "@mutedUntil": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "handover": "방장 넘기기",
+  "handoverTitle": "{name}님에게 방장 넘기기",
+  "@handoverTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "handoverInfo": "고른 기간 동안 둘 다 방장이에요. 기간이 끝나면 내가 '넘기기 완료'를 눌러야 끝나고, 나는 관리자가 돼요. 받는 사람은 거절할 수 있어요.",
+  "handoverPending": "{name}님에게 방장을 넘기는 중이에요. {time}부터 마칠 수 있어요.",
+  "@handoverPending": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "handoverIncoming": "방장을 넘겨받았어요. {time}까지는 기존 방장과 함께 방장이에요.",
+  "@handoverIncoming": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "handoverFinish": "넘기기 완료",
+  "handoverDecline": "방장 받지 않기",
+  "logMuted": "{name}님 메시지 금지",
+  "@logMuted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "logUnmuted": "{name}님 메시지 금지 풀기",
+  "@logUnmuted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "logHandover": "{name}님에게 방장 넘기기 시작",
+  "@logHandover": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "toolsMembers": "멤버",
+  "permBlocked": "이 방에서는 관리자만 보낼 수 있어요",
+  "slowWait": "슬로 모드: {n}초 뒤에 보낼 수 있어요",
+  "@slowWait": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "mentionAll": "@모두",
+  "mentionAllInfo": "이 방의 모든 멤버에게 알려요",
+  "mentionAllAdmins": "멤버가 33명 이상인 방은 관리자만 @모두를 쓸 수 있어요",
+  "videoLabel": "동영상",
+  "videoResumed": "이어서 봐요 · {time}",
+  "@videoResumed": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "videoFromStart": "처음부터",
+  "videoSpeedTitle": "재생 속도",
+  "videoNoteHoldHint": "누르면 찍고 다시 누르면 보내요. 꾹 누르고 있으면 손을 뗄 때 보내요",
+  "videoNoteSlideHint": "↑ 밀면 잠가요 · ← 밀면 지워요",
+  "videoNoteLocked": "잠겼어요 · ■ 누르면 보내요",
+  "autoSaveTitle": "갤러리에 자동 저장",
+  "autoSaveInfo": "받은 사진·영상을 폰 사진 앱에 저절로 저장해요. 사진 앱에 저장된 건 부루미 밖에 남아서 처음엔 꺼져 있어요. 한 번만 보기와 공유가 꺼진 대화는 저장하지 않아요.",
+  "autoplayVideo": "영상 자동 재생",
+  "autoplayVideoSub": "받아 둔 영상이 대화에서 소리 없이 움직여요. 스피커를 누르면 소리가 나요",
+  "videoQualityTitle": "화질",
+  "videoQualityAuto": "자동",
+  "videoQualityOriginal": "원본",
+  "videoQualityLightShort": "가벼운 화질",
+  "videoQualityLight": "가벼운 화질 {height}p",
+  "@videoQualityLight": {
+    "placeholders": {
+      "height": {
+        "type": "int"
+      }
+    }
+  },
+  "videoSendQuality": "영상 화질",
+  "videoQualityAbout": "대략",
+  "videoQualitySmall": "작은 용량",
+  "videoQualityHigh": "높은 화질",
+  "videoLightCopy": "가벼운 복사본도 함께 보내기",
+  "videoLightCopySub": "데이터를 아끼는 사람은 480p로 볼 수 있어요",
+  "videoQualityWebNote": "웹에서는 원본으로 보내요. 폰 앱에서는 이 화질로 줄여서 보내요.",
+  "dlWaiting": "순서 기다리는 중",
+  "dlPaused": "멈춤",
+  "dlFirst": "먼저 받기",
+  "dlPause": "멈추기",
+  "dlResume": "이어 받기 (처음부터)",
+  "dlStop": "그만 받기",
+  "docOpenOther": "다른 앱으로 열기",
+  "docOpenOtherWarn": "다른 앱으로 열면 그 앱이 파일 내용을 볼 수 있어요. 부루미의 암호화 보호 밖으로 나가요.",
+  "docOpenOtherGo": "열기",
+  "docNoInApp": "부루미 안에서 바로 볼 수 없는 파일이에요",
+  "docNoInAppHint": "PDF, 글자 파일, 사진은 부루미 안에서 바로 열려요. 이 파일은 다른 앱으로 열어 주세요.",
+  "docProtectedNoShare": "이 대화는 공유가 꺼져 있어서 다른 앱으로 열 수 없어요",
+  "docSearch": "문서에서 찾기",
+  "docSearchNone": "없어요",
+  "docPage": "{page}/{pages}쪽",
+  "@docPage": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "pages": {
+        "type": "int"
+      }
+    }
+  },
+  "docTabsMore": "{name} 외 {count}개",
+  "@docTabsMore": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "docTabsTitle": "열어 둔 파일",
+  "docTabsCloseAll": "모두 닫기",
+  "docFailed": "파일을 열지 못했어요",
+  "docTextCut": "글이 길어서 앞부분만 보여요",
+  "videoSpeedNormal": "보통",
+  "videoSkipSeconds": "{seconds}초",
+  "@videoSkipSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "dlChatDm": "1:1 대화",
+  "dlOff": "꺼짐",
+  "dlUpToMb": "{mb}MB까지",
+  "@dlUpToMb": {
+    "placeholders": {
+      "mb": {
+        "type": "int"
+      }
+    }
+  },
+  "dlChatsCount": "대화 종류 {count}개",
+  "@dlChatsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dlAutoSwitch": "자동으로 받기",
+  "dlKinds": "받을 것",
+  "dlWhere": "이런 대화에서 미리 받아요",
+  "dlMaxSize": "최대 크기",
+  "dlMaxInfo": "이보다 큰 파일은 누를 때 받아요. 크기를 모르는 파일도 누를 때 받아요.",
+  "dlList": "다운로드 목록",
+  "dlListEmpty": "받은 파일이 아직 없어요",
+  "dlRunning": "받는 중",
+  "dlRecent": "최근에 받은 것",
+  "dlCancelled": "취소했어요",
+  "dlFailed": "받지 못했어요",
+  "dlClear": "목록 지우기",
+  "dlListInfo": "목록만 지워져요. 받아 둔 파일은 아래 보관 기간이 지나면 지워져요.",
+  "dlTapToGet": "눌러서 받기",
+  "keepTitle": "받아 둔 파일 자동으로 지우기",
+  "keepInfo": "마지막으로 연 지 이 기간이 지나면 기기에 받아 둔 사진·동영상·파일을 지워요. 대화는 그대로이고, 다시 누르면 새로 받아요. 받아 둔 파일도 기기 안에서 암호화돼 있어요.",
+  "keepDay": "하루",
+  "keepWeek": "일주일",
+  "keepMonth": "한 달",
+  "keepNever": "안 지워요",
+  "viewOnceVideo": "한 번만 보기 동영상",
+  "draftLabel": "임시 저장:",
+  "pinHowLong": "얼마 동안 고정할까요?",
+  "invitesBlockedRow": "초대를 막은 사람 {n}명",
+  "@invitesBlockedRow": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "invitesBlockedTitle": "{n}명이 초대를 막았어요",
+  "@invitesBlockedTitle": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "invitesBlockedInfo": "이 사람들은 연락처에 있는 사람만 그룹·채널에 초대할 수 있게 해 두었어요. 대신 초대 링크를 1:1 대화로 보낼 수 있어요. 들어올지는 본인이 정해요.",
+  "sendInviteLinkN": "초대 링크 보내기 {n}",
+  "@sendInviteLinkN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "inviteLinkSent": "{n}명에게 초대 링크를 보냈어요",
+  "@inviteLinkSent": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "inviteLinkNone": "초대 링크를 만들 권한이 없어요. 관리자에게 부탁해 보세요.",
+  "readAtToday": "읽음 · 오늘 {time}",
+  "@readAtToday": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "readAtYesterday": "읽음 · 어제 {time}",
+  "@readAtYesterday": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "readAtDate": "읽음 · {date}",
+  "@readAtDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "shareTitle": "공유",
+  "shareAddWord": "한마디 덧붙이기",
+  "shareSendN": "보내기 {n}",
+  "@shareSendN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shareDone": "{n}곳에 전달했어요",
+  "@shareDone": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "textCopied": "글자를 복사했어요",
+  "copyMsgLink": "링크 복사",
+  "msgLinkCopied": "링크를 복사했어요. 이 대화방 멤버만 열 수 있어요.",
+  "msgLinkNotMember": "이 링크는 대화방 멤버만 열 수 있어요.",
+  "msgLinkGone": "메시지를 찾지 못했어요. 지워졌거나 오래된 메시지예요.",
+  "pinnedMessageN": "고정 메시지 #{n}",
+  "@pinnedMessageN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "pinnedListTitle": "고정 메시지 {count}개",
+  "@pinnedListTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pinnedListOpen": "고정 메시지 모두 보기",
+  "unpinAll": "모두 고정 해제",
+  "unpinAllAsk": "고정 메시지 {count}개를 모두 해제할까요?",
+  "@unpinAllAsk": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pinNotifyAll": "모두에게 알림",
+  "pinNotifyInfo": "켜면 멤버 모두의 휴대폰에 알림이 가요. 끄면 조용히 고정돼요.",
+  "pinLine": "{name}님이 메시지를 고정했어요",
+  "@pinLine": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pinLineMine": "메시지를 고정했어요",
+  "pinFor1d": "하루",
+  "pinFor1w": "일주일",
+  "pinFor1m": "한 달",
+  "pinForever": "직접 풀 때까지",
+  "repeatNone": "한 번",
+  "repeatDay": "매일",
+  "repeatWeek": "매주",
+  "repeatMonth": "매월",
+  "tabPolls": "투표",
+  "tabSaved": "저장",
+  "pollClosedShort": "마감",
+  "videoNote": "동그라미 영상",
+  "videoNoteHint": "누르면 최대 1분 동안 찍고, 다시 누르면 보내요",
+  "cameraUnavailable": "카메라를 켤 수 없어요",
+  "saveToGallery": "갤러리에 저장",
+  "savedToGallery": "갤러리에 저장했어요",
+  "noMemberDm": "멤버끼리 1:1 대화 막기",
+  "noMemberDmInfo": "켜면 이 그룹의 일반 멤버끼리는 1:1 대화를 새로 시작할 수 없어요. 관리자와는 대화할 수 있어요. 낯선 사람이 그룹에서 개인 연락하는 걸 막아 줘요.",
+  "memberDmBlocked": "같이 있는 그룹에서 멤버끼리 1:1 대화를 막아 두어서 대화를 시작할 수 없어요.",
+  "cardFlow": "선택형 카드",
+  "newFlow": "선택형 카드 만들기",
+  "flowTitleHint": "예: 오늘 뭐 볼까?",
+  "flowTextHint": "설명 (없어도 돼요)",
+  "flowStartHint": "시작 버튼 이름 (비우면 '시작하기')",
+  "flowStart": "시작하기",
+  "flowQuestionHint": "질문을 적어 주세요",
+  "flowChoiceHint": "선택지",
+  "flowAddChoice": "선택지 추가",
+  "flowAddQuestion": "질문 추가",
+  "flowRemoveQuestion": "이 질문 지우기",
+  "flowResultN": "결과 {n}",
+  "@flowResultN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "flowResultTitleHint": "결과 이름 (예: 액션 영화)",
+  "flowResultTextHint": "결과 설명 (없어도 돼요)",
+  "flowLinkLabelHint": "링크 버튼 이름 (없어도 돼요)",
+  "flowAddResult": "결과 추가",
+  "flowRemoveResult": "이 결과 지우기",
+  "flowPickNext": "이 선택지를 누르면 어디로 갈까요?",
+  "flowToQuestion": "질문 {n}",
+  "@flowToQuestion": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "flowToResult": "결과 {n}",
+  "@flowToResult": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "flowStats": "결과 통계 받기",
+  "flowStatsInfo": "누군가 결과까지 가면 결과 번호만 내 폰으로 와요. 누가 어떤 결과를 받았는지는 내 폰에도 남지 않고, 결과마다 몇 명인지 숫자만 보여요.",
+  "flowInfo": "버튼을 누를 때마다 카드가 다음 질문으로 바뀌어요. 바뀐 화면은 누른 사람에게만 보이고, 고른 답은 그 사람 폰 밖으로 나가지 않아요. 질문은 10개, 선택지는 질문마다 6개, 결과는 8개까지예요.",
+  "flowNoPath": "어떤 선택으로도 결과에 닿지 않아요. 선택지가 어디로 가는지 확인해 주세요.",
+  "flowBack": "뒤로",
+  "flowAgain": "다시 하기",
+  "flowShare": "결과 보내기",
+  "flowResultLabel": "내 결과",
+  "flowShared": "결과를 보냈어요",
+  "flowStatsTitle": "결과 통계",
+  "flowTried": "{n}명이 결과를 받았어요",
+  "@flowTried": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "flowStatsNone": "아직 결과를 받은 사람이 없어요",
+  "flowStatsPrivacy": "결과마다 몇 명인지만 보여요. 누가 어떤 결과를 받았는지는 아무도 몰라요.",
+  "flowRevert": "처음으로 되돌리기",
+  "flowShareText": "{title}\n내 결과: {result}",
+  "@flowShareText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "result": {
+        "type": "String"
+      }
+    }
+  },
+  "welcomeEmptyTitle": "환영 인사 만들기",
+  "welcomeEmptyBody": "새 멤버가 들어오면 자동으로 반겨 줘요.\n사진이나 영상도 하나 넣을 수 있어요.",
+  "welcomeEditorHint": "새 멤버가 들어오면 이 메시지를 봐요.\n길게 누르면 고치거나 지울 수 있어요.",
+  "welcomeOnlyYou": "나만 보여요",
+  "joinedGroupLine": "그룹에 들어왔어요",
+  "joinedChannelLine": "채널을 구독했어요",
+  "welcomeMediaTooBig": "사진이나 영상은 50MB까지 넣을 수 있어요",
+  "textsEncrypted": "끝까지 암호화돼요. 서버는 내용을 볼 수 없어요.",
+  "welcomeRemoveMedia": "사진·영상 빼기",
+  "welcomeAddHint": "환영 메시지",
+  "removeContact": "연락처에서 삭제",
+  "removeContactInfo": "연락처 목록에서만 빠지고 대화는 그대로 남아요. 다시 대화를 열면 연락처에 돌아와요.",
+  "tidyChats": "대화 정리하기",
+  "tidyChatsInfo": "6개월 넘게 새 글이 없는 그룹과 채널이에요. 고른 방을 한 번에 나가요. 나가기 전 5초 동안 되돌릴 수 있어요.",
+  "tidyLast": "마지막 글 {date}",
+  "tidyNone": "정리할 대화가 없어요",
+  "tidyLeave": "{n}개 대화 나가기",
+  "@tidyLast": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "@tidyLeave": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "noIdSearch": "아이디로 나를 찾지 못하게",
+  "noIdSearchInfo": "켜면 모르는 사람이 내 아이디나 이름을 검색해도 나오지 않아요. 같은 대화방에 있는 사람이나 내 QR·초대 링크를 받은 사람은 계속 찾을 수 있어요.",
+  "liveLabel": "LIVE",
+  "liveLabelOff": "LIVE 끔",
+  "liveStyleLive": "라이브",
+  "liveStyleLoop": "반복",
+  "liveStyleBounce": "바운스",
+  "liveStyleOff": "라이브 끄기",
+  "liveOnToast": "라이브 포토를 켰어요",
+  "liveLoopToast": "반복 재생으로 바꿨어요",
+  "liveBounceToast": "바운스로 바꿨어요",
+  "liveOffToast": "라이브 포토를 껐어요. 사진만 보내요",
+  "livePhoto": "라이브 포토",
+  "liveReplay": "다시 재생",
+  "aiEditor": "AI 편집기",
+  "aiTabTranslate": "번역",
+  "aiTabStyle": "말투",
+  "aiTabFix": "고치기",
+  "aiOriginal": "원래 글",
+  "aiResult": "결과",
+  "aiEmojify": "이모지 넣기",
+  "aiApply": "적용",
+  "aiFromLang": "원래 언어: {lang}",
+  "@aiFromLang": {
+    "placeholders": {
+      "lang": {
+        "type": "String"
+      }
+    }
+  },
+  "aiToLang": "바꿀 언어",
+  "aiFailed": "지금은 AI가 답하지 못했어요. 잠시 뒤 다시 해 보세요.",
+  "aiRefused": "이 글은 AI가 바꿀 수 없어요.",
+  "aiTooLong": "글이 너무 길어요. {count}자까지 바꿀 수 있어요.",
+  "@aiTooLong": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiPreparing": "휴대폰이 AI를 준비하고 있어요. 조금 뒤에 다시 해 보세요.",
+  "aiNoChange": "고칠 곳이 없어요.",
+  "aiHelp": "AI 편집기는 이 휴대폰 안의 AI만 써요. 쓴 글은 서버를 포함해 어디로도 보내지 않아요.",
+  "aiStyleNew": "새 말투",
+  "aiStyleNameHint": "말투 이름 (예: 해적)",
+  "aiStyleRulesHint": "어떻게 바꿀지 적어 주세요 (예: 해적처럼 써 줘. '으하하'를 자주 넣어서)",
+  "aiStyleIconPick": "아이콘으로 쓸 이모지를 하나 골라요",
+  "aiStyleEmpty": "아이콘, 이름, 설명을 모두 채워 주세요.",
+  "aiStyleLong": "이름은 {name}자, 설명은 {rules}자까지 쓸 수 있어요.",
+  "@aiStyleLong": {
+    "placeholders": {
+      "name": {
+        "type": "int"
+      },
+      "rules": {
+        "type": "int"
+      }
+    }
+  },
+  "aiStyleBlocked": "이런 지시는 쓸 수 없어요. 다른 말로 적어 주세요.",
+  "aiStyleSaveInfo": "내 말투는 내 계정 설정에 잠긴 채로 저장돼요. 서버는 내용을 몰라요.",
+  "aiStyleAdd": "말투 추가",
+  "aiStyleAdded": "말투를 추가했어요: {name}",
+  "@aiStyleAdded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "aiStyleAddedHint": "긴 글을 쓸 때 AI 버튼 → 말투에서 골라요.",
+  "aiStyleExample": "예시",
+  "aiStyleBefore": "바꾸기 전",
+  "aiStyleAfter": "바꾼 후",
+  "aiStyleAnother": "다른 예시",
+  "aiStyleAddInfo": "이 말투를 AI 편집기에 넣으면 내 메시지를 이렇게 바꿀 수 있어요. 예시는 내 휴대폰 AI가 방금 만들었어요.",
+  "aiStyleNoAi": "이 휴대폰에서는 AI 편집기를 쓸 수 없어서 예시를 보여 드릴 수 없어요. 말투는 저장해 둘 수 있어요.",
+  "aiStyleHave": "이미 있는 말투예요",
+  "aiMyStyles": "내 말투",
+  "aiMyStylesEmpty": "아직 만든 말투가 없어요. AI 편집기의 말투 탭에서 +를 눌러 만들어요.",
+  "aiStyleCopyLink": "링크 복사",
+  "aiStyleSendInfo": "링크 안에 말투가 들어 있어요. 서버에는 저장되지 않고, 몇 명이 쓰는지도 세지 않아요.",
+  "aiStyleCard": "부루미 말투",
+  "aiStyleCardOpen": "말투 보기",
+  "aiEditorSwitch": "AI 편집기",
+  "aiEditorSwitchSub": "긴 글을 쓰면 맞춤법·말투·번역 버튼이 생겨요",
+  "aiNotOnPhone": "이 휴대폰은 기기 안 AI를 지원하지 않아서 AI 편집기가 보이지 않아요.",
+  "aiStyleFormal": "정중하게",
+  "aiStyleShort": "짧게",
+  "aiStyleFriendly": "다정하게",
+  "aiStyleWork": "업무용",
+  "aiStyleHistoric": "사극체",
+  "aiStyleZen": "차분하게",
+  "aiTryAgain": "다시 하기",
+  "aiLangKo": "한국어",
+  "aiLangEn": "영어",
+  "aiLangJa": "일본어",
+  "aiLangZh": "중국어",
+  "aiLangEs": "스페인어",
+  "aiLangVi": "베트남어",
+  "aiLangRu": "러시아어",
+  "aiExample1": "이번 주말에 시간 되면 같이 저녁 먹을래? 7시쯤 어때?",
+  "aiExample2": "오늘 비가 와서 그냥 집에서 쉬려고. 너는 뭐 해?",
+  "aiExample3": "다음 달에 이사 가는데 짐 싸는 것 좀 도와줄 수 있어?",
+  "gateTitle": "가입 심사 도우미",
+  "gateHeader": "가입 신청이 오면 도우미가 몇 초 안에 확인하고 들여보내거나 거절해요. 대화 내용은 볼 수 없어요.",
+  "gateOn": "도우미 켜기",
+  "gateOnInfo": "켜면 '가입 심사 도우미' 계정이 이 방에 들어와요. 이 계정은 사람을 들이고 거절하는 일만 할 수 있고, 글을 쓰거나 설정을 바꿀 수 없어요.",
+  "gateSafety": "안전",
+  "gateSafetyInfo": "도우미는 암호 열쇠가 없어서 대화 내용을 받을 수 없어요. 서버가 도우미의 열쇠 등록을 막아요. 도우미가 보는 건 신청한 사람의 이름과 질문에 쓴 답뿐이에요.",
+  "gateCantRead": "대화를 못 읽어요",
+  "gateHasKeys": "암호 열쇠가 있어요. 도우미를 꺼 주세요",
+  "gateKeyCount": "암호 열쇠 {count}개",
+  "@gateKeyCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "gateQuestions": "가입 질문",
+  "gateQuestionsInfo": "신청할 때 답해요. 객관식은 맞았는지 바로 알려 주고 다시 고를 수 있어요. 질문과 답은 암호화되지 않아서 서버도 볼 수 있어요. 개인 정보는 묻지 마세요. 최대 5개.",
+  "gateQuizKind": "객관식 · 보기 {count}개",
+  "@gateQuizKind": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "gateWrittenKind": "글로 답하기",
+  "gateAddQuestion": "질문 추가",
+  "gateEditQuestion": "질문 고치기",
+  "gateQuestionHint": "질문 (예: 우리 모임에서 하고 싶은 건?)",
+  "gateQuizShort": "객관식",
+  "gateChoices": "보기",
+  "gateChoicesInfo": "동그라미를 눌러 정답을 골라요. 정답은 신청하는 사람에게 보이지 않아요.",
+  "gateChoiceHint": "보기 {n}",
+  "@gateChoiceHint": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "gateAddChoice": "보기 추가",
+  "gateWrittenInfo": "신청하는 사람이 글로 답해요. 관리자가 신청 목록에서 답을 볼 수 있어요.",
+  "gateRemoveQuestion": "질문 지우기",
+  "gateRules": "심사 규칙",
+  "gateRulesInfo": "객관식을 틀리거나 금지어가 있으면 거절해요. 사칭으로 확인된 계정도 거절하고, 확인 중인 계정은 관리자에게 넘겨요. 거절된 사람은 다시 신청할 수 있어요.",
+  "gateNeedAnswers": "글 답을 비우면 거절",
+  "gateWords": "금지어",
+  "gateWordsInfo": "이름이나 답에 이 말이 있으면 거절해요. 한 줄에 하나씩, 최대 30개.",
+  "gateWordsHint": "예: 코인\n무료 지급",
+  "gateAi": "AI로 글 답 확인",
+  "gateAiInfo": "글 답만 AI에게 보내요. AI는 들여보내거나 관리자에게 넘길 수만 있고, 혼자 거절하지 못해요.",
+  "gateLog": "심사 기록",
+  "gateLogNone": "아직 도우미가 확인한 신청이 없어요",
+  "gateLogInfo": "최근 50개까지 보여요. 잘못 들어온 사람은 멤버 목록에서 내보내고, 잘못 거절된 사람은 다시 신청하면 돼요.",
+  "gateWhyOk": "질문을 모두 통과했어요",
+  "gateWhyAi": "AI가 답을 확인했어요",
+  "gateWhyQuiz": "객관식 답이 틀렸어요",
+  "gateWhyEmpty": "글 답을 비웠어요",
+  "gateWhyWords": "금지어가 있어요",
+  "gateWhyFake": "사칭으로 확인된 계정이에요",
+  "gateWhyChecking": "사칭 확인 중인 계정이에요",
+  "gateWhyHeld": "관리자가 확인해야 해요",
+  "gateIn": "들어옴",
+  "gateOut": "거절",
+  "gateHeld": "관리자 확인",
+  "gateSending": "신청하고 있어요",
+  "gateYoureIn": "들어왔어요",
+  "gateYoureInBody": "{name} 질문을 모두 통과했어요",
+  "@gateYoureInBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "gateNotIn": "이번에는 들어갈 수 없어요",
+  "gateNotInBody": "답을 다시 확인하고 나중에 다시 신청해 주세요",
+  "gateFailed": "신청하지 못했어요. 다시 해 주세요",
+  "gateWaiting": "신청했어요",
+  "gateWaitingBody": "관리자가 확인하면 대화 목록에 나타나요",
+  "gateQuizIntro": "질문 {count}개에 답하면 신청돼요",
+  "@gateQuizIntro": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "gateStep": "질문 {now}/{total}",
+  "@gateStep": {
+    "placeholders": {
+      "now": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "gateTryAgain": "아니에요. 다시 골라 보세요",
+  "gateAnswerHint": "답을 써 주세요",
+  "gateAnswersSeenBy": "답은 이 방의 관리자와 가입 심사 도우미가 봐요. 암호화되지 않으니 개인 정보는 쓰지 마세요",
+  "gateGoToGroup": "그룹으로 가기",
+  "gateGoToChannel": "채널로 가기",
+  "gateSend": "신청하기",
+  "gateAnswerAndAsk": "질문에 답하고 신청하기",
+  "gateHeldNote": "도우미가 정하지 못한 신청만 여기 남아요",
+  "community": "커뮤니티",
+  "communityAdd": "커뮤니티에 추가",
+  "communityIntroBody": "그룹과 채널 여러 개를 하나로 묶어요. 멤버는 한곳에서 다른 대화를 보고 바로 들어갈 수 있어요.",
+  "communityCreate": "커뮤니티 만들기",
+  "communityMine": "내 커뮤니티에 추가",
+  "communityNew": "새 커뮤니티",
+  "communityName": "커뮤니티 이름",
+  "communityAbout": "소개 (선택)",
+  "communityCreateBtn": "만들기",
+  "communityPrivacy": "어떤 대화가 묶였는지, 커뮤니티 이름이 무엇인지 서버는 몰라요. 멤버 휴대폰에서만 열려요.",
+  "communityAsOne": "한 대화로 보기",
+  "communityAsOneFooter": "커뮤니티의 대화를 대화 목록에서 한 줄로 묶어요.",
+  "communityIn": "내가 들어간 대화",
+  "communityView": "볼 수 있는 대화",
+  "communityAsk": "가입 요청할 수 있는 대화",
+  "communityHiddenTag": "관리자만 보여요",
+  "communityAddChat": "커뮤니티에 대화 추가",
+  "communityWhoAdds": "대화를 추가할 수 있는 사람",
+  "communityAddAll": "모든 멤버",
+  "communityAddAllInfo": "멤버가 자기 그룹과 채널을 추가할 수 있어요.",
+  "communityAddAdmins": "관리자만",
+  "communityAddAdminsInfo": "관리자만 대화를 추가할 수 있어요. 서버가 직접 막아요.",
+  "communityAdmins": "관리자",
+  "communityChats": "대화 관리",
+  "communityChatsFooter": "숨긴 대화는 관리자만 볼 수 있어요. 관리자 열쇠로 따로 잠가서 멤버 휴대폰도 못 열어요.",
+  "communityHide": "숨기기",
+  "communityShow": "보이기",
+  "communityRemoveChat": "커뮤니티에서 빼기",
+  "communityLeave": "커뮤니티 나가기",
+  "communityLeaveInfo": "내 대화는 그대로 남고 커뮤니티만 안 보여요.",
+  "communityDelete": "커뮤니티 없애기",
+  "communityDeleteInfo": "묶음만 없어지고 그룹과 채널은 그대로 남아요.",
+  "communityRemovingIn": "{seconds}초 뒤에 없어져요",
+  "@communityRemovingIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "communityCardGroup": "이 그룹을 {name} 커뮤니티에 추가했어요",
+  "@communityCardGroup": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "communityCardChannel": "이 채널을 {name} 커뮤니티에 추가했어요",
+  "@communityCardChannel": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "communityOpen": "보기",
+  "communityJoin": "들어가기",
+  "communityAskBtn": "요청",
+  "communityAskedBtn": "요청함",
+  "communityAsked": "가입을 요청했어요. 관리자가 받아 주면 들어가져요.",
+  "communityMembers": "멤버 {count}명",
+  "@communityMembers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityChatsCount": "대화 {count}개",
+  "@communityChatsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "communityPickTitle": "추가할 대화",
+  "communityPickEmpty": "추가할 수 있는 그룹이나 채널이 없어요. 내가 방장이나 관리자인 대화만 추가할 수 있어요.",
+  "communityPickHidden": "관리자만 보이게 추가",
+  "communityPickFooter": "링크가 없는 대화에는 '승인 후 참여' 비공개 링크가 새로 생겨요. 커뮤니티 멤버는 요청하고, 관리자가 받아 줘요.",
+  "communityAddedToast": "커뮤니티에 추가했어요",
+  "communityNotYet": "곧 커뮤니티에 들어가져요. 관리자 휴대폰이 열쇠를 보내 주면 바로 보여요.",
+  "communityEmpty": "아직 대화가 없어요",
+  "communityOnlyAdmins": "관리자만 할 수 있어요",
+  "communityInfo": "커뮤니티 정보",
+  "communityAdminsFooter": "관리자는 대화를 추가·숨기기·빼기 할 수 있어요. 관리자가 되면 숨긴 대화 열쇠를 받아요.",
+  "communityMakeAdmin": "관리자로 지정",
+  "communityUnmakeAdmin": "관리자 해제",
+  "communityRoleOwner": "방장",
+  "communityRoleAdmin": "관리자",
+  "communityLast": "{who} › {chat}",
+  "@communityLast": {
+    "placeholders": {
+      "who": {
+        "type": "String"
+      },
+      "chat": {
+        "type": "String"
+      }
+    }
+  },
+  "searchFilter": "종류로 찾기",
+  "kindPhoto": "사진",
+  "kindVideo": "동영상",
+  "kindFile": "파일",
+  "kindLink": "링크",
+  "kindVoice": "음성 메시지",
+  "keywordReplies": "키워드 자동 답장",
+  "keywordRepliesInfo": "멤버 글에 이 단어가 있으면 정한 답을 내 이름으로 달아 줘요. 서버는 글을 못 읽어서 이 휴대폰이 답해요. 같은 단어는 1분에 한 번만 답해요.",
+  "keywordWordHint": "단어 (예: 회비)",
+  "keywordAnswerHint": "답 (예: 회비는 매달 1만 원이에요)",
+  "pollDescription": "설명 (선택)",
+  "pollAddPhoto": "사진 넣기",
+  "pollRemovePhoto": "사진 빼기",
+  "pollAttachTitle": "선택지에 붙이기",
+  "pollAttachPhoto": "사진",
+  "pollAttachSticker": "스티커",
+  "pollAttachPlace": "지금 있는 곳",
+  "pollAttachRemove": "붙인 것 빼기",
+  "pollAttachInfo": "선택지마다 사진, 스티커, 장소 중 하나를 붙일 수 있어요. 사진은 이 휴대폰에서 암호화돼 올라가고, 장소는 지도 회사에 묻지 않고 숫자로만 담겨요.",
+  "pollPickSticker": "스티커 고르기",
+  "pollAllowAdd": "선택지 추가 허용",
+  "pollAllowChange": "투표 바꾸기 허용",
+  "pollShuffle": "선택지 순서 섞기",
+  "pollHideResults": "마감까지 결과 숨기기",
+  "pollMoreInfo": "선택지 추가: 멤버가 선택지를 더 넣을 수 있어요 (모두 12개까지, 넣은 사람 이름이 보여요). 순서 섞기: 사람마다 선택지 순서가 달라서 첫 줄에 몰리지 않아요.",
+  "pollHideAnonInfo": "익명 투표에서 결과를 숨기면, 마감 전까지 숫자가 만든 사람 휴대폰 밖으로 나가지 않아요. 마감되면 그 휴대폰이 결과를 올려요.",
+  "pollHideOpenInfo": "공개 투표의 표는 대화 안에 암호화돼 있어서 멤버 휴대폰에 함께 저장돼요. 마감 전까지는 앱이 숫자를 가려요.",
+  "pollNoChangeInfo": "한 번 고르면 바꾸거나 취소할 수 없어요.",
+  "pollAddTitle": "선택지 추가",
+  "pollAddDone": "추가",
+  "pollAddInfo": "내가 넣은 선택지에는 내 이름이 함께 보여요. 같은 선택지는 두 번 넣을 수 없어요.",
+  "pollAddedBy": "추가: {name}",
+  "@pollAddedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pollHiddenUntilEnd": "결과는 마감 후 공개돼요",
+  "pollViewVotes": "투표 결과 보기",
+  "pollResults": "투표 결과",
+  "pollVotesN": "{n}표",
+  "@pollVotesN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "pollNobodyYet": "아직 아무도 고르지 않았어요",
+  "pollFinalShort": "바꾸기 불가",
+  "pollFull": "선택지는 12개까지예요",
+  "pollRepeat": "이미 있는 선택지예요",
+  "pollAnonResultsInfo": "익명 투표라 누가 골랐는지는 아무에게도 보이지 않아요. 숫자만 보여요.",
+  "pollChangeVote": "투표 바꾸기",
+  "articleWrite": "긴 글 쓰기",
+  "articleExpand": "크게 쓰기",
+  "articleTitleHint": "제목",
+  "articleBodyHint": "내용을 써 보세요",
+  "articleReadAll": "전체 읽기",
+  "articleMinutes": "약 {n}분",
+  "@articleMinutes": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "articleChars": "{n}자",
+  "@articleChars": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "articleEncrypted": "끝까지 암호화된 글이에요. 서버는 내용을 볼 수 없어요.",
+  "articleOpenFailed": "글을 열지 못했어요. 잠시 뒤 다시 해 주세요.",
+  "articleTooLong": "글이 너무 길어요. 10만 자까지 쓸 수 있어요.",
+  "articleEmpty": "보낼 내용이 없어요.",
+  "articleSending": "보내는 중이에요…",
+  "articleDiscardAsk": "쓰던 글을 어떻게 할까요?",
+  "articleDiscard": "버리기",
+  "articleKeepDraft": "임시 저장",
+  "articleDraftNote": "임시 저장에는 사진이 빠져요.",
+  "articleStyle": "스타일",
+  "articleInsert": "넣기",
+  "blockH1": "큰 제목",
+  "blockH2": "작은 제목",
+  "blockP": "본문",
+  "blockQuote": "인용",
+  "blockPull": "큰 인용",
+  "blockCode": "코드",
+  "blockMath": "수식",
+  "blockUl": "목록",
+  "blockOl": "번호 목록",
+  "blockTable": "표",
+  "blockImg": "사진",
+  "blockHr": "구분선",
+  "blockRemove": "이 칸 지우기",
+  "blockUp": "위로 옮기기",
+  "blockDown": "아래로 옮기기",
+  "articleCaptionHint": "사진 설명 (선택)",
+  "articleMathHint": "수식 (예: a^2 + b^2 = c^2)",
+  "articleCodeHint": "코드",
+  "articleLangHint": "언어 (선택)",
+  "articleItemHint": "항목",
+  "tableAddRow": "행 추가",
+  "tableAddCol": "열 추가",
+  "tableDelRow": "마지막 행 지우기",
+  "tableDelCol": "마지막 열 지우기",
+  "tableHeader": "첫 행을 머리글로",
+  "articleAi": "AI 도우미",
+  "articleAiInfo": "모두 이 휴대폰 안에서만 처리돼요. 글 내용은 어디로도 보내지 않아요.",
+  "aiTidy": "자동 정리",
+  "aiTidySub": "# 제목, - 목록, | 표 |, $$수식$$ 같은 표시를 서식으로 바꿔요",
+  "aiPolish": "AI로 다듬기",
+  "aiPolishSub": "고른 부분(없으면 지금 칸)을 자연스럽게 다듬어요",
+  "aiShorter": "짧게 줄이기",
+  "aiShorterSub": "핵심만 남겨요",
+  "aiUnavailable": "이 휴대폰에서는 아직 AI 글쓰기를 쓸 수 없어요. 자동 정리는 쓸 수 있어요.",
+  "aiDone": "바꿨어요. 되돌리기로 돌아갈 수 있어요.",
+  "articleUndo": "되돌리기",
+  "articleRedo": "다시 하기",
+  "roomNight": "야간 모드",
+  "roomNightInfo": "정한 시간에는 멤버가 글을 쓸 수 없어요. 방장과 관리자는 계속 쓸 수 있어요. 시간은 지금 이 휴대폰 시간대를 따라요.",
+  "nightRange": "{from}시~{to}시",
+  "nightBlocked": "야간 모드예요. {hour}시부터 보낼 수 있어요",
+  "@nightRange": {
+    "placeholders": {
+      "from": {
+        "type": "int"
+      },
+      "to": {
+        "type": "int"
+      }
+    }
+  },
+  "@nightBlocked": {
+    "placeholders": {
+      "hour": {
+        "type": "int"
+      }
+    }
+  },
+  "sendToChannels": "여러 채널에 함께 올리기",
+  "noOtherChannels": "글을 올릴 수 있는 다른 채널이 없어요",
+  "sendToCount": "채널 {n}곳에 올리기",
+  "sentToCount": "채널 {n}곳에 올렸어요",
+  "@sendToCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "@sentToCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "raidLock": "습격 잠금",
+  "raidLockInfo": "모르는 사람이 링크로 한꺼번에 몰려올 때 켜세요. 켜 두는 동안 링크로 들어오려는 사람은 모두 관리자 승인을 기다려요. 끄면 링크가 원래대로 돌아가요.",
+  "mentionsOnly": "나를 부를 때만 알림",
+  "mentionsOnlyInfo": "켜면 그룹에서는 누군가 @내 이름이나 @모두로 불렀을 때만 알림이 와요. 다른 글은 조용히 쌓이고, 대화 목록의 숫자로 볼 수 있어요.",
+  "messageRequests": "메시지 요청",
+  "messageRequestsEmpty": "메시지 요청이 없어요",
+  "messageRequestsInfo": "연락처에 없는 사람이 보낸 1:1 대화예요. 수락하기 전에는 내가 읽었는지 상대가 알 수 없어요.",
+  "messageRequestBar": "연락처에 없는 사람이 보낸 메시지예요. 수락하면 답장할 수 있고, 삭제해도 상대에게 알리지 않아요.",
+  "messageRequestAccept": "수락",
+  "messageRequestDelete": "삭제",
+  "messageRequestBlock": "삭제하고 차단",
+  "messageRequestDeleteInfo": "이 대화를 지우고 나가요. 상대에게는 알리지 않아요.",
+  "messageRequestsSwitchInfo": "켜면 연락처에 없는 사람이 시작한 1:1 대화는 대화 목록 위 ‘메시지 요청’에 따로 모여요. 수락하기 전에는 알림이 조용하고 읽음 표시도 가지 않아요.",
+  "nameColor": "이름 색",
+  "nameColorSample": "오늘 모임 몇 시예요?",
+  "nameColorInfo": "그룹에서 내 메시지 위에 보이는 이름 색이에요. 내가 들어가 있는 모든 그룹에 똑같이 보여요. ‘A’는 이름에 따라 자동으로 정해지는 색이에요.",
+  "roomName": "이 그룹에서 내 이름",
+  "roomNameHint": "이름",
+  "roomNameInfo": "이 그룹 사람들에게만 이 이름으로 보여요. 다른 대화에서는 원래 이름 그대로예요. 비워 두면 원래 이름으로 돌아가요.",
+  "liveLocation": "실시간 위치",
+  "liveLocationInfo": "고른 시간 동안 내 위치가 1분마다 대화 안에서 움직여요. 위치는 이 대화 사람들에게만 암호화되어 가고, 언제든 멈출 수 있어요. 앱이 꺼져 있는 동안에는 움직이지 않아요.",
+  "live15m": "15분 동안 공유",
+  "live1h": "1시간 동안 공유",
+  "live8h": "8시간 동안 공유",
+  "liveLocationEnded": "실시간 위치 (끝남)",
+  "liveLeftMinutes": "{n}분 남음",
+  "liveLeftHours": "{n}시간 남음",
+  "liveStop": "공유 멈추기",
+  "@liveLeftMinutes": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "@liveLeftHours": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "editorAuto": "자동",
+  "editorDraw": "그리기",
+  "editorText": "글씨",
+  "editorClearAll": "모두 지우기",
+  "editorAddText": "글씨 넣기",
+  "penPen": "펜",
+  "penArrow": "화살표",
+  "penMarker": "형광펜",
+  "penNeon": "네온",
+  "penEraser": "지우개",
+  "penBlur": "흐림",
+  "editAndSend": "편집해서 보내기",
+  "photoOf": "{n}/{total}",
+  "@photoOf": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "videoMutedToast": "소리를 껐어요. GIF로 보내요",
+  "videoSoundToast": "소리를 켰어요",
+  "sendTogether": "묶어서 보내기",
+  "sendSeparately": "따로 보내기",
+  "sendSpoiler": "가리고 보내기",
+  "sendAsFileOriginal": "파일로 보내기 (원본 화질)",
+  "albumRecents": "최근 항목",
+  "albumFavorites": "즐겨찾기",
+  "albumVideos": "동영상",
+  "albumScreenshots": "스크린샷",
+  "albumSelfies": "셀피",
+  "albumLive": "Live Photos",
+  "newLoginTitle": "누군가 새 기기로 내 계정에 로그인했어요",
+  "newLoginBody": "{device} · {when}. 본인이 맞나요?",
+  "@newLoginBody": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      },
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "newLoginJustNow": "방금",
+  "newLoginYes": "네, 저예요",
+  "newLoginNo": "아니요, 제가 아니에요",
+  "newLoginOut": "이 기기 로그아웃",
+  "newLoginOutDone": "{device}을(를) 로그아웃시켰어요",
+  "@newLoginOutDone": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "newLoginChangePw": "다시 들어오지 못하게 비밀번호도 바꾸는 게 좋아요.",
+  "later": "나중에",
+  "ok": "확인",
+  "deviceUnnamed": "이름 없는 기기",
+  "deleteForMeOnly": "나에게서만 지우기",
+  "deleteForBothShort": "나와 상대 모두에게서 지우기",
+  "deleteForMeAnd": "나와 {name} 모두에게서 지우기",
+  "@deleteForMeAnd": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dateWipeTitle": "날짜로 지우기",
+  "dateWipeHint": "하루를 누르거나, 두 날짜를 눌러 그 사이를 모두 골라요. 진하게 보이는 날에 메시지가 있어요.",
+  "dateWipePick": "날짜를 골라 주세요",
+  "dateWipeButton": "{range} 메시지 {count}개 지우기",
+  "@dateWipeButton": {
+    "placeholders": {
+      "range": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dateWipeAsk": "메시지 {count}개를 지울까요?",
+  "@dateWipeAsk": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dateWipeIn": "{left}초 뒤 지워요",
+  "@dateWipeIn": {
+    "placeholders": {
+      "left": {
+        "type": "int"
+      }
+    }
+  },
+  "dateWipeMenu": "날짜로 지우기",
+  "voiceBlockedLine": "음성 메시지 (받지 않게 해 둔 사람)",
+  "voiceClosedTitle": "음성 메시지를 보낼 수 없어요",
+  "voiceClosedBody": "{name} 님이 음성·영상 메시지를 받지 않게 해 두었어요. 글이나 사진은 보낼 수 있어요.",
+  "@voiceClosedBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "whoVoice": "음성·영상 메시지",
+  "whoVoiceInfo": "고른 사람만 나에게 음성 메시지와 동그라미 영상을 보낼 수 있어요. 1:1 대화에 적용돼요. 상대 앱에는 마이크 버튼이 흐리게 보여요.",
+  "strangerArchive": "모르는 사람 새 대화 보관하기",
+  "strangerArchiveSub": "친구가 아닌 사람의 첫 메시지는 알림 없이 보관함으로 가요.",
+  "strangerTucked": "모르는 사람의 새 대화를 보관함에 넣었어요",
+  "callsEdit": "편집",
+  "callsSelect": "선택",
+  "callsClearAll": "통화 기록 모두 지우기",
+  "callsDeleteN": "지우기 ({count})",
+  "@callsDeleteN": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "callsDeleteAsk": "통화 기록 {count}개를 지울까요?",
+  "@callsDeleteAsk": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "callsDeleteIn": "{left}초 뒤 통화 기록을 지워요",
+  "@callsDeleteIn": {
+    "placeholders": {
+      "left": {
+        "type": "int"
+      }
+    }
+  },
+  "callsDeleteBothNote": "양쪽에서 지우면 상대 휴대폰의 기록도 사라져요.",
+  "deviceSheetCalls": "이 기기로 통화 받기",
+  "deviceSheetCallsSub": "끄면 이 기기는 전화가 와도 울리지 않아요.",
+  "deviceSheetOut": "이 기기 로그아웃",
+  "deviceSheetLastSeen": "마지막 사용",
+  "deviceSheetKind": "종류",
+  "deviceKindPhone": "휴대폰",
+  "deviceKindPc": "PC",
+  "deviceKindWeb": "웹",
+  "deviceIdleTitle": "오래 안 쓴 기기 자동 로그아웃",
+  "deviceIdleInfo": "이 기간 동안 한 번도 쓰지 않은 기기는 서버가 알아서 로그아웃시켜요. 잃어버린 휴대폰이나 남의 PC에 남은 로그인을 막아요.",
+  "deviceIdleOff": "안 함",
+  "idleDays7": "1주",
+  "idleDays30": "1개월",
+  "idleDays90": "3개월",
+  "idleDays180": "6개월",
+  "idleDays365": "1년",
+  "linkPc": "QR로 PC 연결",
+  "linkPcInfo": "PC 부루미 화면의 QR을 이 휴대폰으로 찍으면 비밀번호 없이 바로 로그인돼요.",
+  "linkPcScanTitle": "PC 화면의 QR 찍기",
+  "linkPcStep1": "PC에서 부루미를 열어요.",
+  "linkPcStep2": "로그인 화면의 'QR로 로그인'을 눌러요.",
+  "linkPcStep3": "이 화면으로 PC의 QR을 찍어요.",
+  "linkPcConfirmTitle": "이 PC에 로그인할까요?",
+  "linkPcConfirmBody": "{device}. 내가 지금 직접 띄운 화면이 맞을 때만 눌러요. 누가 보내 준 QR이면 절대 찍지 마세요.",
+  "@linkPcConfirmBody": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "linkPcConfirm": "로그인",
+  "linkPcDone": "PC에 로그인했어요. PC에서 이모지 확인을 마치면 예전 대화도 보여요.",
+  "linkPcBad": "부루미 PC 로그인 QR이 아니에요",
+  "linkPcExpired": "QR 시간이 지났어요. PC에서 새 QR을 띄워 주세요.",
+  "linkPcNoCamera": "이 기기에서는 카메라로 찍을 수 없어요. 휴대폰 앱에서 해 주세요.",
+  "qrLoginTitle": "QR로 로그인",
+  "qrLoginStep1": "휴대폰에서 부루미를 열어요.",
+  "qrLoginStep2": "설정 > 기기 > QR로 PC 연결을 눌러요.",
+  "qrLoginStep3": "휴대폰으로 이 QR을 찍어요.",
+  "qrLoginWaiting": "휴대폰에서 확인하기를 기다리는 중…",
+  "qrLoginNew": "새 QR 만들기",
+  "qrLoginPassword": "아이디와 비밀번호로 로그인",
+  "qrLoginOff": "이 앱은 아직 QR 로그인 서버에 연결되지 않았어요.",
+  "phoneCall": "전화 걸기",
+  "phoneText": "문자 보내기",
+  "phoneCopy": "번호 복사",
+  "phoneSave": "휴대폰 연락처에 저장",
+  "phoneCopied": "번호를 복사했어요",
+  "videoNoteOnceHint": "한 번만 보기: 받는 사람이 한 번 본 뒤 사라져요",
+  "onceRoundSent": "한 번만 보기",
+  "onceRoundExpired": "만료된 영상 메시지",
+  "onceRoundClose": "닫고 삭제",
+  "storyScrubHint": "좌우로 밀어 이동",
+  "camFlashWarm": "따뜻함",
+  "camFlashBright": "밝기",
+  "camFlashFront": "앞카메라로 찍을 때 화면이 이 색으로 밝아져요",
+  "birthdayBannerOne": "{name}님이 오늘 생일이에요!",
+  "@birthdayBannerOne": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "birthdayBannerMany": "친구 {n}명이 오늘 생일이에요!",
+  "@birthdayBannerMany": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "birthdayBannerSub": "눌러서 축하 메시지를 보내 보세요",
+  "birthdayTodayLine": "오늘 생일 🎂 · {date}",
+  "@birthdayTodayLine": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "firstHelloTitle": "아직 메시지가 없어요",
+  "firstHelloSub": "아래 인사를 눌러 첫 마디를 건네 보세요",
+  "firstHelloTap": "눌러서 {name}님에게 인사 보내기",
+  "@firstHelloTap": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "liveTextButton": "글자",
+  "liveTextTitle": "사진 속 글자",
+  "liveTextHint": "줄을 눌러 고르세요. 안 고르면 전부 복사해요",
+  "liveTextPicked": "{n}줄 골랐어요",
+  "@liveTextPicked": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "liveTextNoneSel": "선택 해제",
+  "liveTextCopied": "글자를 복사했어요",
+  "liveTextPaste": "입력칸을 길게 눌러 붙여넣으세요",
+  "liveTextNone": "이 사진에서 글자를 찾지 못했어요",
+  "liveTextAll": "전체 선택",
+  "callNoteAsk": "받지 않았어요. 메시지를 남길까요?",
+  "callNoteVoice": "음성 남기기",
+  "callNoteVideo": "영상 남기기",
+  "callNoteTo": "{name}님에게 남길 말",
+  "@callNoteTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "callNoteVoiceHint": "누르면 녹음해요. 한 번 더 누르면 보내요.",
+  "idKey": "아이디 키",
+  "idKeyMine": "내 키",
+  "idKeyHint": "예: blue7",
+  "idKeyInfo": "키를 정하면, 처음 대화하는 사람은 아이디와 이 키를 둘 다 알아야 메시지를 보낼 수 있어요. 키가 틀리면 메시지가 오지 않고, 보낸 사람에게도 알리지 않아요. 친구와 이미 대화한 사람은 그대로예요. 키는 이 폰에만 있고 서버로 가지 않아요. 글자·숫자 4~20자예요.",
+  "idKeyBad": "글자나 숫자로 4~20자를 써 주세요.",
+  "idKeyOff": "키 끄기",
+  "idKeyOffInfo": "끄면 기다리던 처음 대화도 다시 들어와요.",
+  "idKeyEnterHint": "아이디 키 (받았다면)",
+  "idKeyEnterInfo": "상대가 아이디 키를 알려 줬다면 같이 써요. 처음 대화할 때만 필요해요.",
+  "voiceToText": "글로 보기",
+  "voiceToTextFailed": "이 폰에서는 글로 바꿀 수 없어요. 폰 설정에서 음성 인식 언어를 내려받으면 돼요.",
+  "voiceToTextEmpty": "들리는 말이 없어요.",
+  "voiceToTextOnPhone": "이 폰 안에서만 바꿨어요",
+  "voiceTranslate": "번역",
+  "voiceTranslating": "번역하는 중…",
+  "voiceShowOriginal": "번역 숨기기",
+  "unreadSummaryAsk": "안 읽은 메시지 {count}개 요약 보기",
+  "@unreadSummaryAsk": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "unreadSummaryTitle": "안 읽은 메시지 요약",
+  "unreadSummaryFailed": "지금은 요약할 수 없어요. 글로 된 메시지만 요약해요.",
+  "unreadSummaryOnPhone": "이 폰 AI로만 요약했어요. 대화는 폰 밖으로 나가지 않아요.",
+  "postSummaryButton": "요약",
+  "postSummaryBusy": "요약하는 중…",
+  "postSummaryOriginal": "원문 보기",
+  "postSummaryTitle": "AI 요약",
+  "postSummaryFailed": "지금은 요약할 수 없어요. 잠시 뒤 다시 해 보세요.",
+  "postSummaryOnPhone": "이 폰 AI로만 요약했어요. 글은 폰 밖으로 나가지 않아요.",
+  "postSummarySwitch": "긴 글 요약",
+  "postSummarySwitchSub": "그룹·채널의 긴 글 위에 '요약' 버튼이 보여요",
+  "readerButton": "읽기 모드",
+  "readerMenu": "읽기 모드로 열기",
+  "readerLoading": "페이지를 가져오는 중…",
+  "readerFailed": "이 페이지는 읽기 모드로 열 수 없어요. 브라우저로 열어 보세요.",
+  "readerOpenBrowser": "브라우저로 열기",
+  "readerTextSize": "글자 크기",
+  "readerMinutes": "{minutes}분 읽기",
+  "@readerMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "readerSummaryAsk": "AI로 3줄 요약 보기",
+  "readerFootnote": "이 폰이 사이트에서 직접 가져와 읽기 좋게 정리했어요. 부루미 서버는 어떤 글을 읽었는지 몰라요.",
+  "readerLinkCopied": "링크를 복사했어요",
+  "readerSwitch": "링크에 '읽기 모드' 버튼 보이기",
+  "readerSwitchInfo": "기사 링크를 광고·메뉴 없이 깔끔한 글로 읽어요. 이 폰이 사이트에서 직접 가져오고, 부루미 서버는 거치지 않아요.",
+  "audioPlay": "재생",
+  "audioPause": "일시 정지",
+  "audioPrevious": "이전 곡",
+  "audioNext": "다음 곡",
+  "audioRepeat": "반복",
+  "audioRepeatOff": "반복하지 않아요",
+  "audioRepeatAll": "목록 전체를 반복해요",
+  "audioRepeatOne": "이 곡만 반복해요",
+  "audioPlaylist": "재생 목록 {count}곡",
+  "@audioPlaylist": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "audioSpeedTitle": "재생 속도",
+  "audioSpeedPlain": "보통",
+  "audioSpeedNormal": "보통 속도로 재생해요",
+  "audioSpeedSet": "{speed}배 속도로 재생해요",
+  "@audioSpeedSet": {
+    "placeholders": {
+      "speed": {
+        "type": "String"
+      }
+    }
+  },
+  "protectIntroInfoDm": "이 대화에서는 나와 상대 모두 아래 일을 할 수 없어요.",
+  "protectIntroInfoRoom": "이 방의 모든 멤버가 아래 일을 할 수 없어요.",
+  "protectIntroShot": "화면 캡처·녹화 막기",
+  "protectIntroShotSub": "캡처하거나 녹화하면 대화가 까맣게 나와요",
+  "protectIntroForward": "전달 막기",
+  "protectIntroForwardSub": "메시지를 다른 대화로 보낼 수 없어요",
+  "protectIntroSave": "저장·복사 막기",
+  "protectIntroSaveSub": "사진·영상 저장과 글 복사가 안 돼요",
+  "protectIntroOnlyMe": "끌 수 있는 사람은 켠 나뿐이에요.",
+  "protectNoticeMine": "내가 이 대화의 공유를 막았어요",
+  "protectNoticeOther": "{name}님이 이 대화의 공유를 막았어요",
+  "@protectNoticeOther": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "protectNoticeRoom": "이 방은 공유가 막혀 있어요",
+  "protectMenuFooter": "공유가 막힌 대화라 복사·전달·저장할 수 없어요",
+  "protectOnlyOwner": "상대가 켠 공유 비활성화는 상대만 끌 수 있어요",
+  "protectByOther": "공유 비활성화 (상대가 켬)",
+  "reportStepTitle": "무엇이 문제인가요?",
+  "reportSubTitle": "조금 더 알려 주세요",
+  "reportNoteTitle": "더 알려 줄 내용 (선택)",
+  "reportNoteHint": "예: 이 사람이 여러 방에 같은 글을 올려요",
+  "reportSend": "신고하기",
+  "reportUrgentLine": "이 신고는 운영자가 가장 먼저 봐요",
+  "reportDislikeInfo": "이 신고는 운영자에게 가지 않아요. 이 폰에서 이렇게 할 수 있어요.",
+  "reportDislikeHide": "이 메시지 내 폰에서 숨기기",
+  "reportDislikeBlock": "보낸 사람 차단하기",
+  "reportDislikeHidden": "이 메시지를 내 폰에서 숨겼어요",
+  "reportCopyrightInfo": "저작권 침해는 권리자(만든 사람이나 회사)가 직접 신고해요. 웹 신고서에서 원본과 연락처를 적어 주세요.",
+  "reportCopyrightOpen": "권리자 신고서 열기",
+  "reportHiddenMsg": "내 폰에서 숨긴 메시지예요",
+  "rDislike": "그냥 싫어요",
+  "rChild": "아동 학대·아동 성착취",
+  "rChildSexual": "아동 성착취물",
+  "rChildAbuse": "아동 폭행·학대",
+  "rChildDanger": "아동을 노리는 접근 (그루밍)",
+  "rSexualCrime": "불법 촬영물·성착취물 (합성 포함)",
+  "rHiddenCamera": "몰래 찍은 사진·영상",
+  "rDeepfake": "합성한 사진·영상 (딥페이크)",
+  "rSharedNoConsent": "동의 없이 퍼뜨린 사진",
+  "rExtortion": "사진으로 하는 협박",
+  "rViolence": "폭력이나 위협",
+  "rThreat": "나나 다른 사람을 해치겠다는 위협",
+  "rGraphic": "잔인한 장면",
+  "rSelfHarm": "자해·자살 부추김",
+  "rHate": "혐오 표현",
+  "rGoods": "불법 상품·서비스",
+  "rDrugs": "마약·불법 약물",
+  "rWeapons": "무기",
+  "rFakeDocs": "위조 문서·신분증",
+  "rGoodsOther": "기타 불법 거래",
+  "rAdult": "음란물",
+  "rPorn": "성인 음란물",
+  "rUnwanted": "원치 않는 성적인 메시지",
+  "rPrivacy": "개인정보 노출",
+  "rIdDocs": "신분증·주민등록번호",
+  "rContact": "전화번호·주소",
+  "rPhotos": "내 사진을 허락 없이 올림",
+  "rTerror": "테러·극단주의",
+  "rTerrorPromo": "테러를 칭찬하거나 알리기",
+  "rTerrorRecruit": "테러 계획·사람 모으기",
+  "rScam": "사기·스팸",
+  "rPhishing": "가짜 링크로 비밀번호 빼 가기 (피싱)",
+  "rMoney": "돈 사기·투자 사기",
+  "rSpam": "스팸 광고",
+  "rCopyright": "저작권 침해",
+  "rTakedown": "불법은 아니지만 내려야 해요",
+  "firstPhotoChanged": "프로필 사진 바뀜",
+  "firstNameChanged": "이름 바뀜",
+  "firstDaysAgo": "{n}일 전",
+  "@firstDaysAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "firstToday": "오늘",
+  "firstNotChanged": "최근 30일 없음",
+  "firstGroupsTitle": "같이 있는 그룹",
+  "firstGroupsNone": "없음",
+  "firstAboutTitle": "처음 대화하는 사람이에요",
+  "ageQuarter": "1~3개월 전",
+  "ageHalf": "3개월~1년 전",
+  "firstNotFriend": "친구가 아닌 사람이에요",
+  "onceVoice": "한 번만 듣기 음성",
+  "onceVoiceTap": "눌러서 한 번 들어요",
+  "onceVoiceSent": "한 번만 들을 수 있어요",
+  "onceVoiceExpired": "들은 음성 메시지",
+  "onceVoiceOn": "한 번만 듣기 켜짐: 상대가 한 번 들으면 사라져요",
+  "onceVoiceOff": "한 번만 듣기 꺼짐",
+  "onceVoiceHint": "눌러서 한 번만 재생되게 해요",
+  "onceVoiceClose": "닫고 삭제",
+  "onceVoiceInfo": "한 번 들으면 사라져요. 저장하거나 전달할 수 없어요.",
+  "permMediaAll": "미디어 보내기",
+  "permPhoto": "사진",
+  "permVideo": "동영상",
+  "permFile": "파일",
+  "permMusic": "음악",
+  "permVoice": "음성 메시지",
+  "permVideoNote": "동그라미 영상",
+  "permExceptions": "예외",
+  "permExceptionAdd": "예외 추가",
+  "permExceptionInfo": "특정 멤버만 다르게 정할 수 있어요. 방장과 관리자는 늘 모두 쓸 수 있어요.",
+  "permExceptionRemove": "예외 지우기",
+  "permExceptionCount": "{n}개 다름",
+  "@permExceptionCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "permPickMember": "멤버 고르기",
+  "permTextLocked": "이 방에서는 글을 보낼 수 없어요",
+  "permKindBlocked": "이 방에서는 {what} 보내기가 막혀 있어요",
+  "@permKindBlocked": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "reportBlockedSender": "보낸 사람을 차단했어요",
+  "shareHistory": "최근 메시지 50개 같이 보내기",
+  "shareHistoryInfo": "새 멤버가 들어오기 전 대화도 읽을 수 있게 내 폰이 보내 줘요. 그 사람 폰으로만 암호화해서 가고, 서버는 내용을 몰라요. 글만 보내고 사진·파일은 보내지 않아요.",
+  "sendHistory": "지난 메시지 보내기",
+  "sendHistoryDone": "{name}님에게 지난 메시지 {count}개를 보냈어요",
+  "@sendHistoryDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "earlierBar": "들어오기 전 대화 {count}개 보기",
+  "@earlierBar": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "earlierTitle": "들어오기 전 대화",
+  "earlierInfo": "멤버가 내 폰으로만 보내 준 지난 메시지예요. 이 폰에만 있어요.",
+  "earlierMedia": "{name} · 사진이나 파일 ({time})",
+  "@earlierMedia": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "fmtQuote": "인용",
+  "fmtFoldQuote": "접는 인용",
+  "replyFromOtherChat": "{name} · 다른 대화",
+  "@replyFromOtherChat": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "quotingWho": "인용 · {name}",
+  "@quotingWho": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "quotePickPart": "특정 부분 인용",
+  "replyInOtherChat": "다른 대화에서 답장",
+  "replyNone": "답장 안 함",
+  "replyInWhichChat": "답장할 대화",
+  "quotePickTitle": "인용할 부분",
+  "quotePickHint": "손잡이를 끌어 인용할 부분을 골라요",
+  "quotePickCount": "고른 글자 {n}자",
+  "@quotePickCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "pinAlsoFor": "{name}님에게도 고정",
+  "@pinAlsoFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pinAlsoForOn": "두 사람 모두에게 보여요.",
+  "pinOnlyMeInfo": "이 휴대폰에서 나만 봐요. 상대방에게는 아무것도 가지 않아요.",
+  "pinnedOnlyMe": "나만 보이게 고정했어요",
+  "pinOnlyMeTag": "나만",
+  "attachScan": "문서 스캔",
+  "scanFileName": "스캔 {time}",
+  "@scanFileName": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "scanNotHere": "문서 스캔은 폰 앱에서 쓸 수 있어요",
+  "pack_hip": "힙 프렌즈",
+  "pack_dandy": "댄디 프렌즈",
+  "charEmojiTitle": "{name} 이모지",
+  "@charEmojiTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "charReactionsTitle": "캐릭터 반응",
+  "translate": "번역",
+  "trToLang": "{lang}로 번역하기",
+  "@trToLang": {
+    "placeholders": {
+      "lang": {
+        "type": "String"
+      }
+    }
+  },
+  "trShowOriginal": "원문 보기",
+  "trOtherLang": "다른 언어로 번역",
+  "trDontTranslate": "{lang} 번역하지 않기",
+  "@trDontTranslate": {
+    "placeholders": {
+      "lang": {
+        "type": "String"
+      }
+    }
+  },
+  "trHideBar": "이 대화에서 가리기",
+  "trHiddenNote": "번역 줄을 가렸어요. 메시지를 꾹 눌러 번역을 열면 다시 켤 수 있어요.",
+  "trShowButton": "번역 버튼 보기",
+  "trShowButtonSub": "메시지를 꾹 누르면 번역이 나와요",
+  "trChat": "대화 전체 번역",
+  "trChatSub": "다른 언어 대화 위에 번역 줄이 나와요",
+  "trSkip": "번역하지 않을 언어",
+  "trFooter": "번역은 이 휴대폰 안에서만 해요. 글이 번역 서버로 가지 않아요. 언어마다 처음 한 번만 받아요 (와이파이, 약 30MB).",
+  "trWebDemo": "웹 미리보기는 정해진 예시 번역만 보여 줘요.",
+  "trAppLang": "앱 언어",
+  "trDownloadAsk": "{lang} 번역을 받을까요?",
+  "@trDownloadAsk": {
+    "placeholders": {
+      "lang": {
+        "type": "String"
+      }
+    }
+  },
+  "trDownloadInfo": "한 번만 받으면 인터넷 없이도 번역돼요. 와이파이에서 받아요 (약 30MB).",
+  "trDownload": "받기",
+  "trDownloading": "받는 중…",
+  "trDownloadFailed": "받지 못했어요. 와이파이에 연결한 뒤 다시 해 주세요.",
+  "trUnsupported": "이 휴대폰에서는 번역할 수 없어요",
+  "trFailed": "번역하지 못했어요",
+  "trSameLang": "이미 {lang}예요",
+  "@trSameLang": {
+    "placeholders": {
+      "lang": {
+        "type": "String"
+      }
+    }
+  },
+  "trWholeChatOn": "대화 전체 번역 켜기",
+  "trTranslating": "번역하는 중…",
+  "trLang_ko": "한국어",
+  "trLang_en": "영어",
+  "trLang_ja": "일본어",
+  "trLang_zh": "중국어",
+  "trLang_es": "스페인어",
+  "trLang_fr": "프랑스어",
+  "trLang_de": "독일어",
+  "trLang_ru": "러시아어",
+  "trLang_pt": "포르투갈어",
+  "trLang_it": "이탈리아어",
+  "trLang_vi": "베트남어",
+  "trLang_th": "태국어",
+  "trLang_id": "인도네시아어",
+  "trLang_tr": "튀르키예어",
+  "trLang_ar": "아랍어",
+  "trLang_hi": "힌디어",
+  "trLang_uk": "우크라이나어",
+  "trLang_pl": "폴란드어",
+  "trLang_nl": "네덜란드어",
+  "newLoginMinutesAgo": "{n}분 전",
+  "@newLoginMinutesAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "deviceIdlePage": "자동 로그아웃",
+  "deviceIdleHeader": "이 기간 동안 안 쓰면 로그아웃",
+  "whoInfoVoice": "내 연락처가 아닌 사람의 전화는 부재중으로 남고, 메시지·초대는 보이지 않아요. 음성·영상 메시지를 막은 사람은 마이크 버튼이 잠겨서 글로만 보낼 수 있어요.",
+  "qrLoginHeading": "휴대폰으로 QR을 찍어 로그인",
+  "searchTabChats": "대화",
+  "searchTabChannels": "채널",
+  "searchTabPosts": "글",
+  "searchTabMedia": "미디어",
+  "searchTabLinks": "링크",
+  "searchTabFiles": "파일",
+  "searchTabMusic": "음악",
+  "searchTabVoice": "음성",
+  "searchSectionChats": "대화",
+  "searchSectionGlobal": "전체 검색",
+  "searchSectionMessages": "메시지",
+  "searchScopeAll": "모든 대화",
+  "searchScopeDirect": "1:1 대화",
+  "searchScopeGroup": "그룹",
+  "searchScopeChannel": "채널",
+  "searchScopeTitle": "어느 대화에서 찾을까요?",
+  "searchRecent": "최근 검색",
+  "searchClear": "지우기",
+  "searchMyChannels": "참여한 채널",
+  "searchPublicChannels": "공개 채널",
+  "searchFollowedPosts": "구독한 채널의 글",
+  "searchPublicPosts": "공개 채널 글",
+  "searchPublicPostsNote": "웹 페이지를 켠 공개 채널의 글만 보여요. 찾는 단어는 서버에 남지 않아요.",
+  "searchPostsHint": "채널 글에서 찾을 단어를 써 주세요",
+  "searchChannelsHint": "채널 이름이나 주소를 써 주세요",
+  "searchOnPhoneNote": "메시지·사진·파일은 이 휴대폰 안에서만 찾아요. 서버는 무엇을 찾는지 몰라요.",
+  "searchNoResults": "찾는 결과가 없어요",
+  "searchMore": "더 보기",
+  "searchLess": "접기",
+  "tagThisChat": "이 대화",
+  "tagMyMessages": "내 메시지",
+  "tagPublicPosts": "공개 글",
+  "tagShowChat": "대화로 보기",
+  "tagShowList": "목록으로 보기",
+  "tagShowGrid": "사진으로 보기",
+  "tagJoinToSee": "참여하면 이 대화의 글을 볼 수 있어요",
+  "tagOpenChat": "미리 보기",
+  "tagStoriesTitle": "해시태그 스토리",
+  "tagStoriesEmpty": "이 해시태그가 붙은 스토리가 없어요",
+  "tagStoriesNote": "내가 볼 수 있는 친구 스토리에서만 찾아요",
+  "searchMembers": "멤버 {n}명",
+  "@searchMembers": {
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "searchSubscribers": "구독자 {n}명",
+  "@searchSubscribers": {
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "tagCount": "메시지 {n}개",
+  "@tagCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "tagStories": "스토리 {n}개",
+  "@tagStories": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "tagInChat": "대화: {address}",
+  "@tagInChat": {
+    "placeholders": {
+      "address": {
+        "type": "String"
+      }
+    }
+  },
+  "tagStoriesSub": "스토리 보기 · {tag}",
+  "@tagStoriesSub": {
+    "placeholders": {
+      "tag": {
+        "type": "String"
+      }
+    }
+  },
+  "dayRangeSameMonth": "{from}–{day}일",
+  "@dayRangeSameMonth": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "stkWeather": "날씨",
+  "stkPlace": "위치",
+  "stkLink": "링크",
+  "stkWeatherTitle": "날씨 스티커",
+  "stkWeatherHere": "지금 있는 곳",
+  "stkWeatherHereSub": "위치를 약 10km 단위로 뭉개서 날씨만 물어봐요",
+  "stkWeatherCity": "도시 고르기",
+  "stkWeatherCitySub": "위치를 전혀 쓰지 않아요",
+  "stkWeatherFinding": "날씨를 가져오는 중이에요",
+  "stkWeatherShowCity": "도시 이름 보이기",
+  "stkWeatherInfo": "스토리에는 온도와 날씨만 들어가요. 내 위치는 친구에게도, 부루미에도 남지 않아요. 친구는 자기 나라 단위(°C·°F)로 보고, 눌러서 바꿀 수 있어요.",
+  "stkWeatherNoLocation": "위치를 쓸 수 없어서 도시를 골라 주세요",
+  "stkWeatherOff": "이 버전에서는 날씨를 가져올 수 없어요",
+  "stkWeatherNetwork": "날씨를 가져오지 못했어요. 잠시 뒤 다시 해 주세요",
+  "stkLook": "모양",
+  "stkLookWhite": "흰색",
+  "stkLookDark": "어둡게",
+  "stkLookClear": "투명",
+  "stkLookColor": "내 색",
+  "stkSearchCity": "도시 검색",
+  "stkNearby": "가까운 도시",
+  "stkCities": "도시",
+  "stkPlaceTitle": "위치 스티커",
+  "stkPlaceName": "장소 이름 (예: 성수동 카페거리)",
+  "stkPlaceMap": "친구가 지도에서 열 수 있게",
+  "stkPlaceExact": "정확한 위치",
+  "stkPlaceRough": "대략 (약 1km)",
+  "stkPlaceFinding": "위치를 찾는 중이에요",
+  "stkPlaceNoLocation": "위치를 쓸 수 없어서 이름만 붙여요",
+  "stkPlaceInfo": "이름과 위치는 스토리 안에 암호화되어 친구에게만 가요. 지도를 켜지 않으면 이름만 보여요.",
+  "stkLinkTitle": "링크 스티커",
+  "stkLinkUrl": "주소 (https://…)",
+  "stkLinkName": "보일 이름 (선택)",
+  "stkLinkSmall": "작게",
+  "stkLinkCard": "카드",
+  "stkLinkInfo": "미리보기는 내 폰이 만들어 스토리 안에 암호화해 넣어요. 친구들은 스토리를 볼 때 이 사이트에 접속하지 않아요.",
+  "stkLinkBad": "웹 주소를 넣어 주세요",
+  "stkLinkReading": "미리보기를 만드는 중이에요",
+  "stkLinkPreviewOff": "링크 미리보기가 꺼져 있어서 작게만 보여요",
+  "stkLinkOpen": "열기",
+  "stkLinkGoesTo": "이 링크가 가는 곳",
+  "stkLinkLookalike": "보이는 이름과 실제 주소가 달라요. 주소를 꼭 확인하세요",
+  "stkMapOpen": "지도에서 보기",
+  "stkPlaceOnlyName": "지도 위치 없이 이름만 붙였어요",
+  "roomPhotoNote": "사진은 방 안에서 암호화돼서 보내져요. 공개 링크가 있는 방만 링크 미리보기에도 이 사진이 보여요.",
+  "roomPhotoLine": "{who}님이 {kind, select, channel{채널} other{그룹}} 사진을 {done, select, removed{지웠어요} other{바꿨어요}}",
+  "@roomPhotoLine": {
+    "placeholders": {
+      "who": {
+        "type": "String"
+      },
+      "kind": {
+        "type": "String"
+      },
+      "done": {
+        "type": "String"
+      }
+    }
+  },
+  "roomPhotoLineMine": "{kind, select, channel{채널} other{그룹}} 사진을 {done, select, removed{지웠어요} other{바꿨어요}}",
+  "@roomPhotoLineMine": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      },
+      "done": {
+        "type": "String"
+      }
+    }
+  },
+  "roomPhotoPreview": "사진을 바꿨어요",
+  "meetupEndToggle": "끝나는 시간",
+  "meetupStarts": "시작",
+  "meetupEnds": "종료",
+  "meetupBring": "같이 오는 사람",
+  "meetupWithGuests": "{name} +{n}",
+  "@meetupWithGuests": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "meetupAddCalendar": "캘린더에 추가",
+  "meetupCalendarFile": "캘린더 파일을 받았어요. 열면 캘린더에 들어가요",
+  "meetupRemind": "1시간 전에 알림",
+  "meetupRemindInfo": "'갈게요'나 '아마도'로 답한 일정은 시작 1시간 전에 이 폰이 알려 줘요. 서버는 몰라요.",
+  "myPlans": "내 일정",
+  "myPlansEmpty": "아직 일정이 없어요. 대화에서 + > 일정으로 만들거나, 받은 일정에 '갈게요'를 누르면 여기에 모여요.",
+  "myPlansPast": "지난 일정",
+  "myPlansSoon": "다가오는 일정",
+  "meetupReminderTitle": "1시간 뒤: {title}",
+  "@meetupReminderTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "myPlansMade": "내가 만든 일정",
+  "myPlansGoing": "갈게요",
+  "earlierVoice": "음성 메시지",
+  "earlierFileFailed": "파일을 열 수 없어요. 보낸 사람이 지웠을 수 있어요.",
+  "callIgnore": "무시",
+  "callUnknown": "연락처에 없는 사람이에요",
+  "callCommonGroups": "같은 그룹 {n}개",
+  "@callCommonGroups": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "callNoCommon": "같은 그룹 없음",
+  "callLock": "화면 잠금",
+  "callLocked": "화면 잠김 · 길게 눌러 풀기",
+  "filterMentions": "멘션",
+  "mentionNone": "나를 부른 대화가 없어요",
+  "newGroupFromMembers": "이 멤버로 새 그룹 만들기",
+  "reportPerson": "신고하기",
+  "reportPersonNote": "이 사람이 보낸 최근 메시지 {n}개까지 운영팀에 함께 보내요",
+  "@reportPersonNote": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "reportPersonEmpty": "이 사람이 보낸 메시지가 없어 신고할 내용이 없어요",
+  "storageByChat": "대화별 저장 공간",
+  "storageByChatInfo": "내려받은 사진·영상·파일이 이 폰에 차지하는 크기예요. 지워도 메시지는 그대로고, 누르면 다시 받아요.",
+  "storageGoneChat": "나간 대화",
+  "storageFiles": "파일 {n}개",
+  "@storageFiles": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "storageChatTotal": "이 대화가 차지하는 크기",
+  "storageChatInfo": "지워도 메시지는 남아요. 대화에서 다시 누르면 내려받아요.",
+  "storageClearChat": "이 대화 파일 모두 지우기",
+  "storageClearPicked": "고른 파일 {n}개 지우기",
+  "@storageClearPicked": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "storageChatFiles": "큰 파일부터",
+  "storageChatEmpty": "이 폰에 받아 둔 파일이 없어요",
+  "storageNoName": "이름 없는 파일",
+  "storageGoing": "파일 {count}개 {n}초 뒤 지워요",
+  "@storageGoing": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "videoEditTitle": "동영상 편집",
+  "videoRotate": "회전",
+  "videoFlip": "뒤집기",
+  "videoSound": "소리",
+  "videoEditFailed": "영상을 편집하지 못해서 보내지 않았어요",
+  "videoEditing": "영상을 만드는 중이에요",
+  "photoHdOn": "HD 화질로 보내요",
+  "photoHdOff": "표준 화질로 보내요. 데이터를 아껴요",
+  "sendHd": "HD 화질로 보내기",
+  "photoHdSetting": "사진을 HD로 보내기",
+  "photoHdSettingSub": "끄면 표준 화질로 보내서 데이터와 저장 공간을 아껴요",
+  "albumPreview": "미리보기",
+  "albumPreviewHint": "꾹 눌러 끌면 순서가 바뀌어요",
+  "pickEdit": "편집",
+  "pickTrim": "자르기·회전",
+  "pickSpoilerOn": "가리기",
+  "pickSpoilerOff": "가리기 풀기",
+  "pickRemove": "빼기",
+  "spoilerCount": "{count}개 가림",
+  "@spoilerCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiAgeTitle": "AI 기능은 만 18세 이상만 쓸 수 있어요",
+  "aiAgeInfo": "안드로이드의 휴대폰 속 AI(Google)는 약관에 따라 만 18세 이상만 쓸 수 있어요. 한 번만 물어보고, 설정 › 대화 › AI 기능에서 바꿀 수 있어요.",
+  "aiAgeAdult": "만 18세 이상이에요",
+  "aiAgeMinor": "18세 미만이에요",
+  "aiAgeOnly": "18세 이상만 쓸 수 있어요",
+  "aiAgeRow": "AI 나이 확인",
+  "aiAgeRowSub": "AI 편집기·요약·배경 지우기 (안드로이드)",
+  "aiAgeValueAdult": "만 18세 이상",
+  "aiAgeValueMinor": "18세 미만",
+  "aiAgeValueUnknown": "확인 전",
+  "trPoweredByGoogle": "Powered by Google Translate",
+  "stkWeatherCredit": "날씨 정보: MET Norway 자료 기반 (CC BY 4.0)",
+  "creditsHeader": "출처",
+  "creditsFooter": "눌러서 자세한 내용과 원문 라이선스를 볼 수 있어요.",
+  "creditWeather": "날씨 정보",
+  "creditWeatherSub": "MET Norway · CC BY 4.0",
+  "creditWeatherInfo": "스토리 날씨 스티커의 날씨는 노르웨이 기상청(MET Norway) 자료를 바탕으로 해요. 우리 서버가 위치를 약 10 km 단위로 흐리게 해서 묻고, 앱이 기온과 날씨 그림으로 바꿔 보여 줘요.",
+  "creditGoogle": "번역·AI (안드로이드)",
+  "creditGoogleSub": "Google ML Kit",
+  "creditGoogleInfo": "안드로이드에서는 번역, 문서 스캔, 배경 지우기, AI 편집기를 Google ML Kit이 휴대폰 안에서 처리해요. 내용은 회사로 보내지 않아요. 번역 결과 아래에는 Google 표시가 붙어요. 아이폰은 애플 기본 기능을 써요.",
+  "creditFont": "글꼴",
+  "creditFontSub": "Pretendard · SIL OFL 1.1",
+  "creditFontInfo": "앱 글꼴은 Pretendard예요. 누구나 무료로 쓸 수 있는 SIL 오픈 폰트 라이선스라서 원문을 함께 실어요.",
+  "creditPdq": "사진 지문",
+  "creditPdqSub": "PDQ (Meta) · 안전 서버",
+  "creditPdqInfo": "알려진 불법 사진을 찾을 때 Meta가 공개한 PDQ 사진 지문 방식을 우리 안전 서버에서 써요. 비공개 대화의 사진은 검사하지 않아요.",
+  "partsHeader": "앱 부품 {count}개",
+  "@partsHeader": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importTitle": "다른 앱 대화 가져오기",
+  "importHeader": "카카오톡 · 왓츠앱 · 텔레그램에서 내보낸 대화를 원래 날짜 그대로 부루미 대화방에 넣어요.",
+  "importAppKakao": "카카오톡",
+  "importAppWhatsapp": "왓츠앱",
+  "importAppTelegram": "텔레그램",
+  "importDeviceIphone": "아이폰",
+  "importDeviceAndroid": "안드로이드",
+  "importDevicePc": "PC",
+  "importHowTo": "{app}에서 내보내는 방법",
+  "@importHowTo": {
+    "placeholders": {
+      "app": {
+        "type": "String"
+      }
+    }
+  },
+  "importStepsKakaoPhone": "가져올 대화방을 열고 오른쪽 위 ☰ 메뉴를 눌러요\n메뉴 아래쪽 ⚙ 설정에서 '대화 내용 내보내기'를 눌러요\n사진까지 가져오려면 '모든 메시지 내부 저장소에 저장', 글만 가져오려면 '텍스트 메시지만 보내기'를 골라요\n저장된 파일(.zip 또는 .txt)을 아래 '내보낸 파일 고르기'로 골라요",
+  "importStepsKakaoPc": "PC 카카오톡에서 대화방을 열고 오른쪽 위 ☰ 메뉴를 눌러요\n'대화 내보내기'를 눌러 .txt 파일로 저장해요\n그 파일을 휴대폰으로 옮기거나 PC용 부루미에서 바로 골라요",
+  "importStepsWhatsappIphone": "가져올 대화방을 열고 맨 위 상대 이름(또는 그룹 이름)을 눌러요\n아래로 내려 '대화 내보내기'를 눌러요\n사진까지 가져오려면 '미디어 첨부'를 골라요\n'파일에 저장'으로 저장한 뒤, 아래 '내보낸 파일 고르기'로 골라요",
+  "importStepsWhatsappAndroid": "가져올 대화방을 열고 오른쪽 위 ⋮ 를 눌러요\n'더보기' → '대화 내보내기'를 눌러요\n사진까지 가져오려면 '미디어 포함'을 골라요\n파일로 저장한 뒤, 아래 '내보낸 파일 고르기'로 골라요",
+  "importStepsTelegram": "컴퓨터용 텔레그램(Telegram Desktop)에서 대화방을 열고 오른쪽 위 ⋮ 를 눌러요\n'대화 기록 내보내기'를 눌러요\n사진까지 가져오려면 사진 · 파일을 켜고, 형식은 'JSON'(또는 HTML)을 골라요\n다 되면 내보낸 폴더를 통째로 압축(.zip)해서, 아래 '내보낸 파일 고르기'로 골라요",
+  "importTelegramPhoneNote": "휴대폰 텔레그램 앱에는 대화 내보내기가 없어서 컴퓨터용 텔레그램을 써야 해요.",
+  "importKakaoMediaNote": "글만 내보낸 파일이면 사진 자리에 '사진'이라고만 표시돼요.",
+  "importWhatsappMediaNote": "'미디어 없이'로 내보내면 사진 자리에 '사진'이라고만 표시돼요.",
+  "importPrivacy": "파일은 이 휴대폰 안에서만 읽어요. 보낼 때는 이 휴대폰에서 암호화해서 보내니, 서버는 내용도 누가 썼는지도 볼 수 없어요.",
+  "importPick": "내보낸 파일 고르기",
+  "importSample": "예시 파일로 해 보기",
+  "importReading": "대화를 읽고 있어요",
+  "importPickFailed": "파일을 고를 수 없어요. 다시 해 주세요.",
+  "importErrBig": "파일이 너무 커요. 사진 없이 내보내거나 기간을 나눠서 해 주세요.",
+  "importErrEmpty": "파일에 메시지가 없어요.",
+  "importErrBroken": "파일이 깨져서 열 수 없어요. 다시 내보내 주세요.",
+  "importErrUnknown": "카카오톡 · 왓츠앱 · 텔레그램에서 내보낸 대화 파일이 아니에요.",
+  "importPickChat": "가져올 대화 고르기",
+  "importNoTitle": "이름 없는 대화",
+  "importCount": "메시지 {count}개",
+  "@importCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importCheckTitle": "가져올 대화 확인",
+  "importWhoIsMe": "이 중에 나는 누구인가요?",
+  "importWhoIsMeInfo": "고른 이름의 메시지는 내 말풍선(오른쪽)으로 보여요. 다른 사람은 원래 앱의 이름으로 보여요.",
+  "importPeerInfo": "{name} 님의 메시지는 이 대화의 {peer} 님 말풍선으로 보여요.",
+  "@importPeerInfo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "peer": {
+        "type": "String"
+      }
+    }
+  },
+  "importWhere": "어디에 넣을까요?",
+  "importPickRoom": "넣을 대화방 고르기",
+  "importPickRoomInfo": "가져온 메시지는 이 대화방의 모든 사람이 볼 수 있어요.",
+  "importKindDirect": "1:1 대화",
+  "importKindGroup": "그룹",
+  "importKindChannel": "채널",
+  "importMedia": "사진 · 동영상 · 파일",
+  "importMediaSize": "{count}개 · {size}",
+  "@importMediaSize": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "importNoMedia": "이 파일에는 사진이 들어 있지 않아요",
+  "importMissingInfo": "사진 · 파일 {count}개는 내보낸 파일에 없어서 자리만 표시돼요. 사진까지 가져오려면 원래 앱에서 사진을 포함해 다시 내보내 주세요.",
+  "@importMissingInfo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importStart": "가져오기",
+  "importConfirmTitle": "{room} 대화방에 메시지 {count}개를 넣을까요?",
+  "@importConfirmTitle": {
+    "placeholders": {
+      "room": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importConfirmInfo": "원래 날짜와 시간 순서대로 들어가고, 말풍선마다 '가져옴' 표시가 붙어요.",
+  "importStepMedia": "사진과 파일을 암호화해서 올리고 있어요 ({done}/{total})",
+  "@importStepMedia": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "importStepPack": "메시지를 암호화해서 묶고 있어요",
+  "importStepSend": "거의 다 됐어요",
+  "importKeepOpen": "다 될 때까지 이 화면을 열어 두세요.",
+  "importDone": "메시지 {count}개를 가져왔어요!",
+  "@importDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importFailed": "가져오지 못했어요. 인터넷 연결을 확인하고 다시 해 주세요.",
+  "importRetry": "다시 하기",
+  "importStop": "그만두기",
+  "importSeeChat": "대화 보기",
+  "importLineMine": "{app}에서 대화를 가져왔어요 · 메시지 {count}개",
+  "@importLineMine": {
+    "placeholders": {
+      "app": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importLine": "{name} 님이 {app}에서 대화를 가져왔어요 · 메시지 {count}개",
+  "@importLine": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "app": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importInfoTitle": "가져온 대화",
+  "importInfoCount": "메시지",
+  "importInfoDates": "기간",
+  "importInfoBy": "가져온 사람",
+  "importInfoByMe": "나",
+  "importInfoNote": "가져온 메시지는 다른 앱에서 내보낸 파일 그대로예요. 부루미가 보낸 사람을 확인한 메시지가 아니라서 '가져옴' 표시가 붙어요.",
+  "importDelete": "가져온 대화 지우기",
+  "importedMark": "가져옴",
+  "importSticker": "스티커",
+  "importNotIncluded": "{kind} · 내보낸 파일에 없음",
+  "@importNotIncluded": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      }
+    }
+  },
+  "importSysCreate": "{name} 님이 대화방을 만들었어요",
+  "@importSysCreate": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "importSysJoin": "{name} 님이 들어왔어요",
+  "@importSysJoin": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "importSysLeft": "{name} 님이 내보냈어요",
+  "@importSysLeft": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "importSysPin": "{name} 님이 메시지를 고정했어요",
+  "@importSysPin": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "importSysCall": "{name} 님의 통화",
+  "@importSysCall": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "importSysTitle": "{name} 님이 이름을 바꿨어요: {title}",
+  "@importSysTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "importSysPhoto": "{name} 님이 사진을 바꿨어요",
+  "@importSysPhoto": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "importSysOther": "{name} 님의 알림",
+  "@importSysOther": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "importRow": "다른 앱 대화 가져오기",
+  "importRowSub": "카카오톡 · 왓츠앱 · 텔레그램",
+  "importMenu": "대화 가져오기",
+  "importDeleted": "삭제된 메시지",
+  "importAlready": "이 대화방에 같은 대화를 이미 가져왔어요. 또 가져오면 메시지가 두 번씩 보여요.",
+  "invJoined": "{count}명 참여",
+  "@invJoined": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "invPeopleLeft": "{count}명 남음",
+  "@invPeopleLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "invDaysLeft": "{count}일 남음",
+  "@invDaysLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "invHoursLeft": "{count}시간 남음",
+  "@invHoursLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "invMinutesLeft": "{count}분 남음",
+  "@invMinutesLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "invEnded": "기간 끝남",
+  "invFull": "인원 마감",
+  "invRevoked": "취소됨",
+  "invMoreHeader": "추가 링크",
+  "invMoreInfo": "인스타 프로필용, 친구용처럼 링크를 여러 개 만들 수 있어요. 기간이 끝나거나 인원이 차면 서버가 바로 막아서, 내 폰이 꺼져 있어도 지켜져요.",
+  "invNew": "새 링크 만들기",
+  "invRevokedHeader": "취소된 링크",
+  "invDeleteAllRevoked": "취소된 링크 모두 지우기",
+  "invDeleteAllIn": "{seconds}초 뒤에 취소된 링크를 지워요",
+  "@invDeleteAllIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "invNewTitle": "새 링크",
+  "invEditTitle": "링크 수정",
+  "invMake": "만들기",
+  "invNameHint": "링크 이름 (예: 인스타 프로필)",
+  "invNameInfo": "이름은 관리자만 봐요. 받는 사람에게는 보이지 않아요.",
+  "invTime": "기간",
+  "inv1h": "1시간",
+  "inv1d": "1일",
+  "inv1w": "1주",
+  "invNoLimit": "제한 없음",
+  "invPick": "직접",
+  "invTimeNone": "끝나는 날 없이 계속 열려 있어요",
+  "invTimeEnds": "{time}에 끝나요",
+  "@invTimeEnds": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "invPeople": "인원",
+  "invPeopleCount": "{count}명",
+  "@invPeopleCount": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "invPeopleHint": "몇 명까지 들어올 수 있는지 숫자로 적어 주세요",
+  "invPeopleN": "{count}명이 들어오면 링크가 닫혀요",
+  "@invPeopleN": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "invPeopleNone": "몇 명이든 들어올 수 있어요",
+  "invPeopleApproval": "승인 후 참여가 켜져 있어서 관리자가 한 명씩 들여보내요. 그래서 인원 제한 대신 기간만 쓰여요.",
+  "invRevokedInfo": "취소한 링크라서 더 이상 열리지 않아요.",
+  "invFullInfo": "정한 인원이 다 들어와서 더 이상 열리지 않아요. 링크 수정에서 인원을 늘릴 수 있어요.",
+  "invEndedInfo": "기간이 끝나서 더 이상 열리지 않아요. 링크 수정에서 기간을 늘릴 수 있어요.",
+  "invJoinedHeader": "이 링크로 들어온 사람 {count}명",
+  "@invJoinedHeader": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "invJoinedMore": "최근 100명까지 보여요.",
+  "invNobody": "아직 아무도 안 들어왔어요",
+  "invLeftRoom": "지금은 나간 사람",
+  "invRevoke": "링크 취소",
+  "invRevokeIn": "{seconds}초 뒤에 링크를 취소해요",
+  "@invRevokeIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "invDelete": "링크 지우기",
+  "invDeleteIn": "{seconds}초 뒤에 링크를 지워요",
+  "@invDeleteIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "joinLinkEnded": "이 초대 링크는 기간이 끝났어요",
+  "joinLinkFull": "이 초대 링크는 인원이 다 찼어요",
+  "chatLinks": "대화 링크",
+  "chatLinksAbout": "링크를 누른 사람에게 나와의 대화가 열리고, 미리 써 둔 글이 입력창에 들어가 있어요. 가게 문의나 행사 신청 받을 때 좋아요.",
+  "chatLinksFooter": "링크에는 내 아이디가 들어 있어요. 링크 목록은 이 폰에만 있고, 누가 눌렀는지는 서버도 몰라서 세지 않아요.",
+  "chatLinkNew": "대화 링크 만들기",
+  "chatLinkEdit": "대화 링크",
+  "chatLinkNoText": "미리 쓴 글 없음",
+  "chatLinkPreview": "받는 사람에게 이렇게 보여요",
+  "chatLinkText": "미리 쓸 글",
+  "chatLinkTextHint": "예: 케이크 주문하고 싶어요",
+  "chatLinkTextInfo": "링크를 누른 사람의 입력창에 들어가요. 그 사람이 고치거나 지우고 직접 보내요.",
+  "chatLinkNameHint": "링크 이름 (예: 가게 문의)",
+  "chatLinkNameInfo": "이름은 나만 봐요.",
+  "chatLinkKey": "아이디 키 넣기",
+  "chatLinkKeyInfo": "켜면 처음 보는 사람도 아이디 키 없이 대화를 시작할 수 있어요. 링크가 퍼지면 키도 같이 퍼져요.",
+  "chatLinkIdInfo": "링크를 받은 사람은 내 아이디를 볼 수 있어요.",
+  "chatLinkDelete": "링크 지우기",
+  "chatLinkDeleteIn": "{seconds}초 뒤에 링크를 지워요",
+  "@chatLinkDeleteIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "chatLinkWaiting": "입력창에 들어갈 글",
+  "chatLinkStart": "메시지 보내기",
+  "qrSeeChannel": "채널 보기",
+  "qrSeeGroup": "그룹 보기",
+  "qrChat": "대화하기",
+  "qrMessage": "메시지 링크",
+  "qrSee": "보기",
+  "qrPc": "PC에서 로그인",
+  "qrConnect": "연결하기",
+  "qrExpired": "시간이 지난 QR 코드예요",
+  "qrOpenLink": "링크 열기",
+  "qrCopyText": "글 복사하기",
+  "qrWebTitle": "{host} 사이트로 이동할까요?",
+  "@qrWebTitle": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "qrScan": "QR 코드 읽기",
+  "qrScanHint": "QR 코드를 네모 안에 비춰 주세요",
+  "qrNoCamera": "카메라를 쓸 수 없어요",
+  "shareInTitle": "부루미로 보내기",
+  "shareInComment": "메시지 추가",
+  "shareInFrom": "보낼 계정",
+  "shareInNoPost": "이 대화에는 글을 쓸 수 없어요",
+  "shareInKind": "이 대화는 이 종류를 막아 두었어요",
+  "shareInLater": "지금은 보낼 수 없는 시간이에요",
+  "shareInSlow": "조금 뒤에 보낼 수 있어요",
+  "shareInNone": "보낼 수 있는 대화가 없어요",
+  "shareInSending": "보내는 중 {percent}%",
+  "@shareInSending": {
+    "placeholders": {
+      "percent": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "shareInSent": "{count}곳에 보냈어요",
+  "@shareInSent": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "shareInFailed": "{count}곳에는 못 보냈어요",
+  "@shareInFailed": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "shareInDemo": "다른 앱에서 보내기 체험",
+  "shareInSendN": "{count}곳에 보내기",
+  "@shareInSendN": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "editorSticker": "스티커",
+  "editorAddSticker": "스티커·이모지 넣기",
+  "editorStickerHint": "누르면 메뉴, 두 손가락으로 크기·각도, 휴지통으로 끌면 지워져요",
+  "stkPhotoCut": "사진 오려 붙이기",
+  "stkFlip": "뒤집기",
+  "stkCopy": "복제",
+  "stkCutout": "오려내기",
+  "cutoutFail": "이 기기에서는 배경을 지울 수 없어요",
+  "colorTitle": "색",
+  "colorGrid": "격자",
+  "colorSpectrum": "스펙트럼",
+  "colorSliders": "슬라이더",
+  "colorRed": "빨강",
+  "colorGreen": "초록",
+  "colorBlue": "파랑",
+  "mediaChanged": "사진 바뀜",
+  "editFirstPhoto": "바뀌기 전 사진",
+  "captionAboveMenu": "설명 위로 올리기",
+  "captionUp": "설명 위로 올리기",
+  "captionDown": "설명 아래로 내리기",
+  "editSwapPhoto": "다른 사진·동영상으로 바꾸기",
+  "editThisPhoto": "이 사진 편집",
+  "editAddPhoto": "사진·동영상 넣기",
+  "editingMedia": "사진 수정",
+  "editMediaHint": "여기를 누르면 사진 바꾸기·편집",
+  "editNewPhotoPicked": "새 사진으로 바뀌어요",
+  "noSwapPublic": "공개 그룹·채널에서는 보낸 사진을 바꿀 수 없어요. 설명만 고칠 수 있어요.",
+  "editMediaFailed": "수정하지 못했어요. 잠시 뒤 다시 해 주세요.",
+  "photoMineForThem": "내가 정한 사진",
+  "photoTheirs": "올린 사진",
+  "myProfile": "내 프로필",
+  "myProfileSeenBy": "보는 사람",
+  "seenEveryone": "모든 사람",
+  "seenContacts": "내 연락처",
+  "myProfileEveryoneInfo": "내 아이디를 아는 누구나 이렇게 봐요. '모두'로 둔 것만 서버에 저장돼요.",
+  "myProfileContactsInfo": "나와 1:1 대화를 하는 사람은 이렇게 봐요. 서버를 거치지 않고 암호화된 1:1 대화로만 전달돼요.",
+  "myProfileHidden": "안 보이는 것: {what}",
+  "@myProfileHidden": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "myProfileWho": "누가 무엇을 볼지 바꾸기",
+  "myProfileEdit": "편집",
+  "myProfileNoPhoto": "사진이 안 보여요",
+  "publicPhoto": "공개 사진",
+  "publicPhotoSet": "공개 사진 설정",
+  "publicPhotoChange": "공개 사진 바꾸기",
+  "publicPhotoRemove": "공개 사진 지우기",
+  "publicPhotoInfo": "프로필 사진을 볼 수 없는 사람에게는 이 사진이 대신 보여요. 공개 사진은 서버에 저장돼요.",
+  "publicPhotoDone": "공개 사진을 정했어요",
+  "publicPhotoRemoved": "공개 사진을 지웠어요",
+  "oldPhotos": "예전 사진",
+  "oldPhotosInfo": "예전 사진은 이 휴대폰에만 암호화되어 있어요. 다른 사람에게는 대표 사진 한 장만 보여요.",
+  "photoMain": "대표 사진",
+  "photoMakeMain": "대표 사진으로",
+  "photoMainDone": "이제 대표 사진이에요",
+  "photoDeleted": "사진을 지웠어요",
+  "photoUsedUntil": "{date}까지 쓴 사진",
+  "@photoUsedUntil": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "photoSuggest": "{name}님에게 사진 제안",
+  "@photoSuggest": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "photoSuggestInfo": "고른 사진은 암호화되어 1:1 대화로 가요. 받은 사람이 '내 사진으로'를 눌러야 바뀌어요.",
+  "photoSuggestSent": "사진을 제안했어요",
+  "photoSuggestNoChat": "1:1 대화가 있어야 사진을 제안할 수 있어요",
+  "photoSuggestMine": "프로필 사진을 제안했어요",
+  "photoSuggestTheirs": "{name}님이 프로필 사진을 제안했어요",
+  "@photoSuggestTheirs": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "photoSuggestView": "사진 보기",
+  "photoSuggestUse": "내 사진으로",
+  "photoSuggestPreview": "🖼️ 사진 제안",
+  "emojiPhoto": "이모지나 스티커로",
+  "emojiPhotoTitle": "이모지 사진",
+  "emojiPhotoEmoji": "이모지",
+  "emojiPhotoSticker": "부루미",
+  "emojiPhotoSize": "크기",
+  "emojiPhotoColor": "배경",
+  "emojiPhotoCustom": "직접 고르기",
+  "emojiPhotoInfo": "사진이 없어도 이모지나 부루미 캐릭터로 나만의 프로필 사진을 만들 수 있어요.",
+  "skEdit": "고치기",
+  "skKeep": "프로필에 남기기",
+  "skUnkeep": "프로필에서 빼기",
+  "skAlbumPut": "앨범에 넣기",
+  "skTop": "맨 위에 고정",
+  "skUntop": "고정 풀기",
+  "skCover": "표지 고르기",
+  "skDelete": "스토리 지우기",
+  "skFailed": "지금은 바꿀 수 없어요. 잠시 뒤에 다시 해 주세요",
+  "skKeptDone": "프로필에 남겼어요",
+  "skUnkeptDone": "프로필에서 뺐어요",
+  "skDeleteIn": "{n}초 뒤에 지워져요",
+  "@skDeleteIn": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "skTopFull": "맨 위에는 3개까지 고정할 수 있어요",
+  "skAlbums": "앨범",
+  "skAlbumNone": "앨범 없음",
+  "skAlbumNew": "새 앨범",
+  "skAlbumName": "앨범 이름",
+  "skAlbumInfo": "앨범은 프로필에서 스토리를 주제별로 모아 보여 줘요. 그 스토리를 받은 친구에게만 보여요.",
+  "skCoverTitle": "표지",
+  "skCoverNone": "이 영상에서는 장면을 꺼낼 수 없어요",
+  "skCoverInfo": "프로필과 보관함에 이 장면이 보여요",
+  "skKeptCount": "프로필 스토리 {n}개",
+  "@skKeptCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "skAll": "전체",
+  "skPostOpen": "글 보기",
+  "skMusicTooBig": "음악 파일은 10MB까지 넣을 수 있어요",
+  "skReact": "반응",
+  "skMusic": "음악",
+  "skRound": "동그라미 영상",
+  "skReactPick": "반응 스티커",
+  "skReactInfo": "친구가 누르면 나에게만 반응이 와요",
+  "skEdited": "수정됨",
+  "skReactSent": "반응을 보냈어요",
+  "skSaved": "고쳤어요",
+  "skCoverPill": "표지",
+  "skSplit": "긴 영상이라 스토리 {n}개로 나눠 올려요",
+  "@skSplit": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "skSplitInfo": "누르면 그 부분을 빼요",
+  "skGroupStory": "그룹 스토리",
+  "skGroupStoryNew": "그룹 스토리 올리기",
+  "skChannelStoryNew": "채널 스토리 올리기",
+  "skGroupStoryInfo": "운영자만 올릴 수 있어요. 멤버 모두가 대화 목록 위에서 봐요. 그룹 암호화 안에서만 가요.",
+  "skGroupOpen": "그룹으로 가기",
+  "skGroupShared": "그룹 스토리를 올렸어요",
+  "skToStory": "내 스토리",
+  "skKeptMine": "프로필 스토리",
+  "skKeptEmpty": "프로필에 남긴 스토리가 없어요. 내 스토리를 열고 ⋯ 버튼에서 프로필에 남기기를 눌러요.",
+  "skKeptInfo": "24시간이 지나도 친구들이 내 프로필에서 볼 수 있어요. 그 스토리를 받은 친구에게만 보여요.",
+  "skMore": "더 보기",
+  "skMuteTap": "눌러서 소리 켜고 끄기",
+  "skRoundShort": "동그라미",
+  "quickForwardIn": "{n}초 뒤에 전달해요",
+  "@quickForwardIn": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "quickForwardTo": "받는 곳: {name}",
+  "@quickForwardTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "quickForwardHint": "화살표를 꾹 누른 채 밀면 바로 전달돼요",
+  "nextChannelPull": "안 읽은 글 {n}개 · 위로 밀어 다음 채널",
+  "@nextChannelPull": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "nextChannelLetGo": "놓으면 다음 채널로 가요",
+  "sendAsTitle": "보내는 이름",
+  "sendAsInfo": "이 대화에서 내 글이 어떤 이름으로 보일지 골라요",
+  "sendAsMe": "내 이름과 사진으로 보여요",
+  "sendAsChannelHidden": "채널 이름만 보이고 내 이름은 안 보여요",
+  "sendAsMyChannel": "내 공개 채널 이름으로 보여요",
+  "sendAsChanged": "{name} 이름으로 보내요",
+  "@sendAsChanged": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "showAuthors": "작성자 프로필 보이기",
+  "showAuthorsInfo": "켜면 글마다 쓴 관리자의 사진과 이름이 보여서 그룹처럼 보여요. 관리자는 입력칸 왼쪽 사진을 눌러 채널 이름으로 올릴 수도 있어요.",
+  "subscriberDm": "구독자 메시지 받기",
+  "subscriberDmInfo": "켜면 구독자가 💬 버튼으로 관리자에게 따로 메시지를 보낼 수 있어요. 대화는 끝까지 암호화돼요.",
+  "dmInboxTag": "메시지",
+  "dmInboxSub": "{channel} · 구독자 메시지",
+  "@dmInboxSub": {
+    "placeholders": {
+      "channel": {
+        "type": "String"
+      }
+    }
+  },
+  "dmEmptyTitle": "관리자에게 메시지 보내기",
+  "dmEmptyBody": "{channel} 관리자에게만 보여요. 끝까지 암호화돼요.",
+  "@dmEmptyBody": {
+    "placeholders": {
+      "channel": {
+        "type": "String"
+      }
+    }
+  },
+  "dmButtonHint": "채널 관리자에게 메시지 보내기",
+  "dmToAdmins": "관리자에게 보내는 메시지",
+  "dmOpenFailed": "지금은 메시지를 보낼 수 없어요",
+  "allBackgrounds": "배경 모두 보기",
+  "allBackgroundsInfo": "누르면 내 기본 배경이 바로 바뀌어요. 밤을 누르면 야간 모드일 때 모습을 미리 볼 수 있어요.",
+  "channelNameColor": "채널 이름 색",
+  "channelNameColorInfo": "채널 글에 답장할 때 인용 칸이 이 색으로 보여요.",
+  "dayLook": "낮",
+  "nightLook": "밤",
+  "gradInfo": "내가 메시지를 보낼 때마다 색이 조금씩 돌아요. 색과 무늬는 이 휴대폰에만 저장돼요.",
+  "gradSky": "하늘",
+  "gradPeach": "복숭아",
+  "gradMint": "민트",
+  "gradLilac": "라일락",
+  "gradSunset": "노을",
+  "gradNight": "밤하늘",
+  "gradPickColor": "동그라미를 누르고 색을 골라요",
+  "gradTapToTurn": "눌러서 움직임 보기",
+  "lookFromLevel": "레벨 {n}부터",
+  "@lookFromLevel": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "lookSampleLink": "링크 미리보기",
+  "lookSampleLinkText": "burumy.app · 새 소식",
+  "lookSampleQuote": "오늘 몇 시에 만나요?",
+  "lookSampleText": "7시 어때요?",
+  "myThemes": "내 테마",
+  "myThemesInfo": "누르면 바로 바뀌어요. 꾹 누르면 고치기·링크 복사·삭제를 할 수 있어요. 링크를 대화에 보내면 친구도 같은 테마를 쓸 수 있어요.",
+  "nightBrightness": "밤 밝기",
+  "nightBrightnessInfo": "야간 모드일 때 사진·색 배경을 이만큼 어둡게 해요.",
+  "none": "없음",
+  "patternStrength": "무늬 강도",
+  "patternTitle": "무늬",
+  "personLook": "이름·프로필 꾸미기",
+  "personLookInfo": "그룹에서는 이름 색과 함께 모두에게 보이고, 1:1 대화 상대에게는 암호화된 쪽지로 전해져요.",
+  "pickBackground": "배경 고르기",
+  "profileColor": "프로필 색",
+  "profileIcons": "프로필 무늬",
+  "replyIcons": "답장 무늬",
+  "replyIconsInfo": "다른 사람이 내 메시지에 답장하면 인용 칸에 이 무늬가 흐리게 보여요.",
+  "roomCoverColor": "표지 색",
+  "roomLogoIcons": "표지 무늬",
+  "roomLook": "모양",
+  "roomLookFailed": "바꾸지 못했어요. 관리자인지 확인해 주세요.",
+  "roomLookInfo": "모든 멤버에게 보여요. 커뮤니티 레벨이 오를수록 꾸밀 수 있는 것이 늘어나요.",
+  "roomLookSaved": "모양을 바꿨어요",
+  "roomStatusEmoji": "상태 이모지",
+  "roomWallAll": "모두에게 보이는 배경",
+  "roomWallAllInfo": "멤버가 이 대화방 배경을 따로 고르지 않았다면 이 배경이 보여요.",
+  "themeAccentInfo": "강조색은 말풍선·버튼·스위치에 쓰여요. 너무 어두운 색은 읽기 쉽게 조금 밝게 바꿔요.",
+  "themeApplied": "테마를 적용했어요",
+  "themeApply": "이 테마 적용하기",
+  "themeCardOpen": "테마 보기",
+  "themeCopyLink": "링크 복사",
+  "themeDefaultName": "내 테마",
+  "themeDeletedIn": "{n}초 뒤에 테마를 지워요",
+  "@themeDeletedIn": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "themeEdit": "테마 고치기",
+  "themeLinkCopied": "테마 링크를 복사했어요. 대화에 붙여 보내 보세요.",
+  "themeLinkInfo": "테마는 링크 안에 들어 있어요. 서버에서 받아 오는 것은 없어요.",
+  "themeMake": "테마 만들기",
+  "themeMakeInfo": "저장하면 바로 적용돼요. 야간 모드에서는 같은 배경이 조금 어둡게 보여요.",
+  "themeNameHint": "테마 이름",
+  "themeNew": "새 테마",
+  "themePartAccent": "강조색",
+  "themePartWall": "배경",
+  "themeSaved": "테마를 저장했어요",
+  "wallApplyBoth": "나와 상대 모두 적용",
+  "wallApplyHere": "이 대화에만 적용",
+  "wallBlur": "흐림",
+  "wallFromPhotos": "사진에서 고르기",
+  "wallMakeColors": "색 섞어 만들기",
+  "wallMine": "내가 만든 배경",
+  "wallMixed": "내가 섞은 색",
+  "wallMoreChoices": "사진·색으로 고르기",
+  "wallMotion": "움직임",
+  "wallNoteKeep": "그대로 두기",
+  "wallNoteMine": "나와 {name}님 화면에 새 배경을 설정했어요",
+  "@wallNoteMine": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "wallNoteTheirs": "{name}님이 두 사람 화면에 새 배경을 설정했어요",
+  "@wallNoteTheirs": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "wallNoteUndo": "내 배경으로 되돌리기",
+  "wallPhotoMineOnly": "사진 배경은 내 휴대폰에만 보여요",
+  "wallPreview": "배경 미리보기",
+  "wallPreviewReply": "옆으로 넘기면 다른 배경을 볼 수 있어요",
+  "wallReady": "부루미 배경",
+  "wallSet": "배경으로 설정",
+  "wallSolid": "단색",
+  "wallSolidColor": "단색",
+  "anonAdminLabel": "익명 관리자",
+  "anonAdmin": "익명으로 남기",
+  "anonAdminInfo": "켜면 이 관리자가 쓴 글은 그룹 이름과 사진으로 보이고, 멤버 목록에서도 보이지 않아요. 켜기 전에 쓴 글은 그대로예요. 앱 화면에서만 숨겨지고, 서버 기록에는 보낸 계정이 남아요.",
+  "anonSelfInfo": "켜면 내가 쓴 글이 그룹 이름과 사진으로 보이고, 멤버 목록에서 나를 숨겨요. 켜기 전에 쓴 글은 그대로예요. 앱 화면에서만 숨겨지고, 서버 기록에는 보낸 계정이 남아요.",
+  "anonShort": "익명",
+  "myTag": "내 태그",
+  "myTagAdd": "내 태그 달기",
+  "myTagInfo": "이 그룹에서 내 이름 옆에 보여요 (최대 16자). 비우면 태그가 사라져요.",
+  "ownTags": "스스로 태그 달기",
+  "ownTagsInfo": "켜면 멤버가 그룹 정보에서 자기 이름 옆 태그를 직접 달 수 있어요. 관리자가 달아 준 태그가 있으면 그게 먼저 보여요. 관리자 태그는 초록색, 멤버 태그는 회색이에요.",
+  "antiSpam": "강력 스팸 차단",
+  "antiSpamIntro": "광고·도박·대출 같은 스팸을 관리자 폰이 알아서 지워요. 대화 내용은 서버가 읽을 수 없어서, 글을 지울 수 있는 관리자 폰에서 확인해요.",
+  "antiSpamInfo": "200명이 넘는 큰 그룹에 특히 좋아요. 관리자 글과 '스팸 아님'으로 둔 사람 글은 지우지 않아요. 지워진 글은 모두의 화면에서 가루처럼 흩어져 사라져요.",
+  "antiSpamChecks": "이런 글을 걸러요",
+  "antiSpamCheckWords": "도박·대출·리딩방 같은 스팸 단어",
+  "antiSpamCheckLinks": "새로 온 멤버의 링크와 연락처 (텔레그램 아이디, 오픈채팅, 전화번호)",
+  "antiSpamCheckRepeat": "같은 글을 여러 번 올리기",
+  "antiSpamCheckMentions": "한 번에 여러 사람 부르기 (@ 6개 이상)",
+  "antiSpamCheckStrikes": "하루에 3번 걸리면 하루 동안 글쓰기 금지",
+  "antiSpamRemoved": "스팸 차단이 지운 글",
+  "antiSpamRemovedInfo": "이 폰이 지운 글이에요. 잘못 지웠으면 '스팸 아님'을 눌러요. 그 사람 글은 다시 거르지 않고, 스팸 때문에 걸린 글쓰기 금지도 풀려요.",
+  "antiSpamNone": "아직 지운 글이 없어요",
+  "spamOk": "스팸 아님",
+  "spamOkMark": "스팸 아님 처리됨",
+  "spamOkDone": "{name}님 글은 이제 거르지 않아요",
+  "@spamOkDone": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "logSpam": "스팸 차단이 {name}님 글을 지웠어요",
+  "@logSpam": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "logSpamOk": "{name}님을 스팸 아님으로 두었어요",
+  "@logSpamOk": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "groupReadCount": "{n}명 읽음",
+  "@groupReadCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "groupReadTitle": "{n}명 읽음",
+  "@groupReadTitle": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "groupReadNotYet": "{n}명은 아직 안 읽었어요.",
+  "@groupReadNotYet": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "groupReadInfo": "100명 이하 그룹에서만 보여요. 읽은 시간은 7일 동안 남아요.",
+  "groupReadToday": "오늘 {time}",
+  "@groupReadToday": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "groupReadYesterday": "어제 {time}",
+  "@groupReadYesterday": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "draftFromOther": "다른 기기에서 쓰던 글을 이어서 쓸 수 있어요",
+  "toneGoing": "'{name}' 소리를 지워요 · {n}초",
+  "@toneGoing": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "soundChatDefault": "기본 ({name})",
+  "@soundChatDefault": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "toneMine": "내 소리",
+  "toneMineEmpty": "대화에서 5초 이하의 음성 메시지를 길게 누르고 '알림음으로 저장'을 누르면 여기에 생겨요.",
+  "toneMineInfo": "소리는 이 기기 안에 암호화해서 보관해요. 앱을 쓰는 동안 이 소리가 나고, 잠긴 화면 알림은 지금은 기본 소리로 울려요.",
+  "toneSeconds": "{n}초",
+  "@toneSeconds": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "toneNone": "아직 저장한 소리가 없어요",
+  "toneOurs": "부루미 소리",
+  "saveAsTone": "알림음으로 저장",
+  "toneTooLong": "5초·300KB 이하의 소리만 알림음으로 저장할 수 있어요",
+  "toneFull": "알림음은 {n}개까지 저장할 수 있어요",
+  "@toneFull": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "toneDefaultName": "{who}의 소리 {n}",
+  "@toneDefaultName": {
+    "placeholders": {
+      "who": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "toneSaved": "알림음에 추가했어요. 대화의 알림 메뉴에서 고를 수 있어요",
+  "toneForChat": "알림음 바꾸기",
+  "storageTitle": "저장 공간",
+  "storageOther": "기타 임시 파일",
+  "storageNoLimit": "제한 없음",
+  "storageClearing": "{size} 비우는 중 · {n}초",
+  "@storageClearing": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "storageFreed": "{size} 비웠어요",
+  "@storageFreed": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "storageFreedInfo": "대화는 그대로예요. 필요하면 누르는 순간 다시 받아요.",
+  "storageNothing": "비울 게 없어요",
+  "storageOnDevice": "이 기기에서 쓰는 공간",
+  "storageOfTotal": "전체 {size} 중",
+  "@storageOfTotal": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "storageKeepsChats": "걱정 마세요. 비워도 대화와 메시지는 그대로 남고, 사진·동영상·파일은 누르면 서버에서 다시 받아요.",
+  "storagePercent": "{n}%",
+  "@storagePercent": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "storageClearButton": "선택한 것 비우기 · {size}",
+  "@storageClearButton": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "storagePickKind": "비울 종류를 골라 주세요",
+  "keepExceptions": "예외로 둔 대화",
+  "keepExceptionInfo": "이 대화만 따로 정한 기간이 지나면 받아 둔 파일을 지워요. '안 지워요'로 두면 이 대화 파일은 자동으로 지우지 않아요.",
+  "storageMaxTitle": "최대 저장 용량",
+  "storageMaxInfo": "받아 둔 파일이 이 크기를 넘으면 가장 오래 안 연 것부터 지워요. 휴대폰과 PC 앱은 각자 이 기기 안에서 지켜요.",
+  "storageAllChats": "모든 대화 보기",
+  "storageBig": "큰 파일",
+  "storageTabMedia": "사진·동영상",
+  "dataUsageTitle": "데이터 사용량",
+  "storageThisChat": "이 대화",
+  "usageMessages": "메시지",
+  "usageCalls": "통화",
+  "usageResetting": "통계를 지워요 · {n}초",
+  "@usageResetting": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "usageAll": "전체",
+  "usageCell": "모바일 데이터",
+  "usageWifi": "Wi-Fi",
+  "usageUsed": "사용한 데이터",
+  "usageInfo": "이 기기에서만 세요. 사진·동영상·파일·음성은 실제 크기, 메시지는 글자 크기, 통화는 통화 시간으로 어림한 값이에요.",
+  "usageAbout": "약 {size}",
+  "@usageAbout": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "usageSent": "보냄",
+  "usageRecv": "받음",
+  "usageSentN": "보냄 · {n}개",
+  "@usageSentN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "usageRecvN": "받음 · {n}개",
+  "@usageRecvN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "usageSince": "{date}부터 센 값이에요",
+  "@usageSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "usageReset": "통계 초기화",
+  "draftSync": "임시 글 내 기기끼리 이어쓰기",
+  "draftSyncSub": "쓰다 만 글을 내 다른 기기(PC 등)에서 이어 써요. 암호화해서 내 기기끼리만 주고받아요.",
+  "archiveSettings": "보관함 설정",
+  "archiveHow": "보관함은 이렇게 써요",
+  "archiveIntroTitle": "이게 보관함이에요",
+  "archiveIntro1Title": "목록을 깔끔하게",
+  "archiveIntro1": "자주 안 보는 대화를 옮겨 두면 대화 목록이 가벼워져요. 대화는 그대로 남아요.",
+  "archiveIntro2Title": "알림 끈 대화는 계속 여기에",
+  "archiveIntro2": "알림을 끈 대화는 새 메시지가 와도 보관함에 있어요. 알림 켠 대화는 새 메시지가 오면 목록으로 돌아와요. 보관함 설정에서 바꿀 수 있어요.",
+  "archiveIntro3Title": "밀어서 넣고 빼기",
+  "archiveIntro3": "대화를 왼쪽으로 밀어 보관하고, 보관함 안에서 다시 밀면 꺼내요.",
+  "archiveSettingsInfo": "보관한 대화가 언제 목록으로 돌아올지 정해요. 이 휴대폰에만 저장돼요.",
+  "archiveUnmutedHeader": "알림 켠 대화",
+  "archiveKeepUnmuted": "새 메시지가 와도 계속 보관",
+  "archiveUnmutedInfo": "끄면 알림 켠 대화는 누가 새 메시지를 보낼 때 목록으로 돌아와요. 알림 끈 대화는 언제나 보관함에 남아요.",
+  "archiveFolderHeader": "폴더에 넣은 대화",
+  "archiveKeepFolder": "새 메시지가 와도 계속 보관",
+  "archiveFolderInfo": "폴더에 직접 넣은 대화는 폴더 탭에서 볼 수 있으니 보관함에 계속 둘 수 있어요.",
+  "archiveStrangerHeader": "모르는 사람",
+  "folderShare": "폴더 공유하기",
+  "folderShareRowInfo": "링크 하나로 이 폴더의 그룹·채널을 친구에게 한 번에 보내요.",
+  "folderShareTitle": "'{name}' 폴더 공유",
+  "@folderShareTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "folderShareInfo": "링크를 연 사람은 폴더를 추가하고, 고른 대화에 한 번에 들어와요.",
+  "folderShareChats": "링크에 넣을 대화",
+  "folderShareChatsInfo": "1:1 대화와 초대 링크가 없는 대화는 빠져요. 들어올 때는 대화마다 정한 규칙(승인, 가입 질문)을 그대로 지켜요.",
+  "folderShareNone": "이 폴더에는 공유할 그룹이나 채널이 없어요",
+  "folderShareNoLink": "초대 링크 없음",
+  "folderJoinTitle": "'{name}' 폴더 추가",
+  "@folderJoinTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "folderJoinInfo": "고른 대화에 들어가고, 대화 목록 위에 이 폴더 탭이 생겨요.",
+  "folderJoinChats": "대화 {n}개",
+  "@folderJoinChats": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "folderJoinIn": "이미 들어가 있어요",
+  "folderJoinGo": "폴더 추가하고 {n}개 들어가기",
+  "@folderJoinGo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "folderJoined": "'{name}' 폴더를 추가했어요 · 대화 {n}개",
+  "@folderJoined": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "folderJoinNone": "들어간 대화가 없어 폴더를 만들지 않았어요",
+  "folderJoinAsked": "{n}개는 승인을 기다려요.",
+  "@folderJoinAsked": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "folderJoinFailed": "{n}개는 들어가지 못했어요.",
+  "@folderJoinFailed": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "accountPreviewEmpty": "아직 대화가 없어요",
+  "accountPreviewSwitch": "이 계정으로 바꾸기",
+  "onceGoesHours": "안 열면 {n}시간 뒤 사라져요",
+  "@onceGoesHours": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "onceGoesMinutes": "안 열면 {n}분 뒤 사라져요",
+  "@onceGoesMinutes": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "onceOpenWithinHours": "눌러서 열기 · {n}시간 남음",
+  "@onceOpenWithinHours": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "onceOpenWithinMinutes": "눌러서 열기 · {n}분 남음",
+  "@onceOpenWithinMinutes": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "zipCount": "파일 {n}개",
+  "@zipCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "zipUnpacked": "풀면 {size}",
+  "@zipUnpacked": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "zipFirstOnly": "앞의 {n}개만 보여요",
+  "@zipFirstOnly": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "zipInfo": "압축을 풀지 않고 보여 줘요. 누른 파일만 이 폰 메모리에서 열고, 저장하거나 서버로 보내지 않아요.",
+  "zipPassword": "암호가 걸린 압축 파일이라 안을 볼 수 없어요",
+  "zipEmpty": "빈 압축 파일이에요",
+  "zipTooBig": "풀면 50MB가 넘어서 여기서는 못 열어요",
+  "zipCantOpen": "이 파일은 열 수 없어요",
+  "storyGroupOnly": "그룹에만",
+  "storyGroupOnlySub": "고른 그룹의 멤버만 봐요",
+  "storyGroupOnlyInfo": "그 그룹 멤버라면 친구가 아니어도 볼 수 있어요. 다른 그룹과 친구에게는 가지 않아요.",
+  "storyGroupOnlyLabel": "{name}에만",
+  "@storyGroupOnlyLabel": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "storyGroupOnlyShared": "{name} 멤버에게만 올렸어요",
+  "@storyGroupOnlyShared": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "textStickerTitle": "글자 스티커",
+  "textStickerSave": "보내기",
+  "textStickerHint": "아래에 쓴 글자가 여기에 스티커로 보여요",
+  "textStickerPlain": "글자만",
+  "textStickerBubble": "말풍선",
+  "textStickerBadge": "동그라미",
+  "textStickerTag": "이름표",
+  "textStickerPlaceholder": "짧은 말을 써 보세요",
+  "textStickerTile": "글자",
+  "pdfMarkAdd": "형광펜",
+  "pdfMarkDone": "형광펜으로 표시했어요",
+  "pdfMarks": "형광펜 표시 {count}개",
+  "@pdfMarks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pdfMarksTitle": "형광펜 표시",
+  "pdfMarksInfo": "표시는 이 휴대폰에만 남아요. 대화에 보내기 전에는 아무도 못 봐요.",
+  "pdfMarkPage": "{page}쪽",
+  "@pdfMarkPage": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      }
+    }
+  },
+  "pdfMarksSend": "대화에 보내기",
+  "pdfMarksSent": "대화에 보냈어요",
+  "pdfMarksQuote": "{name}에서 표시한 부분",
+  "@pdfMarksQuote": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pdfMarkGoing": "표시를 지워요 ({seconds})",
+  "@pdfMarkGoing": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "pdfMarksHow": "글자를 꾹 눌러 고른 다음 '형광펜'을 누르면 표시돼요.",
+  "appIconMarks": "부루미 마크",
+  "appIconCharacters": "캐릭터",
+  "appIconLogos": "다른 로고",
+  "appIconLogo": "로고 {letter}",
+  "@appIconLogo": {
+    "placeholders": {
+      "letter": {
+        "type": "String"
+      }
+    }
+  },
+  "linkSummaryButton": "3줄 요약",
+  "linkSummaryBusy": "요약하는 중…",
+  "linkSummaryTitle": "3줄 요약 · 나만 보여요",
+  "linkSummaryFailed": "글을 가져오지 못했어요. 읽기 모드로 열어 보세요.",
+  "linkSummaryHide": "요약 접기",
+  "shotLine": "{name}님이 {what, select, photo{한 번 보기 사진을} video{한 번 보기 영상을} voice{한 번 듣기 음성을} round{한 번 보기 동그란 영상을} file{보호된 파일을} bubble{비눗방울을} other{대화 화면을}} 캡처했어요",
+  "@shotLine": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "shotLineMine": "내가 {what, select, photo{한 번 보기 사진을} video{한 번 보기 영상을} voice{한 번 듣기 음성을} round{한 번 보기 동그란 영상을} file{보호된 파일을} bubble{비눗방울을} other{대화 화면을}} 캡처했어요 · 대화방에 알렸어요",
+  "@shotLineMine": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "shotPreview": "📸 {name}님이 캡처했어요",
+  "@shotPreview": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "shotPreviewMine": "📸 캡처했다고 알렸어요",
+  "shotInfoTitle": "캡처 알림",
+  "shotInfoBody": "부루미는 한 번 보기 사진·영상, 보호된 파일, 공유를 막은 대화를 캡처하지 못하게 막아요. 안드로이드는 캡처하면 검은 화면만 남아요. 아이폰은 앱이 캡처를 막을 수 없어서, 대신 캡처한 사실을 대화방에 알려요. 알림은 끝까지 암호화되어 서버는 몰라요.",
+  "bestFriendSwitch": "제일 친한 친구 표시",
+  "bestFriendInfo": "최근 2주 동안 서로 가장 많이 대화한 친구 이름 옆에 ❤가 붙어요. 내 폰이 직접 세고 나만 봐요. 서버도, 그 친구도 몰라요.",
+  "bestFriendTip": "제일 친한 친구예요",
+  "bestFriendTipBody": "최근 2주 동안 서로 가장 많이 대화했어요. 이 ❤는 나만 보여요.",
+  "memoriesTitle": "{years}년 전 오늘",
+  "@memoriesTitle": {
+    "placeholders": {
+      "years": {
+        "type": "int"
+      }
+    }
+  },
+  "memoriesPreview": "📷 {years}년 전 오늘 저장한 사진 {count}개가 있어요",
+  "@memoriesPreview": {
+    "placeholders": {
+      "years": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "memoriesOpen": "보기",
+  "memoriesSwitch": "1년 전 오늘 보기",
+  "memoriesInfo": "저장한 메시지에 올려 둔 사진·영상 중 몇 년 전 오늘 저장한 것을 폰이 골라 저장한 메시지 줄에 알려 줘요. 새로 올리거나 서버에 보관하는 건 없어요.",
+  "memoriesSend": "대화로 보내기",
+  "memoriesGoTo": "저장한 메시지에서 보기",
+  "memoriesOnPhone": "내 폰이 고른 추억이에요 · 서버에는 없어요",
+  "feedComment": "댓글",
+  "feedCommentHint": "댓글 달기…",
+  "feedCommentsKnown": "아는 친구 댓글만 보여요",
+  "feedCommentsMine": "내 글이라 댓글이 모두 보여요",
+  "feedCommentsMore": "댓글 {n}개 모두 보기",
+  "@feedCommentsMore": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "feedCommentDelete": "댓글 삭제",
+  "feedCommentsTitle": "댓글",
+  "feedCommentsInfo": "댓글은 글쓴이에게만 암호화되어 가고, 글쓴이 폰이 친구들에게 다시 나눠 줘요. 친구 폰은 그 친구가 아는 사람의 댓글만 보여 줘요. 서버는 누가 누구와 친구인지 몰라요. 다른 댓글은 지워지지 않고 내 폰에서만 가려져요.",
+  "memoriesCount": "{count}개",
+  "@memoriesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "accountSuspended": "계정이 잠시 정지됐어요. 고친 앱이나 프로그램으로 규칙을 어기려는 시도가 여러 번 있었어요. 정지 기간이 끝나면 다시 쓸 수 있고, 그동안은 대화방 나가기만 돼요. 잘못된 정지라면 이의 신청을 보내 주세요.",
+  "accountWarned": "이 앱이 바뀐 것 같아요. 같은 시도를 계속하면 계정이 정지돼요. 공식 부루미 앱을 써 주세요.",
+  "pullCameraSwitch": "아래로 당겨 카메라 열기",
+  "pullCameraInfo": "대화 목록 맨 위에서 아래로 길게 당기면 카메라가 바로 열려요. 짧게 당기면 지금처럼 보관함이 나와요.",
+  "pullCameraMore": "더 당기면 카메라",
+  "pullCameraLetGo": "놓으면 카메라가 열려요",
+  "aiFriendName": "AI 친구",
+  "aiFriendPreview": "폰 안의 AI와 이야기해요",
+  "aiFriendLock": "이 폰 안에서만 대화해요 · 서버로 가지 않아요",
+  "aiFriendHint": "AI 친구에게 메시지",
+  "aiFriendHello": "안녕하세요! 저는 부루미 AI 친구예요. 궁금한 걸 묻거나, 보낼 말을 같이 고민해 봐요. 우리 대화는 이 폰 밖으로 나가지 않아요.",
+  "aiFriendIdea1": "오늘 저녁 메뉴 추천해 줘",
+  "aiFriendIdea2": "친구 생일 축하 문구 써 줘",
+  "aiFriendIdea3": "주말에 뭐 하면 좋을까?",
+  "aiFriendIdea4": "이 말 영어로 바꿔 줘: 오늘 고마웠어",
+  "aiFriendThinking": "생각하는 중…",
+  "aiFriendFailed": "지금은 답하지 못했어요. 잠시 후 다시 보내 주세요.",
+  "aiFriendNoAi": "이 폰에는 AI가 없어서 AI 친구를 쓸 수 없어요. 아이폰은 Apple Intelligence, 안드로이드는 Gemini Nano가 있는 폰에서 돼요.",
+  "aiFriendClear": "대화 지우기",
+  "aiFriendCleared": "AI 친구와의 대화를 지웠어요",
+  "aiFriendHide": "대화 목록에서 빼기",
+  "aiFriendHidden": "AI 친구를 목록에서 뺐어요 · 설정 > 대화에서 다시 켤 수 있어요",
+  "aiFriendSwitch": "대화 목록에 AI 친구 보이기",
+  "aiFriendSwitchSub": "폰 안의 AI만 써요",
+  "aiFriendWrong": "AI의 답은 틀릴 수 있어요",
+  "aiFriendCopy": "복사",
+  "aiFriendCopied": "복사했어요",
+  "aiFriendShare": "대화로 보내기",
+  "aiFriendAsk": "AI 친구에게 묻기: {words}",
+  "@aiFriendAsk": {
+    "placeholders": {
+      "words": {
+        "type": "String"
+      }
+    }
+  },
+  "shopTitle": "스티커 가게",
+  "shopFree": "무료 스티커",
+  "shopFreeInfo": "부루미가 직접 그린 스티커예요. 추가하면 스티커 창에 바로 생겨요.",
+  "shopPaid": "유료 스티커",
+  "shopSoon": "곧 열려요",
+  "shopPaidInfo": "작가 스티커와 특별 팩은 결제가 열리면 여기서 살 수 있어요. 브랜드 광고 스티커는 팔지 않아요. 부루미는 광고를 넣지 않아요.",
+  "shopFreeTag": "무료",
+  "shopMovingN": "움직이는 스티커 {n}개",
+  "@shopMovingN": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "shopBy": "부루미",
+  "shopAdd": "추가하기",
+  "shopAdded": "추가됨",
+  "shopRemove": "빼기",
+  "shopPrivacy": "어떤 스티커를 받는지 서버에 알리지 않아요. 인기 순위도 폰에서 정해요.",
+  "shopNew": "새로 나왔어요",
+  "shopOpen": "스티커 가게",
+  "searchFeatures": "기능 · 설정",
+  "searchChannelPosts": "구독 채널 글",
+  "searchStickers": "스티커",
+  "searchAllPosts": "글 모두 보기",
+  "shopPackInfo": "{count}개 · {moving}개는 움직여요",
+  "@shopPackInfo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "moving": {
+        "type": "int"
+      }
+    }
+  },
+  "shopSeenTitle": "대화에서 본 묶음",
+  "aiFriendMore": "더 보기",
+  "searchFeatAiFriend": "AI 친구",
+  "searchFeatMemories": "1년 전 오늘",
+  "searchFeatBestFriend": "제일 친한 친구 표시",
+  "searchFeatLock": "앱 잠금 · 비밀번호",
+  "searchFeatPullCamera": "아래로 당겨 카메라 열기",
+  "dmInboxAll": "전체",
+  "dmInboxAllInfo": "이 채널로 온 메시지를 모두 모아 봐요. 누르면 그 사람과의 대화로 가요.",
+  "accountSuspendedEdit": "다른 사람의 메시지를 고치려는 시도가 있어서 계정이 정지됐어요. 부루미 앱에서는 할 수 없는 일이라, 고친 앱이나 프로그램을 쓴 것으로 보여요. 잘못된 정지라면 이의 신청을 보내 주세요.",
+  "appealButton": "이의 신청",
+  "appealHint": "무슨 일이 있었는지 적어 주세요",
+  "appealInfo": "운영팀만 읽어요. 대화 내용은 운영팀에게도 보이지 않아요. 한 번에 하나만 보낼 수 있어요.",
+  "appealSent": "이의 신청을 보냈어요. 운영팀이 읽고 정지를 풀지 정해요.",
+  "appealWaiting": "이의 신청을 기다리는 중이에요. 운영팀이 정지를 풀면 바로 다시 쓸 수 있어요.",
+  "appealDenied": "운영팀이 정지를 그대로 두기로 했어요. {date}부터 다시 신청할 수 있어요.",
+  "@appealDenied": {"placeholders": {"date": {"type": "String"}}},
+  "suspendUntil": "{date}까지 정지",
+  "@suspendUntil": {"placeholders": {"date": {"type": "String"}}},
+  "suspendUntilLifted": "운영팀이 풀 때까지 정지",
+  "suspendReasonEdit": "다른 사람의 메시지를 고치려는 시도",
+  "suspendReasonApp": "고친 앱이나 프로그램으로 규칙을 어기려는 시도 여러 번",
+  "notSuspended": "지금은 정지되어 있지 않아요."
 }

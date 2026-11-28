@@ -32,8 +32,16 @@ Future<(AppState, FakeBackend)> start(WidgetTester t) async {
 
 Future<void> tapKey(WidgetTester t, String key) async {
   final f = find.byKey(Key(key));
-  await t.scrollUntilVisible(f, 150, scrollable: find.byType(Scrollable).last);
-  await t.pumpAndSettle();
+  // Already on screen: tap as it is (scrolling it to the very top would put
+  // it under the glass bar now that the tools page is taller).
+  if (f.hitTestable().evaluate().isEmpty) {
+    await t.scrollUntilVisible(f, 150, scrollable: find.byType(Scrollable).last);
+    await t.pumpAndSettle();
+    if (f.hitTestable().evaluate().isEmpty) {
+      await t.drag(find.byType(Scrollable).last, const Offset(0, 120));
+      await t.pumpAndSettle();
+    }
+  }
   await t.tap(f);
   await t.pumpAndSettle();
 }
@@ -152,21 +160,37 @@ void main() {
     await t.pumpAndSettle();
     await t.tap(find.byKey(const Key('room-text-save')));
     await t.pumpAndSettle();
-    expect(b.roomConfigs['!r1']!['rules'], '1. 서로 존중해요');
+    // Encrypted: the room keeps only the fingerprint, the words go in a
+    // hidden encrypted note.
+    expect(b.roomConfigs['!r1']!.containsKey('rules'), isFalse);
+    expect((b.roomConfigs['!r1']!['texts'] as Map)['r'], true);
+    expect(b.sentSignals.last.$3['rules'], '1. 서로 존중해요');
     expect(b.roomConfigs['!r1']!['rules_agree'], true);
 
+    // Welcome: a little chat screen with the preview bubble.
     await tapKey(t, 'tool-welcome');
-    await t.enterText(find.byKey(const Key('room-text')), '반가워요!');
-    await t.tap(find.byKey(const Key('room-text-save')));
+    expect(find.byKey(const Key('welcome-empty')), findsOneWidget);
+    await t.enterText(find.byKey(const Key('welcome-input')), '반가워요!');
+    await t.tap(find.byKey(const Key('welcome-put')));
     await t.pumpAndSettle();
-    expect(b.roomConfigs['!r1']!['welcome'], '반가워요!');
+    expect(find.byKey(const Key('welcome-preview')), findsOneWidget);
+    expect(find.text('나만 보여요'), findsOneWidget);
+    await t.tap(find.byKey(const Key('welcome-save')));
+    await t.pumpAndSettle();
+    expect(b.roomConfigs['!r1']!.containsKey('welcome'), isFalse);
+    expect((b.roomConfigs['!r1']!['texts'] as Map)['w'], true);
+    expect(b.sentSignals.last.$3['welcome'], '반가워요!');
+    expect(b.sentSignals.last.$3['rules'], '1. 서로 존중해요', reason: 'rules kept');
 
     await tapKey(t, 'tool-reactions');
     await t.tap(find.byKey(const Key('pick-some')));
     await t.pumpAndSettle();
     await t.tap(find.byKey(const Key('react-pick-🔥')));
     await t.pumpAndSettle();
-    await tapKey(t, 'react-max-minus');
+    // Tip 450: a slider now (saved once the finger rests).
+    t.widget<CupertinoSlider>(find.byKey(const Key('react-max-slider'))).onChanged!(10);
+    await t.pump(const Duration(milliseconds: 500));
+    await t.pumpAndSettle();
     expect(b.roomConfigs['!r1']!['reactions'], 'some');
     expect(b.roomConfigs['!r1']!['reactions_set'], contains('🔥'));
     expect(b.roomConfigs['!r1']!['reactions_max'], 10);
@@ -199,7 +223,7 @@ void main() {
 
     // My own background for this chat only.
     await tapKey(t, 'info-theme');
-    await t.tap(find.byKey(const Key('pick-nature')));
+    await t.tap(find.byKey(const Key('room-theme-nature')));
     await t.pumpAndSettle();
     expect(s.pref('chat_theme:!r1', ''), 'nature');
     expect(s.pref('chat_theme', 'plain'), 'plain');
@@ -216,7 +240,8 @@ void main() {
     await t.pumpAndSettle();
     expect(find.byKey(const Key('rules-gate')), findsOneWidget);
     expect(find.byKey(const Key('composer')), findsNothing);
-    expect(find.byKey(const Key('welcome-card')), findsOneWidget);
+    // An old room (plain settings) still shows its welcome as my bubble.
+    expect(find.byKey(const Key('welcome-bubble')), findsOneWidget);
     expect(find.byKey(const Key('reaction-👍')), findsNothing, reason: 'room allows no reactions');
 
     await t.tap(find.byKey(const Key('rules-open')));
@@ -227,9 +252,11 @@ void main() {
     expect(find.byKey(const Key('composer')), findsOneWidget);
     expect(s.on('agreed:!r1'), isTrue);
 
-    await t.tap(find.byKey(const Key('welcome-close')));
+    await t.longPress(find.byKey(const Key('welcome-bubble')));
     await t.pumpAndSettle();
-    expect(find.byKey(const Key('welcome-card')), findsNothing);
+    await t.tap(find.byKey(const Key('welcome-delete')));
+    await t.pumpAndSettle();
+    expect(find.byKey(const Key('welcome-bubble')), findsNothing);
 
     // Reactions back on but counts hidden: emoji without numbers.
     b.roomConfigs['!r1'] = {...b.roomConfigs['!r1']!, 'reactions': 'all'};

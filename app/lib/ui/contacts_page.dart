@@ -10,6 +10,8 @@ import '../design/tokens.dart';
 import '../l10n/app_localizations.dart';
 import 'chat_page.dart';
 import 'common.dart';
+import 'ios.dart';
+import 'room_rules_pages.dart';
 
 class ContactsPage extends StatefulWidget {
   const ContactsPage({super.key});
@@ -43,7 +45,14 @@ class _ContactsPageState extends State<ContactsPage> {
 
   Future<void> load() async {
     final c = await state!.backend.contacts();
-    if (mounted) setState(() => contacts = c);
+    final gone = state!.removedContacts;
+    if (mounted)
+      setState(
+        () => contacts = [
+          for (final x in c)
+            if (!gone.contains(x.userId)) x,
+        ],
+      );
   }
 
   void search(String term) {
@@ -56,10 +65,42 @@ class _ContactsPageState extends State<ContactsPage> {
   }
 
   Future<void> open(Person p) async {
-    final room = p.roomId ?? await state!.makeChat(() => state!.backend.createDirectChat(p.userId));
+    if (state!.removedContacts.contains(p.userId)) unawaited(state!.removeContact(p.userId, removed: false));
+    final String room;
+    try {
+      room = p.roomId ?? await state!.makeChat(() => state!.backend.createDirectChat(p.userId));
+    } catch (e) {
+      if (mounted && !await explainDmBlocked(context, e)) rethrow;
+      return;
+    }
     unawaited(state!.refresh());
     if (mounted) {
       await openChat(context, room, p.name);
+    }
+  }
+
+  /// Long press: "연락처에서 삭제" (the chat itself stays).
+  Future<void> actions(Person person) async {
+    final l = L.of(context);
+    final ok = await showCupertinoModalPopup<bool>(
+      context: context,
+      builder: (c) => IosActionSheet(
+        title: Text(person.name),
+        message: Text(l.removeContactInfo),
+        actions: [
+          CupertinoActionSheetAction(
+            key: const Key('contact-remove'),
+            isDestructiveAction: true,
+            onPressed: () => Navigator.pop(c, true),
+            child: Text(l.removeContact),
+          ),
+        ],
+        cancelButton: CupertinoActionSheetAction(onPressed: () => Navigator.pop(c, false), child: Text(l.cancel)),
+      ),
+    );
+    if (ok == true) {
+      await state!.removeContact(person.userId);
+      await load();
     }
   }
 
@@ -109,6 +150,7 @@ class _ContactsPageState extends State<ContactsPage> {
                 return GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: () => open(person),
+                  onLongPress: found == null ? () => actions(person) : null,
                   child: Padding(
                     padding: EdgeInsets.symmetric(horizontal: Tokens.space[3], vertical: Tokens.space[1]),
                     child: Row(

@@ -2,6 +2,8 @@
 name = "burumy_bridge"
 version = "0.1.0"
 edition = "2024"
+license = "LicenseRef-Burumy-Proprietary"
+publish = false
 
 [dependencies]
 anyhow = "1.0.105"

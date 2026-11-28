@@ -2,6 +2,8 @@
 name = "burumy_web"
 version = "0.1.0"
 edition = "2024"
+license = "LicenseRef-Burumy-Proprietary"
+publish = false
 
 [lib]
 crate-type = ["cdylib"]

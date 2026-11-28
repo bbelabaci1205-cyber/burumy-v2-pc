@@ -35,9 +35,9 @@ Future<void> tap(WidgetTester t, Finder f) async {
 }
 
 void main() {
-  testWidgets('saved messages: top of the list, chips, side list, source view, info', (t) async {
+  testWidgets('saved messages: in the list by time, chips, side list, source view, info', (t) async {
     final (s, _) = await start(t);
-    expect(s.chats.first.roomId, s.savedRoomId);
+    expect(s.chats.any((c) => c.roomId == s.savedRoomId), isTrue);
     expect(find.byKey(const Key('saved-avatar')), findsWidgets);
     await tap(t, find.text('저장한 메시지').first);
     // 3 source chats; chips 링크 1, ✅ 1, ❤️ 1.

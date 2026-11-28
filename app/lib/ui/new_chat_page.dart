@@ -6,11 +6,14 @@ import '../core/app_state.dart';
 import '../core/backend.dart';
 import '../design/tokens.dart';
 import '../l10n/app_localizations.dart';
+import 'trust_ui.dart';
 import 'chat_page.dart';
 import 'common.dart';
+import 'invite_links.dart';
 import 'ios.dart';
 import 'glass.dart';
 import 'ios_route.dart';
+import 'room_rules_pages.dart';
 import 'wide.dart';
 
 /// Closes the new-chat screens and opens the chat in their place.
@@ -41,6 +44,9 @@ class NewChatPage extends StatefulWidget {
 
 class _NewChatPageState extends State<NewChatPage> {
   final id = TextEditingController();
+
+  /// 아이디 키 the other person gave me (only for their first chat).
+  final key = TextEditingController();
   List<Person> contacts = const [];
   bool busy = false;
 
@@ -57,11 +63,13 @@ class _NewChatPageState extends State<NewChatPage> {
     setState(() => busy = true);
     final s = AppScope.of(context);
     try {
-      final room = await s.makeChat(() => s.backend.createDirectChat(userId));
+      final k = key.text.trim();
+      final room = await s.makeChat(() => s.backend.createDirectChat(userId, idKey: k));
       await s.refresh();
       if (mounted) openCreated(context, room, title);
-    } catch (_) {
+    } catch (e) {
       if (mounted) setState(() => busy = false);
+      if (mounted) await explainDmBlocked(context, e);
     }
   }
 
@@ -105,6 +113,13 @@ class _NewChatPageState extends State<NewChatPage> {
                   trailing: const IosChevron(),
                   onTap: () => group(channel: true),
                 ),
+                IosTile(
+                  key: const Key('new-by-link'),
+                  leading: iconTile(Palette.tileIndigo, CupertinoIcons.link),
+                  title: Text(l.joinByLink),
+                  trailing: const IosChevron(),
+                  onTap: () => Navigator.of(context).push(IosPageRoute(builder: (_) => const JoinByLinkPage())),
+                ),
               ],
             ),
             IosSection(
@@ -122,7 +137,20 @@ class _NewChatPageState extends State<NewChatPage> {
                     onSubmitted: (v) => direct(v.trim(), v.trim()),
                   ),
                 ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: Tokens.space[1]),
+                  child: CupertinoTextField(
+                    key: const Key('new-chat-key'),
+                    controller: key,
+                    placeholder: l.idKeyEnterHint,
+                    autocorrect: false,
+                    decoration: null,
+                    padding: EdgeInsets.symmetric(horizontal: Tokens.space[1], vertical: Tokens.space[2]),
+                    onSubmitted: (_) => direct(id.text.trim(), id.text.trim()),
+                  ),
+                ),
               ],
+              footer: sectionFooter(context, l.idKeyEnterInfo),
             ),
             if (contacts.isNotEmpty)
               IosSection(
@@ -146,14 +174,17 @@ class _NewChatPageState extends State<NewChatPage> {
 
 /// Step 1 of a new group: tick the people to add (none is fine).
 class MembersPage extends StatefulWidget {
-  const MembersPage({super.key, required this.contacts});
+  const MembersPage({super.key, required this.contacts, this.picked = const {}});
   final List<Person> contacts;
+
+  /// Ticked when the page opens ("이 멤버로 새 그룹" starts with everyone).
+  final Set<String> picked;
   @override
   State<MembersPage> createState() => _MembersPageState();
 }
 
 class _MembersPageState extends State<MembersPage> {
-  final picked = <String>{};
+  late final picked = {...widget.picked};
 
   @override
   Widget build(BuildContext context) {
@@ -169,7 +200,9 @@ class _MembersPageState extends State<MembersPage> {
         trailing: CupertinoButton(
           key: const Key('members-next'),
           padding: EdgeInsets.zero,
-          onPressed: () => Navigator.of(context).push(IosPageRoute(builder: (_) => NameChatPage(channel: false, members: picked.toList()))),
+          onPressed: picked.isEmpty && widget.picked.isNotEmpty
+              ? null
+              : () => Navigator.of(context).push(IosPageRoute(builder: (_) => NameChatPage(channel: false, members: picked.toList()))),
           child: Text(l.next),
         ),
       ),
@@ -184,6 +217,7 @@ class _MembersPageState extends State<MembersPage> {
                     children: [
                       for (final c in widget.contacts)
                         IosTile(
+                          key: Key('pick-${c.userId}'),
                           leading: Avatar(name: c.name, size: 30),
                           title: Text(c.name),
                           subtitle: Text(displayId(c.userId), style: Tokens.caption.style),
@@ -214,12 +248,31 @@ class NameChatPage extends StatefulWidget {
 class _NameChatPageState extends State<NameChatPage> {
   final name = TextEditingController();
   bool busy = false;
+  String? error;
 
   Future<void> create() async {
     final n = name.text.trim();
     if (n.isEmpty || busy) return;
-    setState(() => busy = true);
+    setState(() {
+      busy = true;
+      error = null;
+    });
     final s = AppScope.of(context);
+    // Channel titles can't take a name held for its real owner (the server
+    // checks again; private groups among friends are free).
+    if (widget.channel) {
+      var why = '';
+      try {
+        why = await s.backend.nameCheck(n, room: true);
+      } catch (_) {}
+      if (!mounted) return;
+      if (why.isNotEmpty) {
+        return setState(() {
+          busy = false;
+          error = nameRefusal(L.of(context), why);
+        });
+      }
+    }
     try {
       final room = await s.makeChat(() => s.backend.createGroup(n, widget.members, channel: widget.channel));
       await s.refresh();
@@ -248,7 +301,13 @@ class _NameChatPageState extends State<NameChatPage> {
         child: ListView(
           children: [
             IosSection(
-              footer: sectionFooter(context, widget.channel ? l.channelInfo : l.groupInfo),
+              footer: error != null
+                  ? Text(
+                      error!,
+                      key: const Key('chat-name-error'),
+                      style: Tokens.caption.style.copyWith(color: Palette.tileRed),
+                    )
+                  : sectionFooter(context, widget.channel ? l.channelInfo : l.groupInfo),
               children: [
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: Tokens.space[1]),

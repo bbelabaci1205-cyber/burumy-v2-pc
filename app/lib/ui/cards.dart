@@ -13,6 +13,8 @@ import '../core/backend.dart';
 import '../core/link_check.dart';
 import '../design/tokens.dart';
 import '../l10n/app_localizations.dart';
+import 'article.dart';
+import 'chat_page.dart' show ForwardPickPage;
 import 'common.dart';
 import 'links.dart';
 import 'glass.dart';
@@ -21,7 +23,7 @@ import 'ios_route.dart';
 import 'wide.dart';
 
 /// Tools that open a card editor from the attach sheet.
-const cardKinds = ['lottery', 'form', 'faq', 'guide', 'links', 'rich', 'checkin'];
+const cardKinds = ['lottery', 'form', 'faq', 'guide', 'links', 'rich', 'checkin', 'flow'];
 
 // ---------------------------------------------------------------------------
 // Shared pieces
@@ -131,6 +133,7 @@ class _EditorScaffold extends StatelessWidget {
       ),
       child: SafeArea(
         child: ListView(
+          key: const Key('card-editor-list'),
           padding: EdgeInsets.only(bottom: Tokens.space[5]),
           children: [
             if (error != null)
@@ -182,7 +185,9 @@ Widget cardEditor(String roomId, String kind) => switch (kind) {
   'faq' => FaqEditor(roomId: roomId, guide: false),
   'guide' => FaqEditor(roomId: roomId, guide: true),
   'links' => LinksEditor(roomId: roomId),
-  'rich' => RichEditor(roomId: roomId),
+  // Formatted posts now use the long-post editor (old 'rich' cards still show).
+  'rich' || 'article' => ArticleEditor(roomId: roomId),
+  'flow' => FlowEditor(roomId: roomId),
   _ => CheckinEditor(roomId: roomId),
 };
 
@@ -1435,7 +1440,7 @@ class _CardBubbleState extends State<CardBubble> {
 
   Text title(String t) => Text(
     t,
-    style: Tokens.body.style.copyWith(color: fg, fontWeight: FontWeight.w600),
+    style: Tokens.body.style.copyWith(color: fg, fontWeight: Tokens.semi),
   );
   Text small(String t, {Key? key}) => Text(
     t,
@@ -1541,6 +1546,8 @@ class _CardBubbleState extends State<CardBubble> {
             onTap: (i) => openCardLink(context, c.listOf('buttons')[i]['url'] as String? ?? ''),
           ),
         ];
+      case 'article':
+        return [ArticleBubble(roomId: widget.roomId, msg: widget.msg, data: c.data, fg: fg)];
       case 'rich':
         return [
           if (c.text('title').isNotEmpty) Text(c.text('title'), style: Tokens.cardTitle.style.copyWith(color: fg)),
@@ -1550,7 +1557,7 @@ class _CardBubbleState extends State<CardBubble> {
               child: switch (b['t']) {
                 'h' => Text(
                   b['text'] as String? ?? '',
-                  style: Tokens.body.style.copyWith(color: fg, fontWeight: FontWeight.w600),
+                  style: Tokens.body.style.copyWith(color: fg, fontWeight: Tokens.semi),
                 ),
                 'li' => Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1577,6 +1584,8 @@ class _CardBubbleState extends State<CardBubble> {
               },
             ),
         ];
+      case 'flow':
+        return [FlowCardBody(roomId: widget.roomId, msg: widget.msg, fg: fg)];
       case 'lottery':
         final joined = c.mine == 'in';
         final n = c.counts['in'] ?? 0;
@@ -1595,7 +1604,7 @@ class _CardBubbleState extends State<CardBubble> {
               Text(
                 l.lotteryWon,
                 key: const Key('lottery-won'),
-                style: Tokens.body.style.copyWith(color: fg, fontWeight: FontWeight.w600),
+                style: Tokens.body.style.copyWith(color: fg, fontWeight: Tokens.semi),
               ),
             if (c.closed && (c.counts['won'] ?? c.winners.length) == 0) small(l.lotteryNoWinner),
             if (c.winners.isNotEmpty) small(c.winners.map(displayId).join(', '), key: const Key('lottery-winners-list')),
@@ -1974,6 +1983,617 @@ class SettingsScaffoldLite extends StatelessWidget {
       backgroundColor: p.background,
       navigationBar: GlassTopBar.nav(leading: const GlassBack(), middle: Text(title), backgroundColor: p.background, border: null),
       child: SafeArea(child: ListView(children: children)),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Choice flow: questions with buttons that turn the card into the next
+// question, ending on a result (TelegramTips 576, done without a bot).
+// The whole tree is inside the encrypted card; taps stay on this phone.
+
+/// Where each person is inside each flow card ("s0", "s2", "r1"…), on
+/// this phone only and only while the app runs. Empty = the start screen.
+class FlowProgress {
+  static final paths = ValueNotifier<Map<String, List<String>>>(const {});
+  static List<String> of(String id) => paths.value[id] ?? const [];
+  static void set(String id, List<String> p) => paths.value = {...paths.value, id: p};
+  static void reset(String id) => set(id, const []);
+}
+
+class _FlowChoice {
+  _FlowChoice(this.to);
+  final label = TextEditingController();
+  String to;
+}
+
+class _FlowStep {
+  final q = TextEditingController();
+  final choices = <_FlowChoice>[];
+}
+
+class _FlowResult {
+  final title = TextEditingController();
+  final text = TextEditingController();
+  final linkLabel = TextEditingController();
+  final linkUrl = TextEditingController();
+}
+
+class FlowEditor extends StatefulWidget {
+  const FlowEditor({super.key, required this.roomId});
+  final String roomId;
+
+  @override
+  State<FlowEditor> createState() => _FlowEditorState();
+}
+
+class _FlowEditorState extends State<FlowEditor> with _Sending {
+  final title = TextEditingController();
+  final text = TextEditingController();
+  final start = TextEditingController();
+  final steps = <_FlowStep>[];
+  final results = <_FlowResult>[_FlowResult()];
+  bool stats = true;
+
+  @override
+  void initState() {
+    super.initState();
+    addStep();
+  }
+
+  @override
+  String get roomId => widget.roomId;
+  @override
+  String get kind => 'flow';
+  @override
+  Map<String, Object?> get data => {
+    'title': title.text.trim(),
+    'text': text.text.trim(),
+    'start': start.text.trim(),
+    'steps': [
+      for (final s in steps)
+        {
+          'q': s.q.text.trim(),
+          'choices': [
+            for (final c in s.choices)
+              if (c.label.text.trim().isNotEmpty) {'label': c.label.text.trim(), 'to': c.to},
+          ],
+        },
+    ],
+    'results': [
+      for (final r in results)
+        {
+          'title': r.title.text.trim(),
+          'text': r.text.text.trim(),
+          if (r.linkLabel.text.trim().isNotEmpty && webLink(r.linkUrl.text) != null) 'link': {'label': r.linkLabel.text.trim(), 'url': webLink(r.linkUrl.text)},
+        },
+    ],
+    'stats': stats,
+  };
+
+  /// A new choice goes to the next question, or to the first result.
+  String nextOf(int step) => step + 1 < steps.length ? 's${step + 1}' : 'r0';
+
+  void addStep() {
+    final s = _FlowStep();
+    steps.add(s);
+    final i = steps.length - 1;
+    s.choices.addAll([_FlowChoice(nextOf(i)), _FlowChoice(nextOf(i))]);
+  }
+
+  /// After removing question/result [gone] of [type], fix every pointer.
+  void retarget(String type, int gone) {
+    for (final (i, s) in steps.indexed) {
+      for (final c in s.choices) {
+        if (!c.to.startsWith(type)) continue;
+        final n = int.parse(c.to.substring(1));
+        if (n == gone) {
+          c.to = type == 's' ? nextOf(i) : 'r0';
+          if (c.to == 's$i') c.to = 'r0';
+        } else if (n > gone) {
+          c.to = '$type${n - 1}';
+        }
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    for (final c in [title, text, start]) {
+      c.dispose();
+    }
+    for (final s in steps) {
+      s.q.dispose();
+      for (final c in s.choices) {
+        c.label.dispose();
+      }
+    }
+    for (final r in results) {
+      for (final c in [r.title, r.text, r.linkLabel, r.linkUrl]) {
+        c.dispose();
+      }
+    }
+    super.dispose();
+  }
+
+  String targetName(L l, String to) {
+    final n = int.parse(to.substring(1)) + 1;
+    return to.startsWith('s') ? l.flowToQuestion(n) : l.flowToResult(n);
+  }
+
+  Future<void> pickTarget(int step, _FlowChoice c) async {
+    final l = L.of(context);
+    final to = await showCupertinoModalPopup<String>(
+      useRootNavigator: !Wide.on,
+      context: context,
+      builder: (x) => IosActionSheet(
+        title: Text(l.flowPickNext),
+        actions: [
+          for (var i = 0; i < steps.length; i++)
+            if (i != step) CupertinoActionSheetAction(key: Key('flow-to-s$i'), onPressed: () => Navigator.pop(x, 's$i'), child: Text(l.flowToQuestion(i + 1))),
+          for (var i = 0; i < results.length; i++)
+            CupertinoActionSheetAction(
+              key: Key('flow-to-r$i'),
+              onPressed: () => Navigator.pop(x, 'r$i'),
+              child: Text(
+                results[i].title.text.trim().isEmpty ? l.flowToResult(i + 1) : '${l.flowToResult(i + 1)} · ${results[i].title.text.trim()}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+        ],
+        cancelButton: CupertinoActionSheetAction(onPressed: () => Navigator.pop(x), child: Text(l.cancel)),
+      ),
+    );
+    if (to != null) setState(() => c.to = to);
+  }
+
+  Widget choiceRow(L l, int i, int j, _FlowChoice c) {
+    final p = paletteOf(context);
+    final s = steps[i];
+    return Row(
+      children: [
+        Expanded(
+          child: _field(context, c.label, key: 'flow-choice-$i-$j', hint: l.flowChoiceHint, max: 40, onChanged: (_) => setState(() {})),
+        ),
+        GestureDetector(
+          key: Key('flow-next-$i-$j'),
+          onTap: () => pickTarget(i, c),
+          child: Container(
+            height: 30,
+            padding: EdgeInsets.symmetric(horizontal: Tokens.space[2]),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(color: p.accent.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(Tokens.capsule)),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(c.to.startsWith('r') ? CupertinoIcons.flag_fill : CupertinoIcons.arrow_turn_down_right, size: 13, color: p.accent),
+                SizedBox(width: Tokens.space[0]),
+                Text(targetName(l, c.to), style: Tokens.caption.style.copyWith(color: p.accent)),
+              ],
+            ),
+          ),
+        ),
+        if (s.choices.length > 1)
+          GestureDetector(
+            key: Key('flow-choice-remove-$i-$j'),
+            behavior: HitTestBehavior.opaque,
+            onTap: () => setState(() {
+              s.choices.removeAt(j);
+              c.label.dispose();
+            }),
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: Tokens.space[2], vertical: Tokens.space[2]),
+              child: Icon(CupertinoIcons.minus_circle_fill, size: 20, color: Palette.tileRed),
+            ),
+          )
+        else
+          SizedBox(width: Tokens.space[3]),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    final reach = flowReachesResult([
+      for (final s in steps)
+        [
+          for (final c in s.choices)
+            if (c.label.text.trim().isNotEmpty) c.to,
+        ],
+    ]);
+    final filled =
+        title.text.trim().isNotEmpty &&
+        steps.every((s) => s.q.text.trim().isNotEmpty && s.choices.any((c) => c.label.text.trim().isNotEmpty)) &&
+        results.every((r) => r.title.text.trim().isNotEmpty);
+    return _EditorScaffold(
+      title: l.newFlow,
+      ready: filled && reach && !busy,
+      onSend: sendCard,
+      error: error ?? (filled && !reach ? l.flowNoPath : null),
+      children: [
+        IosSection(
+          hasLeading: false,
+          header: sectionHeader(context, l.cardTitleLabel),
+          footer: sectionFooter(context, l.flowInfo),
+          children: [
+            _field(context, title, key: 'flow-title', hint: l.flowTitleHint, max: 100, onChanged: (_) => setState(() {})),
+            _field(context, text, key: 'flow-text', hint: l.flowTextHint, max: 1000, lines: 2),
+            _field(context, start, key: 'flow-start', hint: l.flowStartHint, max: 24),
+          ],
+        ),
+        for (final (i, s) in steps.indexed)
+          IosSection(
+            hasLeading: false,
+            header: sectionHeader(context, l.flowToQuestion(i + 1)),
+            children: [
+              _field(context, s.q, key: 'flow-q-$i', hint: l.flowQuestionHint, max: 200, onChanged: (_) => setState(() {})),
+              for (final (j, c) in s.choices.indexed) choiceRow(l, i, j, c),
+              if (s.choices.length < 6)
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: Tokens.space[2]),
+                  child: _addRow(context, 'flow-add-choice-$i', l.flowAddChoice, () => setState(() => s.choices.add(_FlowChoice(nextOf(i))))),
+                ),
+              if (steps.length > 1)
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: Tokens.space[2]),
+                  child: _removeRow(context, 'flow-remove-q-$i', l.flowRemoveQuestion, () {
+                    setState(() {
+                      steps.removeAt(i);
+                      retarget('s', i);
+                    });
+                    s.q.dispose();
+                  }),
+                ),
+            ],
+          ),
+        if (steps.length < 10)
+          IosSection(
+            hasLeading: false,
+            children: [
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: Tokens.space[2]),
+                child: _addRow(context, 'flow-add-q', l.flowAddQuestion, () => setState(addStep)),
+              ),
+            ],
+          ),
+        for (final (i, r) in results.indexed)
+          IosSection(
+            hasLeading: false,
+            header: sectionHeader(context, l.flowResultN(i + 1)),
+            footer: r.linkUrl.text.trim().isNotEmpty && webLink(r.linkUrl.text) == null ? sectionFooter(context, l.linksBadUrl, error: true) : null,
+            children: [
+              _field(context, r.title, key: 'flow-r-title-$i', hint: l.flowResultTitleHint, max: 100, onChanged: (_) => setState(() {})),
+              _field(context, r.text, key: 'flow-r-text-$i', hint: l.flowResultTextHint, max: 1000, lines: 2),
+              _field(context, r.linkLabel, key: 'flow-r-label-$i', hint: l.flowLinkLabelHint, max: 24, onChanged: (_) => setState(() {})),
+              _field(context, r.linkUrl, key: 'flow-r-url-$i', hint: 'example.com', max: 500, keyboard: TextInputType.url, onChanged: (_) => setState(() {})),
+              if (results.length > 1)
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: Tokens.space[2]),
+                  child: _removeRow(context, 'flow-remove-r-$i', l.flowRemoveResult, () {
+                    setState(() {
+                      results.removeAt(i);
+                      retarget('r', i);
+                    });
+                  }),
+                ),
+            ],
+          ),
+        if (results.length < 8)
+          IosSection(
+            hasLeading: false,
+            children: [
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: Tokens.space[2]),
+                child: _addRow(context, 'flow-add-r', l.flowAddResult, () => setState(() => results.add(_FlowResult()))),
+              ),
+            ],
+          ),
+        IosSection(
+          hasLeading: false,
+          footer: sectionFooter(context, l.flowStatsInfo),
+          children: [_row(context, l.flowStats, IosSwitch(key: const Key('flow-stats'), value: stats, onChanged: (v) => setState(() => stats = v)))],
+        ),
+      ],
+    );
+  }
+}
+
+/// The flow inside the chat bubble: start, a question, or a result.
+class FlowCardBody extends StatefulWidget {
+  const FlowCardBody({super.key, required this.roomId, required this.msg, required this.fg});
+  final String roomId;
+  final Msg msg;
+  final Color fg;
+
+  @override
+  State<FlowCardBody> createState() => _FlowCardBodyState();
+}
+
+class _FlowCardBodyState extends State<FlowCardBody> {
+  bool shared = false;
+
+  CardInfo get c => widget.msg.card!;
+  Color get fg => widget.fg;
+  String get id => widget.msg.id;
+
+  void go(List<String> path) {
+    FlowProgress.set(id, path);
+    setState(() => shared = false);
+    final last = path.isEmpty ? '' : path.last;
+    // Numbers on: only the result's number goes to the maker's phone.
+    if (last.startsWith('r') && c.data['stats'] == true && c.mine != last) {
+      final s = AppScope.read(context);
+      s.backend.answerCard(widget.roomId, id, last).catchError((_) {});
+    }
+  }
+
+  Future<void> share(String text) async {
+    final s = AppScope.read(context);
+    final to = await openSheet<String>(context, (_) => const ForwardPickPage());
+    if (to == null || !mounted) return;
+    try {
+      await s.backend.sendText(to, text);
+      if (mounted) setState(() => shared = true);
+    } catch (_) {}
+  }
+
+  Widget button(String key, String label, {bool main = false, IconData? icon, VoidCallback? onTap}) {
+    final p = paletteOf(context);
+    // Main button = theme colour (white on my own coloured bubble).
+    final mine = widget.msg.mine;
+    final ink = main ? (mine ? p.accent : const Color(0xFFFFFFFF)) : fg;
+    final bg = main ? (mine ? const Color(0xFFFFFFFF) : p.accent) : fg.withValues(alpha: 0.12);
+    return GestureDetector(
+      key: Key(key),
+      onTap: onTap,
+      child: Container(
+        height: 40,
+        margin: const EdgeInsets.all(2),
+        padding: EdgeInsets.symmetric(horizontal: Tokens.space[2]),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(Tokens.capsule)),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (icon != null) ...[Icon(icon, size: 14, color: ink), SizedBox(width: Tokens.space[0])],
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Tokens.preview.style.copyWith(color: ink, fontWeight: FontWeight.w500),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget small(String t, {Key? key}) => Text(
+    t,
+    key: key,
+    style: Tokens.caption.style.copyWith(color: fg.withValues(alpha: 0.75)),
+  );
+
+  Widget label(IconData icon, String t) => Padding(
+    padding: EdgeInsets.only(bottom: Tokens.space[0]),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 13, color: fg.withValues(alpha: 0.75)),
+        SizedBox(width: Tokens.space[0]),
+        small(t),
+      ],
+    ),
+  );
+
+  /// Two buttons per row, like Telegram's quiz bots.
+  Widget grid(List<Widget> items) => Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      for (var i = 0; i < items.length; i += 2)
+        Row(
+          children: [
+            Expanded(child: items[i]),
+            if (i + 1 < items.length) Expanded(child: items[i + 1]),
+          ],
+        ),
+    ],
+  );
+
+  @override
+  Widget build(BuildContext context) => ValueListenableBuilder(
+    valueListenable: FlowProgress.paths,
+    builder: (context, _, _) => AnimatedSize(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      alignment: Alignment.topCenter,
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 180),
+        child: KeyedSubtree(key: ValueKey(FlowProgress.of(id).join('/')), child: page(context)),
+      ),
+    ),
+  );
+
+  Widget page(BuildContext context) {
+    final l = L.of(context);
+    final path = FlowProgress.of(id);
+    final steps = c.listOf('steps');
+    final results = c.listOf('results');
+    final statsOn = c.data['stats'] == true;
+    final total = statsOn ? c.counts.values.fold(0, (a, b) => a + b) : 0;
+    final where = path.isEmpty ? '' : path.last;
+    final n = int.tryParse(where.isEmpty ? '' : where.substring(1)) ?? -1;
+    final head = Text(
+      c.text('title'),
+      style: Tokens.body.style.copyWith(color: fg, fontWeight: Tokens.semi),
+    );
+    final makerStats = widget.msg.mine && statsOn
+        ? button(
+            'flow-stats-open',
+            l.flowStatsTitle,
+            icon: CupertinoIcons.chart_bar_alt_fill,
+            onTap: () => paneNav(context).push(IosPageRoute(builder: (_) => FlowStatsPage(card: c))),
+          )
+        : null;
+    if (where.startsWith('s') && n >= 0 && n < steps.length) {
+      final s = steps[n];
+      final depth = path.where((x) => x.startsWith('s')).length;
+      final choices = s['choices'] is List ? (s['choices'] as List).whereType<Map>().toList() : const <Map>[];
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          label(CupertinoIcons.square_stack_3d_up, c.text('title')),
+          small(l.flowToQuestion(depth), key: const Key('flow-step-no')),
+          Text(
+            s['q'] as String? ?? '',
+            key: const Key('flow-q'),
+            style: Tokens.body.style.copyWith(color: fg, fontWeight: Tokens.semi),
+          ),
+          SizedBox(height: Tokens.space[1]),
+          grid([
+            for (final (j, ch) in choices.indexed)
+              button('flow-choice-$j', ch['label'] as String? ?? '', onTap: () => go([...path, ch['to'] as String? ?? ''])),
+          ]),
+          button('flow-back', l.flowBack, icon: CupertinoIcons.chevron_back, onTap: () => go(path.sublist(0, path.length - 1))),
+        ],
+      );
+    }
+    if (where.startsWith('r') && n >= 0 && n < results.length) {
+      final r = results[n];
+      final link = r['link'] is Map ? (r['link'] as Map).cast<String, Object?>() : null;
+      final shareText = l.flowShareText(c.text('title'), r['title'] as String? ?? '');
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          label(CupertinoIcons.sparkles, l.flowResultLabel),
+          Text(
+            r['title'] as String? ?? '',
+            key: const Key('flow-result'),
+            style: Tokens.cardTitle.style.copyWith(color: fg),
+          ),
+          if ((r['text'] as String? ?? '').isNotEmpty)
+            Padding(
+              padding: EdgeInsets.only(top: Tokens.space[0]),
+              child: Text(r['text'] as String, style: Tokens.body.style.copyWith(color: fg)),
+            ),
+          SizedBox(height: Tokens.space[1]),
+          if (link != null)
+            LinkButtonGrid(
+              keyPrefix: 'flow-link',
+              buttons: [
+                {...link, 'row': 0, 'color': ''},
+              ],
+              style: {'color': widget.msg.mine ? 'white' : 'green', 'glass': true, 'size': 'm', 'shape': 'pill', 'ink': widget.msg.mine ? 'black' : 'auto'},
+              onTap: (_) => openCardLink(context, link['url'] as String? ?? ''),
+            ),
+          Row(
+            children: [
+              Expanded(
+                child: button('flow-again', l.flowAgain, icon: CupertinoIcons.arrow_counterclockwise, onTap: () => go(const ['s0'])),
+              ),
+              Expanded(
+                child: button('flow-share', l.flowShare, icon: CupertinoIcons.arrowshape_turn_up_right, onTap: () => share(shareText)),
+              ),
+            ],
+          ),
+          if (shared)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: small(l.flowShared, key: const Key('flow-shared')),
+            ),
+          ?makerStats,
+        ],
+      );
+    }
+    // Start screen.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        label(CupertinoIcons.square_stack_3d_up, l.cardFlow),
+        head,
+        if (c.text('text').isNotEmpty)
+          Padding(
+            padding: EdgeInsets.only(top: Tokens.space[0]),
+            child: Text(c.text('text'), style: Tokens.body.style.copyWith(color: fg)),
+          ),
+        SizedBox(height: Tokens.space[1]),
+        button('flow-start', c.text('start').isEmpty ? l.flowStart : c.text('start'), main: true, onTap: () => go(const ['s0'])),
+        if (statsOn && total > 0)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: small(l.flowTried(total), key: const Key('flow-tried')),
+          ),
+        ?makerStats,
+      ],
+    );
+  }
+}
+
+/// Maker only: how many people reached each result (numbers, no names).
+class FlowStatsPage extends StatelessWidget {
+  const FlowStatsPage({super.key, required this.card});
+  final CardInfo card;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    final p = paletteOf(context);
+    final results = card.listOf('results');
+    final counts = [for (var i = 0; i < results.length; i++) card.counts['r$i'] ?? 0];
+    final total = counts.fold(0, (a, b) => a + b);
+    return SettingsScaffoldLite(
+      title: l.flowStatsTitle,
+      children: [
+        IosSection(
+          hasLeading: false,
+          header: sectionHeader(context, card.text('title')),
+          footer: sectionFooter(context, total == 0 ? l.flowStatsNone : '${l.flowTried(total)}\n\n${l.flowStatsPrivacy}'),
+          children: [
+            for (final (i, r) in results.indexed)
+              Padding(
+                key: Key('flow-stat-$i'),
+                padding: EdgeInsets.symmetric(horizontal: Tokens.space[3], vertical: Tokens.space[2]),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(r['title'] as String? ?? '', style: Tokens.body.style.copyWith(color: p.label)),
+                        ),
+                        Text(
+                          '${counts[i]} · ${total == 0 ? 0 : (counts[i] * 100 / total).round()}%',
+                          key: Key('flow-stat-n-$i'),
+                          style: Tokens.preview.style.copyWith(color: p.secondaryLabel),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: Tokens.space[1]),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(Tokens.capsule),
+                      child: Stack(
+                        children: [
+                          Container(height: 6, color: p.separator),
+                          FractionallySizedBox(
+                            widthFactor: total == 0 ? 0 : counts[i] / total,
+                            child: Container(height: 6, color: p.accent),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ],
     );
   }
 }

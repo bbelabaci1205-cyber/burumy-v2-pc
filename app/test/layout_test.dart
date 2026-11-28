@@ -190,11 +190,11 @@ void main() {
 
       await look('chats');
       for (final chat in ['김민지', '디자인 팀', '부루미 소식']) {
-        if (find.text(chat).evaluate().isEmpty) {
-          final list = find.byWidgetPredicate((w) => w is Scrollable && w.axisDirection == AxisDirection.down).first;
-          await t.scrollUntilVisible(find.text(chat), 200, scrollable: list);
-          await t.pumpAndSettle();
-        }
+        // Story / bubble names repeat chat names: find the chat row itself.
+        final list = find.byWidgetPredicate((w) => w is Scrollable && w.axisDirection == AxisDirection.down).first;
+        await t.scrollUntilVisible(find.text(chat).last, 200, scrollable: list);
+        await t.drag(list, const Offset(0, -120));
+        await t.pumpAndSettle();
         await t.tap(find.text(chat).last);
         await t.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 200)));
         await look('chat $chat');

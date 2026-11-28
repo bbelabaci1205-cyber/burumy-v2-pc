@@ -4,6 +4,10 @@
 import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/widgets.dart' show Curves;
+
+import '../core/features.dart';
+import '../stickers/sticker_words.dart' show emojiGroups;
 
 import '../core/app_state.dart';
 import '../core/backend.dart';
@@ -17,6 +21,7 @@ import 'ios.dart';
 import 'ios_route.dart';
 import 'message_sheets.dart' show GlassSheet;
 import 'settings_art.dart';
+import 'folder_share.dart' show FolderSharePage;
 import 'settings_kit.dart';
 import 'wide.dart';
 
@@ -127,6 +132,30 @@ class _FoldersPageState extends State<FoldersPage> {
     ];
     int count(ChatFolder f) => s.chats.where((c) => f.takes(c, s.friendIds)).length;
 
+    final at = allPos(s, folders.length);
+
+    /// "모든 대화": no page of its own, but it can be dragged like a folder.
+    Widget allRow(int i) => Column(
+      key: const ValueKey('all'),
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (i > 0)
+          Container(height: 1, margin: const EdgeInsetsDirectional.only(start: 60, end: 20), color: p.dark ? const Color(0xFF38383A) : const Color(0xFFE6E6E8)),
+        IosTile(
+          key: const Key('folders-all'),
+          backgroundColor: p.card,
+          leading: iconTile(p.tileGreen, CupertinoIcons.chat_bubble_2_fill),
+          title: Text(l.allChatsFolder),
+          trailing: editing && folders.isNotEmpty
+              ? ReorderableDragStartListener(
+                  index: i,
+                  child: Icon(CupertinoIcons.line_horizontal_3, key: const Key('folder-drag-all'), color: p.secondaryLabel),
+                )
+              : null,
+        ),
+      ],
+    );
+
     Widget folderRow(int i, ChatFolder f) {
       final c = f.color >= 0 && f.color < folderColors.length ? folderColors[f.color] : Palette.tileGrey;
       return Column(
@@ -215,21 +244,21 @@ class _FoldersPageState extends State<FoldersPage> {
               ),
               children: [
                 ArtHeader(art: const FolderArt(), text: l.foldersArtInfo),
-                group(context, header: l.myFolders, footer: folders.isEmpty ? null : l.foldersEditInfo, [
+                group(context, header: l.myFolders, footer: folders.isEmpty ? null : '${l.foldersEditInfo} ${l.folderDefaultInfo}', [
                   IosTile(
                     key: const Key('folders-new'),
                     leading: Icon(CupertinoIcons.add, color: p.accent),
                     title: Text(l.createFolder, style: TextStyle(color: p.accent)),
                     onTap: () => edit(null),
                   ),
-                  IosTile(key: const Key('folders-all'), leading: iconTile(p.tileGreen, CupertinoIcons.chat_bubble_2_fill), title: Text(l.allChatsFolder)),
+                  if (folders.isEmpty) allRow(0),
                   if (folders.isNotEmpty)
                     ReorderableList(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       padding: EdgeInsets.zero,
-                      itemCount: folders.length,
-                      itemBuilder: (_, i) => folderRow(i, folders[i]),
+                      itemCount: folders.length + 1,
+                      itemBuilder: (_, i) => i == at ? allRow(i) : folderRow(i, folders[i > at ? i - 1 : i]),
                       // iOS lift: slight scale + soft shadow while dragging.
                       proxyDecorator: (child, _, a) => AnimatedBuilder(
                         animation: a,
@@ -242,11 +271,13 @@ class _FoldersPageState extends State<FoldersPage> {
                         ),
                       ),
                       onReorderItem: (a, b) async {
-                        final list = [...folders];
+                        // "모든 대화" moves too: the tab in front opens first (tip 342).
+                        final list = <ChatFolder?>[...folders]..insert(at, null);
                         final f = list.removeAt(a);
                         list.insert(b, f);
                         final gone = all.where((x) => x.id == pending);
-                        await saveFolders(s, [...list, ...gone]);
+                        await s.setPref(allPosPref, '${list.indexOf(null)}');
+                        await saveFolders(s, [...list.whereType<ChatFolder>(), ...gone]);
                         if (mounted) setState(() {});
                       },
                     ),
@@ -355,69 +386,17 @@ class _FolderEditPageState extends State<FolderEditPage> {
   }
 
   Future<void> pickEmoji() async {
-    const emojis = [
-      '💬',
-      '👥',
-      '📢',
-      '🤖',
-      '⭐️',
-      '❤️',
-      '💼',
-      '🏠',
-      '🎓',
-      '🎮',
-      '🎵',
-      '✈️',
-      '🛒',
-      '💰',
-      '📚',
-      '🍀',
-      '🔥',
-      '🎉',
-      '🐶',
-      '⚽️',
-      '💡',
-      '📌',
-      '🔒',
-      '👪',
-    ];
-    final l = L.of(context);
-    final p = paletteOf(context);
     final got = await showCupertinoModalPopup<String>(
       context: context,
       useRootNavigator: !Wide.on,
-      builder: (x) => GlassSheet(
-        title: l.folderIcon,
-        children: [
-          Padding(
-            padding: EdgeInsets.all(Tokens.space[2]),
-            child: Wrap(
-              alignment: WrapAlignment.center,
-              spacing: Tokens.space[1],
-              runSpacing: Tokens.space[1],
-              children: [
-                for (final e in emojis)
-                  GestureDetector(
-                    key: Key('folder-emoji-$e'),
-                    onTap: () => Navigator.pop(x, e),
-                    child: SizedBox(
-                      width: 44,
-                      height: 44,
-                      child: Center(child: Text(e, style: const TextStyle(fontSize: 28))),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          CupertinoButton(
-            key: const Key('folder-emoji-none'),
-            onPressed: () => Navigator.pop(x, ''),
-            child: Text(l.folderIconNone, style: Tokens.body.style.copyWith(color: p.accent)),
-          ),
-        ],
-      ),
+      builder: (_) => FolderEmojiSheet(current: f.emoji),
     );
-    if (got != null) setState(() => f.emoji = got);
+    if (got != null) {
+      setState(() {
+        f.emoji = got;
+        if (got.isEmpty) f.iconOnly = false;
+      });
+    }
   }
 
   @override
@@ -500,6 +479,14 @@ class _FolderEditPageState extends State<FolderEditPage> {
                 ],
               ),
             ]),
+            if (f.emoji.isNotEmpty && Features.tipsD1)
+              group(context, footer: l.folderIconOnlyInfo, [
+                IosTile(
+                  key: const Key('folder-icon-only'),
+                  title: Text(l.folderIconOnly),
+                  trailing: IosSwitch(value: f.iconOnly, onChanged: (v) => setState(() => f.iconOnly = v)),
+                ),
+              ]),
             group(context, header: l.folderInclude, footer: tried && empty ? l.folderNeedChats : l.folderIncludeInfo, error: tried && empty, [
               addRow(const Key('folder-add-include'), false),
               for (final k in f.kinds) kindRow(k, f.kinds),
@@ -553,6 +540,17 @@ class _FolderEditPageState extends State<FolderEditPage> {
                 ),
               ],
             ),
+            // 폴더 공유하기 (tip 211): one link for its groups and channels.
+            if (widget.folder != null)
+              group(context, footer: l.folderShareRowInfo, [
+                NavRow(
+                  key: const Key('folder-share'),
+                  color: Palette.tileBlue,
+                  icon: CupertinoIcons.link,
+                  title: l.folderShare,
+                  onTap: () => Navigator.of(context).push(IosPageRoute<void>(builder: (_) => FolderSharePage(folder: f))),
+                ),
+              ]),
             if (widget.folder != null) group(context, [NavRow(key: const Key('folder-delete'), title: l.deleteFolder, danger: true, onTap: remove)]),
           ],
         ),
@@ -633,6 +631,122 @@ class _ChatPickPageState extends State<ChatPickPage> {
               }),
             ),
         ]),
+      ],
+    );
+  }
+}
+
+/// Folder icon (Telegram 502, Eric 2026-11-27 option A): the 24 folder
+/// favourites first, then every emoji by group with tabs, and 없음.
+/// Folders stay on this phone only, so the server never sees the icon.
+class FolderEmojiSheet extends StatefulWidget {
+  const FolderEmojiSheet({super.key, required this.current});
+  final String current;
+
+  static const favourites = '💬👥📢🤖⭐️❤️💼🏠🎓🎮🎵✈️🛒💰📚🍀🔥🎉🐶⚽️💡📌🔒👪';
+
+  @override
+  State<FolderEmojiSheet> createState() => _FolderEmojiSheetState();
+}
+
+class _FolderEmojiSheetState extends State<FolderEmojiSheet> {
+  final scroll = ScrollController();
+  final keys = <String, GlobalKey>{};
+  String tab = 'fav';
+
+  @override
+  void dispose() {
+    scroll.dispose();
+    super.dispose();
+  }
+
+  void jump(String id) {
+    setState(() => tab = id);
+    final c = keys[id]?.currentContext;
+    if (c != null) unawaited(Scrollable.ensureVisible(c, duration: const Duration(milliseconds: 250), curve: Curves.easeOutCubic));
+  }
+
+  String title(L l, String id) => switch (id) {
+    'fav' => l.folderIconFavourites,
+    'smileys' => l.emoji_smileys,
+    'people' => l.emoji_people,
+    'animals' => l.emoji_animals,
+    'food' => l.emoji_food,
+    'activity' => l.emoji_activity,
+    'travel' => l.emoji_travel,
+    'objects' => l.emoji_objects,
+    _ => l.emoji_symbols,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    final p = paletteOf(context);
+    final groups = <(String, IconData, String)>[('fav', CupertinoIcons.folder, FolderEmojiSheet.favourites), ...emojiGroups];
+    Widget cell(String e) => GestureDetector(
+      key: Key('folder-emoji-$e'),
+      onTap: () => Navigator.pop(context, e),
+      child: Container(
+        alignment: Alignment.center,
+        decoration: e == widget.current ? BoxDecoration(color: p.accent.withValues(alpha: 0.18), borderRadius: BorderRadius.circular(Tokens.radius[1])) : null,
+        child: Text(e, style: const TextStyle(fontSize: 28, fontFamilyFallback: Tokens.emojiFallback)),
+      ),
+    );
+    return GlassSheet(
+      title: l.folderIcon,
+      children: [
+        SizedBox(
+          height: 44,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: EdgeInsets.symmetric(horizontal: Tokens.space[2]),
+            children: [
+              for (final (id, icon, _) in groups)
+                GestureDetector(
+                  key: Key('folder-emoji-tab-$id'),
+                  onTap: () => jump(id),
+                  child: Container(
+                    width: 40,
+                    margin: const EdgeInsets.symmetric(horizontal: 2),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(color: tab == id ? p.secondaryLabel.withValues(alpha: 0.16) : null, shape: BoxShape.circle),
+                    child: Icon(icon, size: 21, color: p.secondaryLabel),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        SizedBox(
+          height: MediaQuery.sizeOf(context).height * 0.45,
+          child: CustomScrollView(
+            key: const Key('folder-emoji-grid'),
+            controller: scroll,
+            cacheExtent: 20000,
+            slivers: [
+              for (final (id, _, all) in groups) ...[
+                SliverToBoxAdapter(
+                  child: Padding(
+                    key: keys.putIfAbsent(id, GlobalKey.new),
+                    padding: EdgeInsets.fromLTRB(Tokens.space[3], Tokens.space[2], Tokens.space[3], Tokens.space[1]),
+                    child: Text(title(l, id), style: Tokens.caption.style.copyWith(color: p.secondaryLabel)),
+                  ),
+                ),
+                SliverPadding(
+                  padding: EdgeInsets.symmetric(horizontal: Tokens.space[1]),
+                  sliver: SliverGrid(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 8),
+                    delegate: SliverChildListDelegate([for (final e in all.characters) cell(e)]),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        CupertinoButton(
+          key: const Key('folder-emoji-none'),
+          onPressed: () => Navigator.pop(context, ''),
+          child: Text(l.folderIconNone, style: Tokens.body.style.copyWith(color: p.accent)),
+        ),
       ],
     );
   }

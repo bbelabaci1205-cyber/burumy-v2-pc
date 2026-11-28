@@ -15,6 +15,7 @@ import 'package:timezone/timezone.dart' as tz;
 import '../l10n/app_localizations.dart';
 import '../ui/common.dart' show previewTextL;
 import 'backend.dart';
+import 'chat_badge.dart';
 import 'rules.dart';
 import 'sounds.dart' show messageSounds;
 
@@ -96,6 +97,16 @@ class Push {
     port.listen((_) => onWake());
   }
 
+  /// Another account on this phone: same phone address, its own pusher on
+  /// our server (so its messages wake the phone too).
+  static Future<void> register(Backend b) async {
+    if (!await _init()) return;
+    final m = FirebaseMessaging.instance;
+    final key = Platform.isIOS ? await m.getAPNSToken() : await m.getToken();
+    if (key == null) return;
+    await b.setPush(_gateway, key, Platform.isIOS ? iosPushApp : androidPushApp);
+  }
+
   /// Shows new messages as notifications (the open app calls this after a
   /// sync while it is in the background).
   static Future<void> showNew(Backend b, L l) async {
@@ -104,14 +115,21 @@ class Push {
     final prefs = await b.settings();
     final chats = {for (final c in await b.chats()) c.roomId: c};
     final now = DateTime.now();
+    final me = b.userId ?? '';
+    final myName = await b.myName().catchError((_) => '');
+    final badge = badgeCount(chats.values.toList(), prefs);
     for (final n in list) {
       final c = chats[n.roomId];
-      if (!noticeAllowed(n, prefs, c, now)) continue;
+      if (!noticeAllowed(n, prefs, c, now, me: me, myName: myName)) continue;
       final kind = c == null ? 'direct' : (c.isDirect ? 'direct' : (c.isChannel ? 'channel' : 'group'));
       var (title, body) = noticeText(l, n);
       if (prefs['preview_$kind'] == '0') body = l.noticeNew;
-      final sound = prefs['sound_$kind'] ?? 'nuri';
-      final quiet = sound == 'none' || !messageSounds.contains(sound);
+      // A chat's own sound first (tip 329). Saved sounds ("my:…") play in
+      // the open app; the system notification uses the kind's sound.
+      final own = prefs['sound:${n.roomId}'] ?? '';
+      final picked = own.isNotEmpty && !own.startsWith('my:') ? own : (prefs['sound_$kind'] ?? 'nuri');
+      final sound = picked.startsWith('my:') ? 'nuri' : picked;
+      final quiet = sound == 'none' || !messageSounds.contains(sound) || prefs['quiet:${n.roomId}'] == '1';
       await _local.show(
         id: n.roomId.hashCode & 0x7fffffff,
         title: title,
@@ -129,7 +147,8 @@ class Push {
             // locked screen only says a message came.
             visibility: prefs['lock_name'] == '0' ? NotificationVisibility.private : NotificationVisibility.public,
           ),
-          iOS: DarwinNotificationDetails(presentSound: !quiet),
+          // App icon number, counted here on the phone (tip 185).
+          iOS: DarwinNotificationDetails(presentSound: !quiet, badgeNumber: badge),
         ),
         payload: n.roomId,
       );

@@ -19,13 +19,41 @@ pub const START: &str = "im.securemessenger.poll.start";
 pub const VOTE: &str = "im.securemessenger.poll.vote";
 pub const TALLY: &str = "im.securemessenger.poll.tally";
 pub const END: &str = "im.securemessenger.poll.end";
+/// A member adds an answer (only when the maker allowed it).
+pub const OPTION: &str = "im.securemessenger.poll.option";
+/// The maker writes up to 10 answers; members can add up to 12 in total.
 pub const MAX_ANSWERS: usize = 10;
+pub const MAX_WITH_ADDED: usize = 12;
+pub const MAX_ANSWER_TEXT: usize = 100;
+pub const MAX_DESCRIPTION: usize = 1024;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PollAnswer {
     pub id: String,
     pub text: String,
     pub votes: u32,
+    /// An encrypted photo is attached (fetched separately).
+    pub media: bool,
+    /// A built-in sticker id ("" = none).
+    pub sticker: String,
+    /// A place as "geo:lat,lon" ("" = none).
+    pub geo: String,
+    /// A member added this answer (their user id).
+    pub added_by: Option<String>,
+}
+
+impl PollAnswer {
+    fn plain(id: &str, text: &str) -> Self {
+        PollAnswer {
+            id: id.into(),
+            text: text.into(),
+            votes: 0,
+            media: false,
+            sticker: String::new(),
+            geo: String::new(),
+            added_by: None,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -46,6 +74,86 @@ pub struct Poll {
     pub explain: String,
     /// Voting stops at this time (ms since 1970), 0 = no deadline.
     pub close_at: u64,
+    /// Words under the question, and whether a photo is attached to them.
+    pub description: String,
+    pub media: bool,
+    /// Members may add answers.
+    pub add_options: bool,
+    /// People may change or take back their vote (quizzes never).
+    pub change_vote: bool,
+    /// Each person sees the answers in their own random order.
+    pub shuffle: bool,
+    /// Numbers stay hidden until the poll ends. Anonymous polls: the maker's
+    /// phone posts no numbers before the end. Open polls: votes are in the
+    /// chat, so only the app hides them.
+    pub hide_results: bool,
+}
+
+/// Settings and extras the app sends with a new poll (JSON):
+/// {"description", "add_options", "change_vote", "shuffle", "hide_results",
+///  "answers": [{"sticker": id, "geo": "geo:lat,lon"}] (same order as the answers)}
+pub fn apply_extras(c: &mut serde_json::Value, extra: &serde_json::Value, quiz: bool) {
+    let d: String = extra["description"]
+        .as_str()
+        .unwrap_or_default()
+        .trim()
+        .chars()
+        .take(MAX_DESCRIPTION)
+        .collect();
+    if !d.is_empty() {
+        c["description"] = d.into();
+    }
+    for k in ["add_options", "shuffle", "hide_results"] {
+        if extra[k].as_bool() == Some(true) {
+            c[k] = true.into();
+        }
+    }
+    // Changing a vote is on unless turned off; a quiz answer is always final.
+    if quiz || extra["change_vote"].as_bool() == Some(false) {
+        c["change_vote"] = false.into();
+    }
+    if let (Some(list), Some(answers)) = (extra["answers"].as_array(), c["answers"].as_array_mut()) {
+        for (a, x) in answers.iter_mut().zip(list) {
+            if let Some(st) = x["sticker"].as_str().filter(|s| valid_sticker(s)) {
+                a["sticker"] = st.into();
+            } else if let Some(g) = x["geo"].as_str().and_then(clean_geo) {
+                a["geo"] = g.into();
+            }
+        }
+    }
+}
+
+/// Built-in sticker ids are short lower-case names (no paths, no links).
+pub fn valid_sticker(s: &str) -> bool {
+    (1..=64).contains(&s.len())
+        && s.bytes()
+            .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'_')
+}
+
+/// "geo:lat,lon" with sane numbers, rounded to about 1 m.
+pub fn clean_geo(s: &str) -> Option<String> {
+    let rest = s.strip_prefix("geo:")?;
+    let rest = rest.split(';').next()?;
+    let (a, b) = rest.split_once(',')?;
+    let (lat, lon): (f64, f64) = (a.trim().parse().ok()?, b.trim().parse().ok()?);
+    if !lat.is_finite() || !lon.is_finite() || lat.abs() > 90.0 || lon.abs() > 180.0 {
+        return None;
+    }
+    Some(format!("geo:{lat:.5},{lon:.5}"))
+}
+
+fn media_ok(v: &serde_json::Value) -> bool {
+    v["file"]["url"].is_string() && v["mimetype"].as_str().is_some_and(|m| m.starts_with("image/"))
+}
+
+/// The answer ids a maker's phone accepts: the maker's answers plus the ones
+/// members added in time.
+pub fn answer_ids(events: &[serde_json::Value], pid: &str) -> Vec<String> {
+    let me = "";
+    collect(events, me, &HashMap::new())
+        .remove(pid)
+        .map(|p| p.answers.into_iter().map(|a| a.id).collect())
+        .unwrap_or_default()
 }
 
 /// Quiz explanation limit and the longest deadline.
@@ -166,11 +274,15 @@ pub fn collect(
                 a.iter()
                     .take(MAX_ANSWERS)
                     .filter_map(|x| {
-                        Some(PollAnswer {
-                            id: x["id"].as_str()?.into(),
-                            text: x["text"].as_str()?.into(),
-                            votes: 0,
-                        })
+                        let mut a = PollAnswer::plain(x["id"].as_str()?, x["text"].as_str()?);
+                        a.media = media_ok(&x["media"]);
+                        a.sticker = x["sticker"]
+                            .as_str()
+                            .filter(|s| valid_sticker(s))
+                            .unwrap_or_default()
+                            .into();
+                        a.geo = x["geo"].as_str().and_then(clean_geo).unwrap_or_default();
+                        Some(a)
                     })
                     .collect()
             })
@@ -205,9 +317,20 @@ pub fn collect(
             } else {
                 String::new()
             },
+            change_vote: correct.is_none() && c["change_vote"].as_bool() != Some(false),
             correct,
             close_at: c["close_at"].as_u64().unwrap_or(0),
             answers,
+            description: c["description"]
+                .as_str()
+                .unwrap_or_default()
+                .chars()
+                .take(MAX_DESCRIPTION)
+                .collect(),
+            media: media_ok(&c["media"]),
+            add_options: c["add_options"].as_bool() == Some(true),
+            shuffle: c["shuffle"].as_bool() == Some(true),
+            hide_results: c["hide_results"].as_bool() == Some(true),
         };
         polls.insert(id.into(), (maker.into(), poll));
     }
@@ -223,7 +346,25 @@ pub fn collect(
             continue;
         };
         let sender = v["sender"].as_str().unwrap_or_default();
+        let ts = v["origin_server_ts"].as_u64().unwrap_or(0);
         match ty {
+            // A member's added answer: only while open, up to 12, no repeats.
+            OPTION if p.add_options && !p.closed && !past(p.close_at, ts) => {
+                let Some(eid) = v["event_id"].as_str() else {
+                    continue;
+                };
+                let text: String = c["text"].as_str().unwrap_or_default().trim().to_owned();
+                if text.is_empty()
+                    || text.chars().count() > MAX_ANSWER_TEXT
+                    || p.answers.len() >= MAX_WITH_ADDED
+                    || p.answers.iter().any(|a| a.text.to_lowercase() == text.to_lowercase())
+                {
+                    continue;
+                }
+                let mut a = PollAnswer::plain(eid, &text);
+                a.added_by = Some(sender.into());
+                p.answers.push(a);
+            }
             // Votes after the deadline don't count (the time is the server's).
             VOTE if !p.anonymous
                 && !p.closed
@@ -242,8 +383,9 @@ pub fn collect(
                     ch.truncate(1);
                 }
                 let book = open.entry(pid.into()).or_default();
-                // A quiz answer can't be changed or taken back.
-                if p.correct.is_some() && book.get(sender).is_some_and(|c| !c.is_empty()) {
+                // A quiz answer (or a poll with changes off) can't be changed
+                // or taken back.
+                if !p.change_vote && book.get(sender).is_some_and(|c| !c.is_empty()) {
                     continue;
                 }
                 book.insert(sender.into(), ch);
@@ -425,5 +567,78 @@ mod tests {
         b.votes.insert(b.fingerprint("@c"), vec!["a1".into()]);
         let (c, n) = b.counts();
         assert_eq!((c.get("a0"), c["a1"], n), (None, 2, 2));
+    }
+
+    #[test]
+    fn extras_added_answers_and_vote_lock() {
+        let mut start = start_content("어디서?", &["강남".into(), "홍대".into()], false, false);
+        apply_extras(
+            &mut start,
+            &serde_json::json!({
+                "description": "  토요일 모임  ",
+                "add_options": true,
+                "change_vote": false,
+                "shuffle": true,
+                "hide_results": true,
+                "answers": [{ "sticker": "buru_01_hello" }, { "geo": "geo:37.55634567,126.9229;u=20" }],
+            }),
+            false,
+        );
+        let add = |id: &str, who: &str, text: &str, ts: u64| {
+            let mut e = ev(id, OPTION, who, serde_json::json!({ "poll": "$p", "text": text }));
+            e["origin_server_ts"] = serde_json::json!(ts);
+            e
+        };
+        let mut evs = vec![
+            ev("$p", START, "@a", start),
+            add("$o1", "@b", "성수", 1),
+            add("$o2", "@c", " 강남 ", 2), // repeat: ignored
+            add("$o3", "@c", "", 3),       // empty: ignored
+            ev("$1", VOTE, "@me", serde_json::json!({ "poll": "$p", "choices": ["$o1"] })),
+            ev("$2", VOTE, "@me", serde_json::json!({ "poll": "$p", "choices": ["a0"] })),
+            ev("$3", VOTE, "@b", serde_json::json!({ "poll": "$p", "choices": [] })),
+        ];
+        for i in 0..20 {
+            evs.push(add(&format!("$x{i}"), "@d", &format!("옵션{i}"), 10 + i));
+        }
+        let p = &collect(&evs, "@me", &HashMap::new())["$p"];
+        assert_eq!(p.description, "토요일 모임");
+        assert!(p.add_options && p.shuffle && p.hide_results && !p.change_vote);
+        assert_eq!(p.answers[0].sticker, "buru_01_hello");
+        assert_eq!(p.answers[1].geo, "geo:37.55635,126.92290");
+        assert_eq!(p.answers[2].text, "성수");
+        assert_eq!(p.answers[2].added_by.as_deref(), Some("@b"));
+        assert_eq!(p.answers.len(), MAX_WITH_ADDED, "12 at most");
+        assert_eq!(p.mine, vec!["$o1".to_string()], "first vote stays when changes are off");
+        assert_eq!(p.voters, 1);
+        assert_eq!(answer_ids(&evs, "$p").len(), MAX_WITH_ADDED);
+    }
+
+    #[test]
+    fn no_added_answers_unless_allowed_or_after_close() {
+        let mut start = start_content("q", &["x".into(), "y".into()], false, false);
+        let evs = vec![
+            ev("$p", START, "@a", start.clone()),
+            ev("$o", OPTION, "@b", serde_json::json!({ "poll": "$p", "text": "z" })),
+        ];
+        assert_eq!(collect(&evs, "@me", &HashMap::new())["$p"].answers.len(), 2);
+        apply_extras(&mut start, &serde_json::json!({ "add_options": true, "answers": [{ "sticker": "../x" }, { "geo": "geo:99,0" }] }), false);
+        let evs = vec![
+            ev("$p", START, "@a", start),
+            ev("$e", END, "@a", serde_json::json!({ "poll": "$p" })),
+            ev("$o", OPTION, "@b", serde_json::json!({ "poll": "$p", "text": "z" })),
+        ];
+        let p = &collect(&evs, "@me", &HashMap::new())["$p"];
+        assert_eq!(p.answers.len(), 2, "closed");
+        assert!(p.answers[0].sticker.is_empty() && p.answers[1].geo.is_empty(), "bad extras dropped");
+        assert!(p.change_vote, "changes on by default");
+    }
+
+    #[test]
+    fn quiz_never_changes() {
+        let mut start = start_content_ext("q", &["x".into(), "y".into()], false, false, Some(0), "", 0);
+        apply_extras(&mut start, &serde_json::json!({ "change_vote": true }), true);
+        let p = &collect(&[ev("$p", START, "@a", start)], "@me", &HashMap::new())["$p"];
+        assert!(!p.change_vote);
     }
 }

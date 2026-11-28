@@ -20,6 +20,9 @@ pub enum Role {
     Normal = 0,
     Hide = 1,
     Delete = 2,
+    /// Erases the accounts chosen beforehand from this phone (only when
+    /// two or more accounts are on it; Eric 2026-11-27).
+    Account = 3,
 }
 
 impl Role {
@@ -28,6 +31,7 @@ impl Role {
             0 => Some(Role::Normal),
             1 => Some(Role::Hide),
             2 => Some(Role::Delete),
+            3 => Some(Role::Account),
             _ => None,
         }
     }
@@ -57,12 +61,21 @@ struct Slot {
 }
 
 /// Saved as JSON by the app (phone keychain / browser storage).
+/// Four slots: normal, hide, delete, account (unused ones hold random
+/// decoys, so every lock file has the same shape).
+const SLOTS: usize = 4;
+/// "Not set" in the role map.
+const UNSET: u8 = 4;
+
 #[derive(Clone, Serialize, Deserialize)]
 pub struct LockFile {
-    slots: [Slot; 3],
-    /// Which slots are hide / delete (3 = not set), masked by the normal key.
-    #[serde(with = "byte_hex")]
-    map: [u8; 2],
+    /// Older files (before the account password) have three slots; they
+    /// get a fourth decoy when read.
+    slots: Vec<Slot>,
+    /// Which slots are hide / delete / account, masked by the normal key.
+    /// Older files: two entries with 3 = not set (upgraded on the next
+    /// change made with the normal password).
+    map: String,
     /// Wrong tries in a row.
     pub fails: u32,
     /// After this many wrong tries in a row, every chat on this phone is
@@ -138,11 +151,11 @@ impl LockFile {
         if !password_ok(normal) {
             bail!("password rule");
         }
-        let at = (random::<1>()[0] % 3) as usize;
-        let mut slots = [decoy(), decoy(), decoy()];
+        let at = (random::<1>()[0] as usize) % SLOTS;
+        let mut slots: Vec<Slot> = (0..SLOTS).map(|_| decoy()).collect();
         let (s, mut k) = make(normal, Role::Normal);
         slots[at] = s;
-        let map = [3 ^ k[33], 3 ^ k[34]];
+        let map = hex(&[UNSET ^ k[33], UNSET ^ k[34], UNSET ^ k[35]]);
         k.zeroize();
         Ok(LockFile {
             slots,
@@ -153,14 +166,33 @@ impl LockFile {
     }
 
     pub fn from_json(s: &str) -> Result<LockFile> {
-        Ok(serde_json::from_str(s)?)
+        let mut f: LockFile = serde_json::from_str(s)?;
+        while f.slots.len() < SLOTS {
+            f.slots.push(decoy());
+        }
+        Ok(f)
+    }
+
+    /// Role map in the clear: slot of hide, delete, account (UNSET = none).
+    fn roles(&self, nk: &[u8; 64]) -> [u8; 3] {
+        let m = unhex(&self.map);
+        if m.len() == 2 {
+            // Older file: 3 meant "not set", no account entry.
+            let old = |v: u8| if v >= 3 { UNSET } else { v };
+            return [old(m[0] ^ nk[33]), old(m[1] ^ nk[34]), UNSET];
+        }
+        [m[0] ^ nk[33], m[1] ^ nk[34], m.get(2).map_or(UNSET, |v| v ^ nk[35])]
+    }
+
+    fn set_roles(&mut self, r: [u8; 3], nk: &[u8; 64]) {
+        self.map = hex(&[r[0] ^ nk[33], r[1] ^ nk[34], r[2] ^ nk[35]]);
     }
 
     pub fn to_json(&self) -> String {
         serde_json::to_string(self).unwrap_or_default()
     }
 
-    /// Tries all three slots (always all three). Returns the role and the
+    /// Tries every slot (always all of them). Returns the role and the
     /// slot's key, or None (and counts a failure).
     fn open(&mut self, pw: &str) -> Option<(Role, usize, [u8; 64])> {
         let mut hit = None;
@@ -226,14 +258,14 @@ impl LockFile {
                 bail!("password already used");
             }
         }
-        let mut map = [self.map[0] ^ nk[33], self.map[1] ^ nk[34]];
+        let mut map = self.roles(&nk);
         let idx = role as usize - 1;
-        let slot = if map[idx] < 3 {
+        let slot = if map[idx] < UNSET {
             map[idx] as usize
         } else {
-            // A free decoy slot: not normal, not the other role.
-            (0..3)
-                .find(|i| *i != ni && *i as u8 != map[1 - idx])
+            // A free decoy slot: not normal, not another role.
+            (0..SLOTS)
+                .find(|i| *i != ni && !map.contains(&(*i as u8)))
                 .expect("free slot")
         };
         match pw {
@@ -245,22 +277,23 @@ impl LockFile {
             }
             None => {
                 self.slots[slot] = decoy();
-                map[idx] = 3;
+                map[idx] = UNSET;
             }
         }
-        self.map = [map[0] ^ nk[33], map[1] ^ nk[34]];
+        self.set_roles(map, &nk);
         nk.zeroize();
         Ok(())
     }
 
-    /// Which extra passwords are set (needs the normal password).
-    pub fn extras(&mut self, normal: &str) -> Result<(bool, bool)> {
+    /// Which extra passwords are set: hide, delete, account (needs the
+    /// normal password).
+    pub fn extras(&mut self, normal: &str) -> Result<[bool; 3]> {
         let Some((Role::Normal, _, mut nk)) = self.open(normal) else {
             bail!("wrong password")
         };
-        let r = (self.map[0] ^ nk[33] < 3, self.map[1] ^ nk[34] < 3);
+        let m = self.roles(&nk);
         nk.zeroize();
-        Ok(r)
+        Ok([m[0] < UNSET, m[1] < UNSET, m[2] < UNSET])
     }
 
     pub fn change_normal(&mut self, old: &str, new: &str) -> Result<()> {
@@ -273,11 +306,11 @@ impl LockFile {
         if self.clone().unlock(new).is_some_and(|r| r != Role::Normal) {
             bail!("password already used");
         }
-        let map = [self.map[0] ^ ok[33], self.map[1] ^ ok[34]];
+        let map = self.roles(&ok);
         ok.zeroize();
         let (s, mut k) = make(new, Role::Normal);
         self.slots[ni] = s;
-        self.map = [map[0] ^ k[33], map[1] ^ k[34]];
+        self.set_roles(map, &k);
         k.zeroize();
         Ok(())
     }
@@ -323,14 +356,46 @@ mod tests {
         assert_eq!(g.unlock("hide-pass22"), Some(Role::Hide));
         assert_eq!(g.unlock("delete-pass3"), Some(Role::Delete));
         assert_eq!(g.unlock("normal-pass1"), Some(Role::Normal));
-        assert_eq!(g.extras("normal-pass1").unwrap(), (true, true));
+        assert_eq!(g.extras("normal-pass1").unwrap(), [true, true, false]);
         g.change_normal("normal-pass1", "normal-pass9").unwrap();
         assert_eq!(g.unlock("normal-pass1"), None);
         assert_eq!(g.unlock("normal-pass9"), Some(Role::Normal));
         assert_eq!(g.unlock("hide-pass22"), Some(Role::Hide));
         g.set_extra("normal-pass9", Role::Hide, None).unwrap();
         assert_eq!(g.unlock("hide-pass22"), None);
-        assert_eq!(g.extras("normal-pass9").unwrap(), (false, true));
+        assert_eq!(g.extras("normal-pass9").unwrap(), [false, true, false]);
         assert_eq!(g.unlock("delete-pass3"), Some(Role::Delete));
+        // Fourth: the account password, alongside the other three.
+        g.set_extra("normal-pass9", Role::Hide, Some("hide-pass22")).unwrap();
+        g.set_extra("normal-pass9", Role::Account, Some("account-pass4")).unwrap();
+        assert_eq!(g.extras("normal-pass9").unwrap(), [true, true, true]);
+        let mut h = LockFile::from_json(&g.to_json()).unwrap();
+        assert_eq!(empty.len(), h.to_json().len());
+        assert_eq!(h.unlock("account-pass4"), Some(Role::Account));
+        assert_eq!(h.unlock("hide-pass22"), Some(Role::Hide));
+        assert_eq!(h.unlock("delete-pass3"), Some(Role::Delete));
+        assert_eq!(h.unlock("normal-pass9"), Some(Role::Normal));
+    }
+
+    #[test]
+    fn older_three_slot_file_still_opens() {
+        // Built the way files were before the account password.
+        let salt = random::<16>();
+        let k = derive("normal-pass1", &salt);
+        let normal = Slot { salt: hex(&salt), check: hex(&k[..32]), role: [Role::Normal as u8 ^ k[32]] };
+        let old = serde_json::json!({
+            "slots": [decoy(), normal, decoy()],
+            "map": hex(&[3 ^ k[33], 3 ^ k[34]]),
+            "fails": 0,
+        });
+        let mut f = LockFile::from_json(&old.to_string()).unwrap();
+        assert_eq!(f.unlock("normal-pass1"), Some(Role::Normal));
+        assert_eq!(f.extras("normal-pass1").unwrap(), [false, false, false]);
+        f.set_extra("normal-pass1", Role::Account, Some("account-pass4")).unwrap();
+        f.set_extra("normal-pass1", Role::Hide, Some("hide-pass22")).unwrap();
+        assert_eq!(f.extras("normal-pass1").unwrap(), [true, false, true]);
+        assert_eq!(f.unlock("account-pass4"), Some(Role::Account));
+        assert_eq!(f.unlock("hide-pass22"), Some(Role::Hide));
+        assert_eq!(f.unlock("normal-pass1"), Some(Role::Normal));
     }
 }

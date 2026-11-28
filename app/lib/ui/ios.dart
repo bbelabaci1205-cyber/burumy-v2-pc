@@ -33,10 +33,11 @@ class IosTile extends CupertinoListTile {
     super.leadingSize,
     super.leadingToTitle = gap,
   }) : super(
-         // iOS row titles are a little heavier than Pretendard Regular:
-         // measured ink sits between 400 and 500, nearer 500.
+         // Row titles: Pretendard Regular. Measured 2026-11-26 on Eric's
+         // iPhone against Telegram's settings ("데이터 및 저장 공간"): 400 is
+         // within 3% of Telegram's ink, 500 was ~17% heavier (Eric: 굵다).
          title: DefaultTextStyle.merge(
-           style: const TextStyle(fontWeight: FontWeight.w500),
+           style: const TextStyle(fontWeight: FontWeight.w400),
            child: title,
          ),
          padding: padding ?? (leading == null ? plainPad : iconedPad),
@@ -187,8 +188,12 @@ class IosSwitch extends StatelessWidget {
 /// that slides to the chosen part. Same arguments as
 /// CupertinoSlidingSegmentedControl.
 class IosSegmented<T extends Object> extends StatelessWidget {
-  const IosSegmented({super.key, required this.children, required this.groupValue, required this.onValueChanged});
+  const IosSegmented({super.key, required this.children, required this.groupValue, required this.onValueChanged, this.itemWidth = 110});
   final Map<T, Widget> children;
+
+  /// Width of one choice when the row leaves the size open (beside a
+  /// row's title use a short one, so the title is not cut).
+  final double itemWidth;
   final T? groupValue;
   final ValueChanged<T?> onValueChanged;
 
@@ -199,7 +204,7 @@ class IosSegmented<T extends Object> extends StatelessWidget {
     final at = groupValue == null ? -1 : keys.indexOf(groupValue as T);
     return LayoutBuilder(
       builder: (context, outer) => Container(
-        width: outer.hasBoundedWidth ? null : 110.0 * keys.length,
+        width: outer.hasBoundedWidth ? null : itemWidth * keys.length,
         height: 36,
         padding: const EdgeInsets.all(2),
         decoration: BoxDecoration(color: p.dark ? const Color(0x3D767680) : const Color(0x1F767680), borderRadius: BorderRadius.circular(18)),
@@ -233,7 +238,7 @@ class IosSegmented<T extends Object> extends StatelessWidget {
                           onTap: () => onValueChanged(keys[i]),
                           child: Center(
                             child: DefaultTextStyle(
-                              style: Tokens.preview.style.copyWith(color: p.label, fontWeight: i == at ? FontWeight.w600 : FontWeight.w400),
+                              style: Tokens.preview.style.copyWith(color: p.label, fontWeight: i == at ? Tokens.semi : FontWeight.w400),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               child: children[keys[i]]!,
@@ -276,7 +281,7 @@ class IosActionSheet extends StatelessWidget {
         style: Tokens.body.style.copyWith(
           fontSize: 18,
           color: w.isDestructiveAction ? const Color(0xFFFF3B30) : accent,
-          fontWeight: w.isDefaultAction || cancel ? FontWeight.w600 : FontWeight.w400,
+          fontWeight: w.isDefaultAction || cancel ? Tokens.semi : FontWeight.w400,
         ),
         textAlign: TextAlign.center,
         child: w.child,
@@ -314,7 +319,7 @@ class IosActionSheet extends StatelessWidget {
             children: [
               if (title != null)
                 DefaultTextStyle(
-                  style: Tokens.caption.style.copyWith(color: grey, fontWeight: FontWeight.w600),
+                  style: Tokens.caption.style.copyWith(color: grey, fontWeight: Tokens.semi),
                   textAlign: TextAlign.center,
                   child: title!,
                 ),

@@ -56,7 +56,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => 482803949;
+  int get rustContentHash => 420031086;
 
   static const kDefaultExternalLibraryLoaderConfig = ExternalLibraryLoaderConfig(
     stem: 'burumy_bridge',
@@ -76,9 +76,17 @@ abstract class RustLibApi extends BaseApi {
     required String text,
   });
 
+  Future<String> crateApiDeviceBurumyDeviceAddPollOption({required BurumyDevice that, required String roomId, required String pollId, required String text});
+
+  Future<void> crateApiDeviceBurumyDeviceAddToCommunity({required BurumyDevice that, required String id, required String roomId, required bool hidden});
+
+  Future<bool> crateApiDeviceBurumyDeviceAddressFree({required BurumyDevice that, required String roomId, required String address});
+
   Future<void> crateApiDeviceBurumyDeviceAnswerCall({required BurumyDevice that, required String roomId, required String callId});
 
   Future<void> crateApiDeviceBurumyDeviceAnswerCard({required BurumyDevice that, required String roomId, required String cardId, required String answer});
+
+  Future<void> crateApiDeviceBurumyDeviceAnswerJoinRequest({required BurumyDevice that, required String roomId, required String userId, required bool accept});
 
   Future<void> crateApiDeviceBurumyDeviceAnswerMeetup({required BurumyDevice that, required String roomId, required String meetupId, required String answer});
 
@@ -86,9 +94,13 @@ abstract class RustLibApi extends BaseApi {
 
   Future<String> crateApiDeviceBurumyDeviceBioOf({required BurumyDevice that, required String userId});
 
+  Future<Uint8List?> crateApiDeviceBurumyDeviceBlob({required BurumyDevice that, required String name});
+
   Future<void> crateApiDeviceBurumyDeviceBlock({required BurumyDevice that, required String userId, required bool on_});
 
   Future<List<String>> crateApiDeviceBurumyDeviceBlocked({required BurumyDevice that});
+
+  Future<List<ChatMessage>> crateApiDeviceBurumyDeviceCachedMessages({required BurumyDevice that, required String roomId});
 
   Future<CallAskRow> crateApiDeviceBurumyDeviceCallAsk({required BurumyDevice that, required String roomId, required String callId});
 
@@ -99,6 +111,8 @@ abstract class RustLibApi extends BaseApi {
   Future<String> crateApiDeviceBurumyDeviceCallWaiting({required BurumyDevice that});
 
   Future<bool> crateApiDeviceBurumyDeviceCanPost({required BurumyDevice that, required String roomId});
+
+  Future<bool> crateApiDeviceBurumyDeviceCancelDownload({required BurumyDevice that, required String eventId});
 
   Future<void> crateApiDeviceBurumyDeviceCancelMeetup({required BurumyDevice that, required String roomId, required String meetupId});
 
@@ -113,6 +127,8 @@ abstract class RustLibApi extends BaseApi {
   Future<List<String>> crateApiDeviceBurumyDeviceCloseCard({required BurumyDevice that, required String roomId, required String cardId});
 
   Future<void> crateApiDeviceBurumyDeviceClosePoll({required BurumyDevice that, required String roomId, required String pollId});
+
+  Future<List<CommunityRow>> crateApiDeviceBurumyDeviceCommunities({required BurumyDevice that});
 
   Future<bool> crateApiDeviceBurumyDeviceConfirmSas({required BurumyDevice that, required String userId, required String flowId});
 
@@ -129,7 +145,11 @@ abstract class RustLibApi extends BaseApi {
     required bool othersAdd,
   });
 
+  Future<String> crateApiDeviceBurumyDeviceCreateCommunity({required BurumyDevice that, required String name, required String about});
+
   Future<String> crateApiDeviceBurumyDeviceCreateDm({required BurumyDevice that, required String userId});
+
+  Future<String> crateApiDeviceBurumyDeviceCreateDmKeyed({required BurumyDevice that, required String userId, required String proof});
 
   Future<String> crateApiDeviceBurumyDeviceCreateGroup({required BurumyDevice that, required String name, required List<String> invite, required bool channel});
 
@@ -138,6 +158,7 @@ abstract class RustLibApi extends BaseApi {
     required String roomId,
     required String title,
     required BigInt startsAt,
+    required BigInt endsAt,
     required String place,
   });
 
@@ -151,11 +172,19 @@ abstract class RustLibApi extends BaseApi {
     int? quiz,
     required String explain,
     required PlatformInt64 closeAt,
+    required String extra,
+    required List<PollPhotoIn> photos,
   });
 
   Future<void> crateApiDeviceBurumyDeviceDecline({required BurumyDevice that, required String roomId});
 
+  Future<void> crateApiDeviceBurumyDeviceDeclineBlocked({required BurumyDevice that, required String roomId});
+
+  Future<void> crateApiDeviceBurumyDeviceDeleteCommunity({required BurumyDevice that, required String id});
+
   Future<void> crateApiDeviceBurumyDeviceDeleteForBoth({required BurumyDevice that, required String roomId});
+
+  Future<void> crateApiDeviceBurumyDeviceDeleteInviteLink({required BurumyDevice that, required String roomId, required String code});
 
   Future<void> crateApiDeviceBurumyDeviceDeleteMessage({required BurumyDevice that, required String roomId, required String eventId});
 
@@ -163,9 +192,59 @@ abstract class RustLibApi extends BaseApi {
 
   Future<List<DeviceInfo>> crateApiDeviceBurumyDeviceDevices({required BurumyDevice that});
 
+  Future<Uint8List> crateApiDeviceBurumyDeviceDownloadEncrypted({required BurumyDevice that, required String file});
+
   Future<Uint8List> crateApiDeviceBurumyDeviceDownloadFile({required BurumyDevice that, required String roomId, required String eventId});
 
+  Future<Uint8List> crateApiDeviceBurumyDeviceDownloadFileCached({
+    required BurumyDevice that,
+    required String roomId,
+    required String eventId,
+    required bool cache,
+  });
+
+  Future<Uint8List> crateApiDeviceBurumyDeviceDownloadSecret({required BurumyDevice that, required String file});
+
+  Future<void> crateApiDeviceBurumyDeviceDropBlob({required BurumyDevice that, required String name});
+
+  Future<Uint8List> crateApiDeviceBurumyDeviceEarlierFile({required BurumyDevice that, required String roomId, required int index, required bool thumb});
+
+  Future<List<EarlierRow>> crateApiDeviceBurumyDeviceEarlierMessages({required BurumyDevice that, required String roomId});
+
   Future<void> crateApiDeviceBurumyDeviceEdit({required BurumyDevice that, required String roomId, required String eventId, required String text});
+
+  Future<InviteLinkRow> crateApiDeviceBurumyDeviceEditInviteLink({
+    required BurumyDevice that,
+    required String roomId,
+    required String code,
+    required String name,
+    required BigInt until,
+    required BigInt max,
+  });
+
+  Future<void> crateApiDeviceBurumyDeviceEditMedia({
+    required BurumyDevice that,
+    required String roomId,
+    required String eventId,
+    required String caption,
+    required bool captionAbove,
+    String? fileName,
+    String? fileMime,
+    Uint8List? fileData,
+  });
+
+  Future<int> crateApiDeviceBurumyDeviceEditStory({
+    required BurumyDevice that,
+    required String storyId,
+    required String mime,
+    required List<int> data,
+    required String caption,
+    required String extra,
+    required List<String> only,
+    required String pin,
+  });
+
+  Future<EmojiStatusRow> crateApiDeviceBurumyDeviceEmojiStatusOf({required BurumyDevice that, required String userId});
 
   Future<String> crateApiDeviceBurumyDeviceEnableRecovery({required BurumyDevice that});
 
@@ -175,7 +254,15 @@ abstract class RustLibApi extends BaseApi {
 
   Future<List<FeedLikeRow>> crateApiDeviceBurumyDeviceFeedLikes({required BurumyDevice that});
 
+  Future<void> crateApiDeviceBurumyDeviceForgetFile({required BurumyDevice that, required String roomId, required String eventId});
+
   Future<String> crateApiDeviceBurumyDeviceForward({required BurumyDevice that, required String fromRoom, required String eventId, required String toRoom});
+
+  Future<GateHelperRow> crateApiDeviceBurumyDeviceGateHelperState({required BurumyDevice that, required String roomId});
+
+  Future<String> crateApiDeviceBurumyDeviceGateLog({required BurumyDevice that, required String roomId});
+
+  Future<List<String>> crateApiDeviceBurumyDeviceGroupReceipts({required BurumyDevice that, required String roomId});
 
   Future<void> crateApiDeviceBurumyDeviceHangupCall({required BurumyDevice that, required String roomId, required String callId, required String reason});
 
@@ -183,11 +270,19 @@ abstract class RustLibApi extends BaseApi {
 
   Future<bool> crateApiDeviceBurumyDeviceHideActive({required BurumyDevice that});
 
+  Future<List<String>> crateApiDeviceBurumyDeviceHideMarkedMessages({required BurumyDevice that, required String roomId});
+
+  Future<String> crateApiDeviceBurumyDeviceImportedMessages({required BurumyDevice that, required String roomId, required String cardId});
+
   Future<List<InviteRow>> crateApiDeviceBurumyDeviceInvitations({required BurumyDevice that});
+
+  Future<List<InviteLinkRow>> crateApiDeviceBurumyDeviceInviteLinks({required BurumyDevice that, required String roomId});
 
   Future<void> crateApiDeviceBurumyDeviceInviteUsers({required BurumyDevice that, required String roomId, required List<String> users});
 
   List<String> crateApiDeviceBurumyDeviceInvitedRooms({required BurumyDevice that});
+
+  Future<List<String>> crateApiDeviceBurumyDeviceInvitesBlocked({required BurumyDevice that, required String roomId});
 
   Future<bool> crateApiDeviceBurumyDeviceIsChannel({required BurumyDevice that, required String roomId});
 
@@ -197,15 +292,47 @@ abstract class RustLibApi extends BaseApi {
 
   Future<void> crateApiDeviceBurumyDeviceJoin({required BurumyDevice that, required String roomId});
 
+  Future<List<String>> crateApiDeviceBurumyDeviceJoinCommunityChat({required BurumyDevice that, required String id, required String roomId});
+
+  Future<List<String>> crateApiDeviceBurumyDeviceJoinLink({required BurumyDevice that, required String kind, required String code});
+
+  Future<List<String>> crateApiDeviceBurumyDeviceJoinLinkWith({
+    required BurumyDevice that,
+    required String kind,
+    required String code,
+    required List<String> answers,
+  });
+
+  Future<List<JoinRequestRow>> crateApiDeviceBurumyDeviceJoinRequests({required BurumyDevice that, required String roomId});
+
+  Future<String> crateApiDeviceBurumyDeviceKnockState({required BurumyDevice that, required String roomId});
+
   Future<void> crateApiDeviceBurumyDeviceLeave({required BurumyDevice that, required String roomId});
 
+  Future<void> crateApiDeviceBurumyDeviceLeaveCommunity({required BurumyDevice that, required String id});
+
   Future<bool> crateApiDeviceBurumyDeviceLinkPreviewsEnabled({required BurumyDevice that});
+
+  Future<Uint8List> crateApiDeviceBurumyDeviceLiveVideo({required BurumyDevice that, required String roomId, required String eventId});
 
   Future<void> crateApiDeviceBurumyDeviceLogOutDevices({required BurumyDevice that, required List<String> ids, required String password});
 
   Future<String> crateApiDeviceBurumyDeviceLogin({required BurumyDevice that, required String username, required String password, required String deviceName});
 
+  Future<String> crateApiDeviceBurumyDeviceLoginToken({required BurumyDevice that, required String token, required String deviceName});
+
   Future<void> crateApiDeviceBurumyDeviceLogout({required BurumyDevice that});
+
+  Future<List<String>> crateApiDeviceBurumyDeviceMainLinkUses({required BurumyDevice that, required String roomId});
+
+  Future<InviteLinkRow> crateApiDeviceBurumyDeviceMakeInviteLink({
+    required BurumyDevice that,
+    required String roomId,
+    required String name,
+    required BigInt until,
+    required BigInt max,
+    required BigInt now,
+  });
 
   Future<void> crateApiDeviceBurumyDeviceMarkChecklist({
     required BurumyDevice that,
@@ -217,9 +344,13 @@ abstract class RustLibApi extends BaseApi {
 
   Future<void> crateApiDeviceBurumyDeviceMarkForDelete({required BurumyDevice that, required String roomId, required String eventId, required bool on_});
 
+  Future<void> crateApiDeviceBurumyDeviceMarkForHide({required BurumyDevice that, required String roomId, required String eventId, required bool on_});
+
   Future<void> crateApiDeviceBurumyDeviceMarkRead({required BurumyDevice that, required String roomId});
 
   Future<List<String>> crateApiDeviceBurumyDeviceMarkedMessages({required BurumyDevice that, required String roomId});
+
+  Future<List<String>> crateApiDeviceBurumyDeviceMemberTags({required BurumyDevice that, required String roomId});
 
   Future<List<MemberRow>> crateApiDeviceBurumyDeviceMembers({required BurumyDevice that, required String roomId});
 
@@ -233,13 +364,23 @@ abstract class RustLibApi extends BaseApi {
 
   Future<String> crateApiDeviceBurumyDeviceMyRole({required BurumyDevice that, required String roomId});
 
+  Future<List<String>> crateApiDeviceBurumyDeviceNameColors({required BurumyDevice that, required String roomId});
+
+  Future<RoomLinkRow> crateApiDeviceBurumyDeviceNewPrivateLink({required BurumyDevice that, required String roomId});
+
   Future<bool> crateApiDeviceBurumyDeviceNoticeTextHidden({required BurumyDevice that});
 
   Future<List<NoticeRow>> crateApiDeviceBurumyDeviceNotifications({required BurumyDevice that, required int max});
 
   Future<BurumyDevice> crateApiDeviceBurumyDeviceOpen({required String homeserver, required String dataDir, required String storePassphrase});
 
+  Future<String> crateApiDeviceBurumyDeviceOpenArticle({required BurumyDevice that, required String roomId, required String eventId});
+
   Future<Uint8List> crateApiDeviceBurumyDeviceOpenViewOnce({required BurumyDevice that, required String roomId, required String eventId});
+
+  Future<String> crateApiDeviceBurumyDeviceOpenidToken({required BurumyDevice that});
+
+  Future<LinkPeekRow> crateApiDeviceBurumyDevicePeekAddress({required BurumyDevice that, required String address});
 
   Future<List<PeerKey>> crateApiDeviceBurumyDevicePeerKeys({required BurumyDevice that, required String userId});
 
@@ -248,6 +389,19 @@ abstract class RustLibApi extends BaseApi {
   Future<void> crateApiDeviceBurumyDevicePin({required BurumyDevice that, required String roomId, required String eventId, required bool pinned});
 
   List<String> crateApiDeviceBurumyDevicePinned({required BurumyDevice that, required String roomId});
+
+  Future<Uint8List> crateApiDeviceBurumyDevicePollPhoto({required BurumyDevice that, required String roomId, required String pollId, required String slot});
+
+  Future<StoryPostedRow> crateApiDeviceBurumyDevicePostStories({
+    required BurumyDevice that,
+    required String mime,
+    required List<int> data,
+    required String caption,
+    required List<String> only,
+    required int hours,
+    required List<String> extras,
+    required String room,
+  });
 
   Future<int> crateApiDeviceBurumyDevicePostStory({
     required BurumyDevice that,
@@ -261,11 +415,15 @@ abstract class RustLibApi extends BaseApi {
 
   Future<Uint8List> crateApiDeviceBurumyDevicePreviewImage({required BurumyDevice that, required String roomId, required String eventId});
 
+  Future<String> crateApiDeviceBurumyDevicePrivacyJson({required BurumyDevice that});
+
   Future<ProfileCardRow> crateApiDeviceBurumyDeviceProfileOf({required BurumyDevice that, required String userId});
 
   Future<List<List<String>>> crateApiDeviceBurumyDeviceQuietLists({required BurumyDevice that});
 
   Future<String> crateApiDeviceBurumyDeviceReact({required BurumyDevice that, required String roomId, required String eventId, required String key});
+
+  Future<Uint64List> crateApiDeviceBurumyDeviceReadReceipt({required BurumyDevice that, required String roomId});
 
   Future<BigInt> crateApiDeviceBurumyDeviceReadUntil({required BurumyDevice that, required String roomId});
 
@@ -277,11 +435,24 @@ abstract class RustLibApi extends BaseApi {
 
   Future<void> crateApiDeviceBurumyDeviceReleaseHidden({required BurumyDevice that});
 
+  Future<void> crateApiDeviceBurumyDeviceRemoveFromCommunity({required BurumyDevice that, required String id, required String roomId});
+
+  Future<void> crateApiDeviceBurumyDeviceRemoveLink({required BurumyDevice that, required String roomId});
+
   Future<void> crateApiDeviceBurumyDeviceRemoveMember({required BurumyDevice that, required String roomId, required String userId});
 
   Future<String> crateApiDeviceBurumyDeviceReply({required BurumyDevice that, required String roomId, required String toEvent, required String text});
 
   Future<String> crateApiDeviceBurumyDeviceReplyInThread({required BurumyDevice that, required String roomId, required String root, required String text});
+
+  Future<String> crateApiDeviceBurumyDeviceReplyQuote({
+    required BurumyDevice that,
+    required String roomId,
+    required String toEvent,
+    required String text,
+    required String quote,
+    required String quoteName,
+  });
 
   Future<void> crateApiDeviceBurumyDeviceReportMessage({
     required BurumyDevice that,
@@ -293,13 +464,23 @@ abstract class RustLibApi extends BaseApi {
 
   Future<String> crateApiDeviceBurumyDeviceRequestUserVerification({required BurumyDevice that, required String userId});
 
+  Future<bool> crateApiDeviceBurumyDeviceReshareRoomPhoto({required BurumyDevice that, required String roomId});
+
   Future<void> crateApiDeviceBurumyDeviceRestore({required BurumyDevice that, required String sessionJson});
+
+  Future<void> crateApiDeviceBurumyDeviceRestoreInviteLink({required BurumyDevice that, required String roomId, required String code});
+
+  Future<void> crateApiDeviceBurumyDeviceRevokeInviteLink({required BurumyDevice that, required String roomId, required String code});
 
   Future<List<RingingRow>> crateApiDeviceBurumyDeviceRingingCalls({required BurumyDevice that});
 
   Future<String> crateApiDeviceBurumyDeviceRoomAbout({required BurumyDevice that, required String roomId});
 
   Future<String> crateApiDeviceBurumyDeviceRoomConfig({required BurumyDevice that, required String roomId});
+
+  Future<RoomLinkRow> crateApiDeviceBurumyDeviceRoomLink({required BurumyDevice that, required String roomId});
+
+  Future<Uint8List?> crateApiDeviceBurumyDeviceRoomPhoto({required BurumyDevice that, required String roomId});
 
   Future<bool> crateApiDeviceBurumyDeviceRoomSwitch({required BurumyDevice that, required String roomId, required String key});
 
@@ -309,11 +490,19 @@ abstract class RustLibApi extends BaseApi {
 
   Future<List<String>?> crateApiDeviceBurumyDeviceSasEmoji({required BurumyDevice that, required String userId, required String flowId});
 
+  Future<void> crateApiDeviceBurumyDeviceSaveBlob({required BurumyDevice that, required String name, required List<int> data});
+
   Future<String?> crateApiDeviceBurumyDeviceSavedRoom({required BurumyDevice that, required bool create});
+
+  Future<List<FoundRow>> crateApiDeviceBurumyDeviceSearchAll({required BurumyDevice that, required String term, required String kind, required int limit});
 
   Future<List<ChatMessage>> crateApiDeviceBurumyDeviceSearchMessages({required BurumyDevice that, required String roomId, required String term});
 
   Future<List<PersonRow>> crateApiDeviceBurumyDeviceSearchPeople({required BurumyDevice that, required String term});
+
+  Future<List<PublicRoomRow>> crateApiDeviceBurumyDeviceSearchPublic({required BurumyDevice that, required String term, required bool channelsOnly});
+
+  Future<String> crateApiDeviceBurumyDeviceSendArticle({required BurumyDevice that, required String roomId, required String doc});
 
   Future<String> crateApiDeviceBurumyDeviceSendBubble({
     required BurumyDevice that,
@@ -342,6 +531,40 @@ abstract class RustLibApi extends BaseApi {
     required String caption,
   });
 
+  Future<String> crateApiDeviceBurumyDeviceSendFileOpts({
+    required BurumyDevice that,
+    required String roomId,
+    required String name,
+    required String mime,
+    required List<int> data,
+    required String caption,
+    required bool captionAbove,
+  });
+
+  Future<int> crateApiDeviceBurumyDeviceSendHistory({required BurumyDevice that, required String roomId, required String userId, required int count});
+
+  Future<String> crateApiDeviceBurumyDeviceSendLiveLocation({
+    required BurumyDevice that,
+    required String roomId,
+    required double lat,
+    required double lon,
+    double? accuracy,
+    required BigInt untilMs,
+  });
+
+  Future<String> crateApiDeviceBurumyDeviceSendLivePhoto({
+    required BurumyDevice that,
+    required String roomId,
+    required String name,
+    required String mime,
+    required List<int> data,
+    required String videoMime,
+    required List<int> video,
+    required BigInt durationMs,
+    required String style,
+    required String caption,
+  });
+
   Future<String> crateApiDeviceBurumyDeviceSendLocation({
     required BurumyDevice that,
     required String roomId,
@@ -350,9 +573,25 @@ abstract class RustLibApi extends BaseApi {
     double? accuracy,
   });
 
+  Future<bool> crateApiDeviceBurumyDeviceSendMyDraft({required BurumyDevice that, required String roomId, required String text, required BigInt at});
+
+  Future<void> crateApiDeviceBurumyDeviceSendSignal({required BurumyDevice that, required String roomId, required String kind, required String data});
+
   Future<String> crateApiDeviceBurumyDeviceSendSticker({required BurumyDevice that, required String roomId, required String stickerId});
 
   Future<String> crateApiDeviceBurumyDeviceSendText({required BurumyDevice that, required String roomId, required String text});
+
+  Future<String> crateApiDeviceBurumyDeviceSendTextLink({
+    required BurumyDevice that,
+    required String roomId,
+    required String toEvent,
+    required String text,
+    required bool silent,
+    required String url,
+    required bool above,
+    required bool small,
+    required bool off,
+  });
 
   Future<String> crateApiDeviceBurumyDeviceSendTextQuietly({required BurumyDevice that, required String roomId, required String text});
 
@@ -389,7 +628,32 @@ abstract class RustLibApi extends BaseApi {
 
   Future<void> crateApiDeviceBurumyDeviceSetChatPinned({required BurumyDevice that, required String roomId, required bool on_});
 
+  Future<void> crateApiDeviceBurumyDeviceSetCommunityAddAll({required BurumyDevice that, required String id, required bool all});
+
+  Future<void> crateApiDeviceBurumyDeviceSetCommunityAdmin({required BurumyDevice that, required String id, required String userId, required bool on_});
+
+  Future<void> crateApiDeviceBurumyDeviceSetCommunityChatHidden({required BurumyDevice that, required String id, required String roomId, required bool hidden});
+
+  Future<void> crateApiDeviceBurumyDeviceSetCommunityInfo({required BurumyDevice that, required String id, required String name, required String about});
+
+  Future<int> crateApiDeviceBurumyDeviceSetEmojiStatus({required BurumyDevice that, required String emoji, required BigInt untilMs});
+
+  Future<void> crateApiDeviceBurumyDeviceSetGateHelper({required BurumyDevice that, required String roomId, required bool on_});
+
+  Future<void> crateApiDeviceBurumyDeviceSetIdSearchHidden({required BurumyDevice that, required bool on_});
+
+  Future<void> crateApiDeviceBurumyDeviceSetLinkApproval({required BurumyDevice that, required String roomId, required bool on_});
+
   Future<void> crateApiDeviceBurumyDeviceSetLinkPreviewsEnabled({required BurumyDevice that, required bool on_});
+
+  Future<void> crateApiDeviceBurumyDeviceSetMediaKeep({required BurumyDevice that, BigInt? maxFile, BigInt? keepSecs});
+
+  Future<void> crateApiDeviceBurumyDeviceSetMemberLevel({
+    required BurumyDevice that,
+    required String roomId,
+    required String userId,
+    required PlatformInt64 level,
+  });
 
   Future<void> crateApiDeviceBurumyDeviceSetMyBio({required BurumyDevice that, required String text});
 
@@ -397,7 +661,15 @@ abstract class RustLibApi extends BaseApi {
 
   Future<void> crateApiDeviceBurumyDeviceSetMyPhoto({required BurumyDevice that, required String mime, required List<int> data});
 
+  Future<void> crateApiDeviceBurumyDeviceSetMyRoomLook({required BurumyDevice that, required String roomId, String? name, String? color});
+
+  Future<void> crateApiDeviceBurumyDeviceSetMyRoomTag({required BurumyDevice that, required String roomId, required String tag});
+
   Future<void> crateApiDeviceBurumyDeviceSetNoticeTextHidden({required BurumyDevice that, required bool on_});
+
+  Future<void> crateApiDeviceBurumyDeviceSetPrivacyValue({required BurumyDevice that, required String key, required String valueJson});
+
+  Future<RoomLinkRow> crateApiDeviceBurumyDeviceSetPublicLink({required BurumyDevice that, required String roomId, required String address});
 
   Future<void> crateApiDeviceBurumyDeviceSetPush({required BurumyDevice that, required String gatewayUrl, required String pushkey, required String appId});
 
@@ -409,7 +681,13 @@ abstract class RustLibApi extends BaseApi {
 
   Future<void> crateApiDeviceBurumyDeviceSetRoomName({required BurumyDevice that, required String roomId, required String name});
 
+  Future<void> crateApiDeviceBurumyDeviceSetRoomPhoto({required BurumyDevice that, required String roomId, required String mime, required List<int> data});
+
   Future<void> crateApiDeviceBurumyDeviceSetRoomSwitch({required BurumyDevice that, required String roomId, required String key, required bool on_});
+
+  void crateApiDeviceBurumyDeviceSetSendAs({required BurumyDevice that, required String roomId, required String asJson});
+
+  void crateApiDeviceBurumyDeviceSetSendTopic({required BurumyDevice that, required String roomId, String? topic});
 
   Future<void> crateApiDeviceBurumyDeviceSetSetting({required BurumyDevice that, required String key, required String value});
 
@@ -420,6 +698,8 @@ abstract class RustLibApi extends BaseApi {
   Future<void> crateApiDeviceBurumyDeviceSetTyping({required BurumyDevice that, required String roomId, required bool typing});
 
   void crateApiDeviceBurumyDeviceSetTzOffset({required BurumyDevice that, required int minutes});
+
+  Future<void> crateApiDeviceBurumyDeviceSetWebPage({required BurumyDevice that, required String roomId, required bool on_});
 
   Future<Map<String, String>> crateApiDeviceBurumyDeviceSettings({required BurumyDevice that});
 
@@ -441,6 +721,8 @@ abstract class RustLibApi extends BaseApi {
 
   Future<List<StoryRow>> crateApiDeviceBurumyDeviceStories({required BurumyDevice that});
 
+  Future<StoryLinkRow> crateApiDeviceBurumyDeviceStoryLinkCard({required BurumyDevice that, required String url});
+
   Future<bool> crateApiDeviceBurumyDeviceStreaksEnabled({required BurumyDevice that});
 
   Future<void> crateApiDeviceBurumyDeviceSyncOnce({required BurumyDevice that});
@@ -448,6 +730,10 @@ abstract class RustLibApi extends BaseApi {
   Future<void> crateApiDeviceBurumyDeviceSyncWait({required BurumyDevice that, required BigInt timeoutMs});
 
   Future<List<String>> crateApiDeviceBurumyDeviceTakeEraseNotices({required BurumyDevice that});
+
+  List<SignalRow> crateApiDeviceBurumyDeviceTakeSignals({required BurumyDevice that});
+
+  Future<List<SyncedDraftRow>> crateApiDeviceBurumyDeviceTakeSyncedDrafts({required BurumyDevice that});
 
   Future<bool> crateApiDeviceBurumyDeviceThisDeviceVerified({required BurumyDevice that});
 
@@ -457,6 +743,20 @@ abstract class RustLibApi extends BaseApi {
 
   List<String> crateApiDeviceBurumyDeviceTypingUsers({required BurumyDevice that, required String roomId});
 
+  Future<void> crateApiDeviceBurumyDeviceUpdateLiveLocation({
+    required BurumyDevice that,
+    required String roomId,
+    required String eventId,
+    required double lat,
+    required double lon,
+    double? accuracy,
+    required BigInt untilMs,
+  });
+
+  Future<String> crateApiDeviceBurumyDeviceUploadEncrypted({required BurumyDevice that, required List<int> data});
+
+  Future<String> crateApiDeviceBurumyDeviceUploadSecret({required BurumyDevice that, required List<int> bytes});
+
   String? crateApiDeviceBurumyDeviceUserId({required BurumyDevice that});
 
   Future<String> crateApiDeviceBurumyDeviceVerifyState({required BurumyDevice that, required String userId, required String flowId});
@@ -464,6 +764,20 @@ abstract class RustLibApi extends BaseApi {
   Future<List<String>> crateApiDeviceBurumyDeviceVisibleInvites({required BurumyDevice that});
 
   Future<void> crateApiDeviceBurumyDeviceVote({required BurumyDevice that, required String roomId, required String pollId, required List<String> choices});
+
+  Future<void> crateApiDeviceBurumyDeviceWebPost({
+    required BurumyDevice that,
+    required String roomId,
+    required String eventId,
+    required String text,
+    required BigInt ts,
+    String? photoMime,
+    Uint8List? photo,
+  });
+
+  Future<List<String>> crateApiDeviceBurumyDeviceWebPosts({required BurumyDevice that, required String roomId});
+
+  Future<void> crateApiDeviceBurumyDeviceWebUnpost({required BurumyDevice that, required String roomId, required String eventId});
 
   Future<void> crateApiDeviceInitApp();
 
@@ -544,6 +858,74 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "BurumyDevice_add_checklist_item", argNames: ["that", "roomId", "checklistId", "text"]);
 
   @override
+  Future<String> crateApiDeviceBurumyDeviceAddPollOption({required BurumyDevice that, required String roomId, required String pollId, required String text}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_String(pollId, serializer);
+          sse_encode_String(text, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 3, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceAddPollOptionConstMeta,
+        argValues: [that, roomId, pollId, text],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceAddPollOptionConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_add_poll_option", argNames: ["that", "roomId", "pollId", "text"]);
+
+  @override
+  Future<void> crateApiDeviceBurumyDeviceAddToCommunity({required BurumyDevice that, required String id, required String roomId, required bool hidden}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(id, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_bool(hidden, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 4, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceAddToCommunityConstMeta,
+        argValues: [that, id, roomId, hidden],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceAddToCommunityConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_add_to_community", argNames: ["that", "id", "roomId", "hidden"]);
+
+  @override
+  Future<bool> crateApiDeviceBurumyDeviceAddressFree({required BurumyDevice that, required String roomId, required String address}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_String(address, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 5, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_bool, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceAddressFreeConstMeta,
+        argValues: [that, roomId, address],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceAddressFreeConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_address_free", argNames: ["that", "roomId", "address"]);
+
+  @override
   Future<void> crateApiDeviceBurumyDeviceAnswerCall({required BurumyDevice that, required String roomId, required String callId}) {
     return handler.executeNormal(
       NormalTask(
@@ -552,7 +934,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
           sse_encode_String(callId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 3, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 6, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceAnswerCallConstMeta,
@@ -575,7 +957,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(roomId, serializer);
           sse_encode_String(cardId, serializer);
           sse_encode_String(answer, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 4, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 7, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceAnswerCardConstMeta,
@@ -589,6 +971,29 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "BurumyDevice_answer_card", argNames: ["that", "roomId", "cardId", "answer"]);
 
   @override
+  Future<void> crateApiDeviceBurumyDeviceAnswerJoinRequest({required BurumyDevice that, required String roomId, required String userId, required bool accept}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_String(userId, serializer);
+          sse_encode_bool(accept, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 8, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceAnswerJoinRequestConstMeta,
+        argValues: [that, roomId, userId, accept],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceAnswerJoinRequestConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_answer_join_request", argNames: ["that", "roomId", "userId", "accept"]);
+
+  @override
   Future<void> crateApiDeviceBurumyDeviceAnswerMeetup({required BurumyDevice that, required String roomId, required String meetupId, required String answer}) {
     return handler.executeNormal(
       NormalTask(
@@ -598,7 +1003,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(roomId, serializer);
           sse_encode_String(meetupId, serializer);
           sse_encode_String(answer, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 5, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 9, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceAnswerMeetupConstMeta,
@@ -619,7 +1024,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 6, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 10, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_list_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceBannedConstMeta,
@@ -639,7 +1044,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(userId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 7, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 11, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceBioOfConstMeta,
@@ -652,6 +1057,26 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiDeviceBurumyDeviceBioOfConstMeta => const TaskConstMeta(debugName: "BurumyDevice_bio_of", argNames: ["that", "userId"]);
 
   @override
+  Future<Uint8List?> crateApiDeviceBurumyDeviceBlob({required BurumyDevice that, required String name}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(name, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 12, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_opt_list_prim_u_8_strict, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceBlobConstMeta,
+        argValues: [that, name],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceBlobConstMeta => const TaskConstMeta(debugName: "BurumyDevice_blob", argNames: ["that", "name"]);
+
+  @override
   Future<void> crateApiDeviceBurumyDeviceBlock({required BurumyDevice that, required String userId, required bool on_}) {
     return handler.executeNormal(
       NormalTask(
@@ -660,7 +1085,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(userId, serializer);
           sse_encode_bool(on_, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 8, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 13, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceBlockConstMeta,
@@ -679,7 +1104,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 9, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 14, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_list_String, decodeErrorData: null),
         constMeta: kCrateApiDeviceBurumyDeviceBlockedConstMeta,
@@ -692,6 +1117,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiDeviceBurumyDeviceBlockedConstMeta => const TaskConstMeta(debugName: "BurumyDevice_blocked", argNames: ["that"]);
 
   @override
+  Future<List<ChatMessage>> crateApiDeviceBurumyDeviceCachedMessages({required BurumyDevice that, required String roomId}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 15, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_list_chat_message, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceCachedMessagesConstMeta,
+        argValues: [that, roomId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceCachedMessagesConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_cached_messages", argNames: ["that", "roomId"]);
+
+  @override
   Future<CallAskRow> crateApiDeviceBurumyDeviceCallAsk({required BurumyDevice that, required String roomId, required String callId}) {
     return handler.executeNormal(
       NormalTask(
@@ -700,7 +1146,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
           sse_encode_String(callId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 10, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 16, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_call_ask_row, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceCallAskConstMeta,
@@ -721,7 +1167,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_u_32(max, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 11, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 17, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_list_call_log_row, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceCallLogConstMeta,
@@ -742,7 +1188,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
           sse_encode_String(callId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 12, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 18, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceCallStateConstMeta,
@@ -762,7 +1208,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 13, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 19, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: null),
         constMeta: kCrateApiDeviceBurumyDeviceCallWaitingConstMeta,
@@ -782,7 +1228,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 14, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 20, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_bool, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceCanPostConstMeta,
@@ -795,6 +1241,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiDeviceBurumyDeviceCanPostConstMeta => const TaskConstMeta(debugName: "BurumyDevice_can_post", argNames: ["that", "roomId"]);
 
   @override
+  Future<bool> crateApiDeviceBurumyDeviceCancelDownload({required BurumyDevice that, required String eventId}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(eventId, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 21, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_bool, decodeErrorData: null),
+        constMeta: kCrateApiDeviceBurumyDeviceCancelDownloadConstMeta,
+        argValues: [that, eventId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceCancelDownloadConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_cancel_download", argNames: ["that", "eventId"]);
+
+  @override
   Future<void> crateApiDeviceBurumyDeviceCancelMeetup({required BurumyDevice that, required String roomId, required String meetupId}) {
     return handler.executeNormal(
       NormalTask(
@@ -803,7 +1270,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
           sse_encode_String(meetupId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 15, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 22, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceCancelMeetupConstMeta,
@@ -825,7 +1292,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(userId, serializer);
           sse_encode_String(flowId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 16, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 23, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceCancelVerificationConstMeta,
@@ -847,7 +1314,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
           sse_encode_String(cardId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 17, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 24, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_list_card_answer_row, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceCardAnswersConstMeta,
@@ -869,7 +1336,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(old, serializer);
           sse_encode_String(new_, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 18, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 25, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceChangePasswordConstMeta,
@@ -889,7 +1356,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 19, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 26, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_list_chat_row, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceChatListConstMeta,
@@ -910,7 +1377,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
           sse_encode_String(cardId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 20, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 27, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_list_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceCloseCardConstMeta,
@@ -932,7 +1399,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
           sse_encode_String(pollId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 21, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 28, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceClosePollConstMeta,
@@ -946,6 +1413,25 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "BurumyDevice_close_poll", argNames: ["that", "roomId", "pollId"]);
 
   @override
+  Future<List<CommunityRow>> crateApiDeviceBurumyDeviceCommunities({required BurumyDevice that}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 29, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_list_community_row, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceCommunitiesConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceCommunitiesConstMeta => const TaskConstMeta(debugName: "BurumyDevice_communities", argNames: ["that"]);
+
+  @override
   Future<bool> crateApiDeviceBurumyDeviceConfirmSas({required BurumyDevice that, required String userId, required String flowId}) {
     return handler.executeNormal(
       NormalTask(
@@ -954,7 +1440,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(userId, serializer);
           sse_encode_String(flowId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 22, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 30, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_bool, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceConfirmSasConstMeta,
@@ -974,7 +1460,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 23, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 31, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_list_person_row, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceContactsConstMeta,
@@ -996,7 +1482,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(roomId, serializer);
           sse_encode_String(kind, serializer);
           sse_encode_String(data, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 24, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 32, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceCreateCardConstMeta,
@@ -1028,7 +1514,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_list_String(items, serializer);
           sse_encode_bool(othersMark, serializer);
           sse_encode_bool(othersAdd, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 25, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 33, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceCreateChecklistConstMeta,
@@ -1042,6 +1528,28 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "BurumyDevice_create_checklist", argNames: ["that", "roomId", "title", "items", "othersMark", "othersAdd"]);
 
   @override
+  Future<String> crateApiDeviceBurumyDeviceCreateCommunity({required BurumyDevice that, required String name, required String about}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(name, serializer);
+          sse_encode_String(about, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 34, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceCreateCommunityConstMeta,
+        argValues: [that, name, about],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceCreateCommunityConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_create_community", argNames: ["that", "name", "about"]);
+
+  @override
   Future<String> crateApiDeviceBurumyDeviceCreateDm({required BurumyDevice that, required String userId}) {
     return handler.executeNormal(
       NormalTask(
@@ -1049,7 +1557,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(userId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 26, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 35, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceCreateDmConstMeta,
@@ -1060,6 +1568,28 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateApiDeviceBurumyDeviceCreateDmConstMeta => const TaskConstMeta(debugName: "BurumyDevice_create_dm", argNames: ["that", "userId"]);
+
+  @override
+  Future<String> crateApiDeviceBurumyDeviceCreateDmKeyed({required BurumyDevice that, required String userId, required String proof}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(userId, serializer);
+          sse_encode_String(proof, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 36, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceCreateDmKeyedConstMeta,
+        argValues: [that, userId, proof],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceCreateDmKeyedConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_create_dm_keyed", argNames: ["that", "userId", "proof"]);
 
   @override
   Future<String> crateApiDeviceBurumyDeviceCreateGroup({
@@ -1076,7 +1606,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(name, serializer);
           sse_encode_list_String(invite, serializer);
           sse_encode_bool(channel, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 27, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 37, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceCreateGroupConstMeta,
@@ -1095,6 +1625,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required String roomId,
     required String title,
     required BigInt startsAt,
+    required BigInt endsAt,
     required String place,
   }) {
     return handler.executeNormal(
@@ -1105,19 +1636,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(roomId, serializer);
           sse_encode_String(title, serializer);
           sse_encode_u_64(startsAt, serializer);
+          sse_encode_u_64(endsAt, serializer);
           sse_encode_String(place, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 28, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 38, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceCreateMeetupConstMeta,
-        argValues: [that, roomId, title, startsAt, place],
+        argValues: [that, roomId, title, startsAt, endsAt, place],
         apiImpl: this,
       ),
     );
   }
 
   TaskConstMeta get kCrateApiDeviceBurumyDeviceCreateMeetupConstMeta =>
-      const TaskConstMeta(debugName: "BurumyDevice_create_meetup", argNames: ["that", "roomId", "title", "startsAt", "place"]);
+      const TaskConstMeta(debugName: "BurumyDevice_create_meetup", argNames: ["that", "roomId", "title", "startsAt", "endsAt", "place"]);
 
   @override
   Future<String> crateApiDeviceBurumyDeviceCreatePoll({
@@ -1130,6 +1662,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     int? quiz,
     required String explain,
     required PlatformInt64 closeAt,
+    required String extra,
+    required List<PollPhotoIn> photos,
   }) {
     return handler.executeNormal(
       NormalTask(
@@ -1144,11 +1678,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_opt_box_autoadd_u_32(quiz, serializer);
           sse_encode_String(explain, serializer);
           sse_encode_i_64(closeAt, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 29, port: port_);
+          sse_encode_String(extra, serializer);
+          sse_encode_list_poll_photo_in(photos, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 39, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceCreatePollConstMeta,
-        argValues: [that, roomId, question, answers, anonymous, multiple, quiz, explain, closeAt],
+        argValues: [that, roomId, question, answers, anonymous, multiple, quiz, explain, closeAt, extra, photos],
         apiImpl: this,
       ),
     );
@@ -1156,7 +1692,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiDeviceBurumyDeviceCreatePollConstMeta => const TaskConstMeta(
     debugName: "BurumyDevice_create_poll",
-    argNames: ["that", "roomId", "question", "answers", "anonymous", "multiple", "quiz", "explain", "closeAt"],
+    argNames: ["that", "roomId", "question", "answers", "anonymous", "multiple", "quiz", "explain", "closeAt", "extra", "photos"],
   );
 
   @override
@@ -1167,7 +1703,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 30, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 40, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceDeclineConstMeta,
@@ -1180,6 +1716,48 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiDeviceBurumyDeviceDeclineConstMeta => const TaskConstMeta(debugName: "BurumyDevice_decline", argNames: ["that", "roomId"]);
 
   @override
+  Future<void> crateApiDeviceBurumyDeviceDeclineBlocked({required BurumyDevice that, required String roomId}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 41, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceDeclineBlockedConstMeta,
+        argValues: [that, roomId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceDeclineBlockedConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_decline_blocked", argNames: ["that", "roomId"]);
+
+  @override
+  Future<void> crateApiDeviceBurumyDeviceDeleteCommunity({required BurumyDevice that, required String id}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(id, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 42, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceDeleteCommunityConstMeta,
+        argValues: [that, id],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceDeleteCommunityConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_delete_community", argNames: ["that", "id"]);
+
+  @override
   Future<void> crateApiDeviceBurumyDeviceDeleteForBoth({required BurumyDevice that, required String roomId}) {
     return handler.executeNormal(
       NormalTask(
@@ -1187,7 +1765,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 31, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 43, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceDeleteForBothConstMeta,
@@ -1201,6 +1779,28 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "BurumyDevice_delete_for_both", argNames: ["that", "roomId"]);
 
   @override
+  Future<void> crateApiDeviceBurumyDeviceDeleteInviteLink({required BurumyDevice that, required String roomId, required String code}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_String(code, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 44, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceDeleteInviteLinkConstMeta,
+        argValues: [that, roomId, code],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceDeleteInviteLinkConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_delete_invite_link", argNames: ["that", "roomId", "code"]);
+
+  @override
   Future<void> crateApiDeviceBurumyDeviceDeleteMessage({required BurumyDevice that, required String roomId, required String eventId}) {
     return handler.executeNormal(
       NormalTask(
@@ -1209,7 +1809,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
           sse_encode_String(eventId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 32, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 45, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceDeleteMessageConstMeta,
@@ -1230,7 +1830,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(storyId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 33, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 46, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_u_32, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceDeleteStoryConstMeta,
@@ -1250,7 +1850,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 34, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 47, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_list_device_info, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceDevicesConstMeta,
@@ -1263,6 +1863,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiDeviceBurumyDeviceDevicesConstMeta => const TaskConstMeta(debugName: "BurumyDevice_devices", argNames: ["that"]);
 
   @override
+  Future<Uint8List> crateApiDeviceBurumyDeviceDownloadEncrypted({required BurumyDevice that, required String file}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(file, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 48, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_list_prim_u_8_strict, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceDownloadEncryptedConstMeta,
+        argValues: [that, file],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceDownloadEncryptedConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_download_encrypted", argNames: ["that", "file"]);
+
+  @override
   Future<Uint8List> crateApiDeviceBurumyDeviceDownloadFile({required BurumyDevice that, required String roomId, required String eventId}) {
     return handler.executeNormal(
       NormalTask(
@@ -1271,7 +1892,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
           sse_encode_String(eventId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 35, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 49, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_list_prim_u_8_strict, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceDownloadFileConstMeta,
@@ -1285,6 +1906,119 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "BurumyDevice_download_file", argNames: ["that", "roomId", "eventId"]);
 
   @override
+  Future<Uint8List> crateApiDeviceBurumyDeviceDownloadFileCached({
+    required BurumyDevice that,
+    required String roomId,
+    required String eventId,
+    required bool cache,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_String(eventId, serializer);
+          sse_encode_bool(cache, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 50, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_list_prim_u_8_strict, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceDownloadFileCachedConstMeta,
+        argValues: [that, roomId, eventId, cache],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceDownloadFileCachedConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_download_file_cached", argNames: ["that", "roomId", "eventId", "cache"]);
+
+  @override
+  Future<Uint8List> crateApiDeviceBurumyDeviceDownloadSecret({required BurumyDevice that, required String file}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(file, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 51, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_list_prim_u_8_strict, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceDownloadSecretConstMeta,
+        argValues: [that, file],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceDownloadSecretConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_download_secret", argNames: ["that", "file"]);
+
+  @override
+  Future<void> crateApiDeviceBurumyDeviceDropBlob({required BurumyDevice that, required String name}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(name, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 52, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceDropBlobConstMeta,
+        argValues: [that, name],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceDropBlobConstMeta => const TaskConstMeta(debugName: "BurumyDevice_drop_blob", argNames: ["that", "name"]);
+
+  @override
+  Future<Uint8List> crateApiDeviceBurumyDeviceEarlierFile({required BurumyDevice that, required String roomId, required int index, required bool thumb}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_u_32(index, serializer);
+          sse_encode_bool(thumb, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 53, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_list_prim_u_8_strict, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceEarlierFileConstMeta,
+        argValues: [that, roomId, index, thumb],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceEarlierFileConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_earlier_file", argNames: ["that", "roomId", "index", "thumb"]);
+
+  @override
+  Future<List<EarlierRow>> crateApiDeviceBurumyDeviceEarlierMessages({required BurumyDevice that, required String roomId}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 54, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_list_earlier_row, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceEarlierMessagesConstMeta,
+        argValues: [that, roomId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceEarlierMessagesConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_earlier_messages", argNames: ["that", "roomId"]);
+
+  @override
   Future<void> crateApiDeviceBurumyDeviceEdit({required BurumyDevice that, required String roomId, required String eventId, required String text}) {
     return handler.executeNormal(
       NormalTask(
@@ -1294,7 +2028,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(roomId, serializer);
           sse_encode_String(eventId, serializer);
           sse_encode_String(text, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 36, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 55, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceEditConstMeta,
@@ -1308,13 +2042,140 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "BurumyDevice_edit", argNames: ["that", "roomId", "eventId", "text"]);
 
   @override
+  Future<InviteLinkRow> crateApiDeviceBurumyDeviceEditInviteLink({
+    required BurumyDevice that,
+    required String roomId,
+    required String code,
+    required String name,
+    required BigInt until,
+    required BigInt max,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_String(code, serializer);
+          sse_encode_String(name, serializer);
+          sse_encode_u_64(until, serializer);
+          sse_encode_u_64(max, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 56, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_invite_link_row, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceEditInviteLinkConstMeta,
+        argValues: [that, roomId, code, name, until, max],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceEditInviteLinkConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_edit_invite_link", argNames: ["that", "roomId", "code", "name", "until", "max"]);
+
+  @override
+  Future<void> crateApiDeviceBurumyDeviceEditMedia({
+    required BurumyDevice that,
+    required String roomId,
+    required String eventId,
+    required String caption,
+    required bool captionAbove,
+    String? fileName,
+    String? fileMime,
+    Uint8List? fileData,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_String(eventId, serializer);
+          sse_encode_String(caption, serializer);
+          sse_encode_bool(captionAbove, serializer);
+          sse_encode_opt_String(fileName, serializer);
+          sse_encode_opt_String(fileMime, serializer);
+          sse_encode_opt_list_prim_u_8_strict(fileData, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 57, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceEditMediaConstMeta,
+        argValues: [that, roomId, eventId, caption, captionAbove, fileName, fileMime, fileData],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceEditMediaConstMeta => const TaskConstMeta(
+    debugName: "BurumyDevice_edit_media",
+    argNames: ["that", "roomId", "eventId", "caption", "captionAbove", "fileName", "fileMime", "fileData"],
+  );
+
+  @override
+  Future<int> crateApiDeviceBurumyDeviceEditStory({
+    required BurumyDevice that,
+    required String storyId,
+    required String mime,
+    required List<int> data,
+    required String caption,
+    required String extra,
+    required List<String> only,
+    required String pin,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(storyId, serializer);
+          sse_encode_String(mime, serializer);
+          sse_encode_list_prim_u_8_loose(data, serializer);
+          sse_encode_String(caption, serializer);
+          sse_encode_String(extra, serializer);
+          sse_encode_list_String(only, serializer);
+          sse_encode_String(pin, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 58, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_u_32, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceEditStoryConstMeta,
+        argValues: [that, storyId, mime, data, caption, extra, only, pin],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceEditStoryConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_edit_story", argNames: ["that", "storyId", "mime", "data", "caption", "extra", "only", "pin"]);
+
+  @override
+  Future<EmojiStatusRow> crateApiDeviceBurumyDeviceEmojiStatusOf({required BurumyDevice that, required String userId}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(userId, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 59, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_emoji_status_row, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceEmojiStatusOfConstMeta,
+        argValues: [that, userId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceEmojiStatusOfConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_emoji_status_of", argNames: ["that", "userId"]);
+
+  @override
   Future<String> crateApiDeviceBurumyDeviceEnableRecovery({required BurumyDevice that}) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 37, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 60, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceEnableRecoveryConstMeta,
@@ -1333,7 +2194,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 38, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 61, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceEraseEverythingConstMeta,
@@ -1355,7 +2216,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(roomId, serializer);
           sse_encode_String(postId, serializer);
           sse_encode_bool(on_, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 39, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 62, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceFeedLikeConstMeta,
@@ -1375,7 +2236,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 40, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 63, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_list_feed_like_row, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceFeedLikesConstMeta,
@@ -1388,6 +2249,28 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiDeviceBurumyDeviceFeedLikesConstMeta => const TaskConstMeta(debugName: "BurumyDevice_feed_likes", argNames: ["that"]);
 
   @override
+  Future<void> crateApiDeviceBurumyDeviceForgetFile({required BurumyDevice that, required String roomId, required String eventId}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_String(eventId, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 64, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceForgetFileConstMeta,
+        argValues: [that, roomId, eventId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceForgetFileConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_forget_file", argNames: ["that", "roomId", "eventId"]);
+
+  @override
   Future<String> crateApiDeviceBurumyDeviceForward({required BurumyDevice that, required String fromRoom, required String eventId, required String toRoom}) {
     return handler.executeNormal(
       NormalTask(
@@ -1397,7 +2280,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(fromRoom, serializer);
           sse_encode_String(eventId, serializer);
           sse_encode_String(toRoom, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 41, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 65, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceForwardConstMeta,
@@ -1411,6 +2294,68 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "BurumyDevice_forward", argNames: ["that", "fromRoom", "eventId", "toRoom"]);
 
   @override
+  Future<GateHelperRow> crateApiDeviceBurumyDeviceGateHelperState({required BurumyDevice that, required String roomId}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 66, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_gate_helper_row, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceGateHelperStateConstMeta,
+        argValues: [that, roomId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceGateHelperStateConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_gate_helper_state", argNames: ["that", "roomId"]);
+
+  @override
+  Future<String> crateApiDeviceBurumyDeviceGateLog({required BurumyDevice that, required String roomId}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 67, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceGateLogConstMeta,
+        argValues: [that, roomId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceGateLogConstMeta => const TaskConstMeta(debugName: "BurumyDevice_gate_log", argNames: ["that", "roomId"]);
+
+  @override
+  Future<List<String>> crateApiDeviceBurumyDeviceGroupReceipts({required BurumyDevice that, required String roomId}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 68, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_list_String, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceGroupReceiptsConstMeta,
+        argValues: [that, roomId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceGroupReceiptsConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_group_receipts", argNames: ["that", "roomId"]);
+
+  @override
   Future<void> crateApiDeviceBurumyDeviceHangupCall({required BurumyDevice that, required String roomId, required String callId, required String reason}) {
     return handler.executeNormal(
       NormalTask(
@@ -1420,7 +2365,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(roomId, serializer);
           sse_encode_String(callId, serializer);
           sse_encode_String(reason, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 42, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 69, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceHangupCallConstMeta,
@@ -1440,7 +2385,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 43, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 70, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_bool, decodeErrorData: null),
         constMeta: kCrateApiDeviceBurumyDeviceHasRecoveryConstMeta,
@@ -1459,7 +2404,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 44, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 71, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_bool, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceHideActiveConstMeta,
@@ -1472,13 +2417,56 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiDeviceBurumyDeviceHideActiveConstMeta => const TaskConstMeta(debugName: "BurumyDevice_hide_active", argNames: ["that"]);
 
   @override
+  Future<List<String>> crateApiDeviceBurumyDeviceHideMarkedMessages({required BurumyDevice that, required String roomId}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 72, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_list_String, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceHideMarkedMessagesConstMeta,
+        argValues: [that, roomId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceHideMarkedMessagesConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_hide_marked_messages", argNames: ["that", "roomId"]);
+
+  @override
+  Future<String> crateApiDeviceBurumyDeviceImportedMessages({required BurumyDevice that, required String roomId, required String cardId}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_String(cardId, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 73, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceImportedMessagesConstMeta,
+        argValues: [that, roomId, cardId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceImportedMessagesConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_imported_messages", argNames: ["that", "roomId", "cardId"]);
+
+  @override
   Future<List<InviteRow>> crateApiDeviceBurumyDeviceInvitations({required BurumyDevice that}) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 45, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 74, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_list_invite_row, decodeErrorData: null),
         constMeta: kCrateApiDeviceBurumyDeviceInvitationsConstMeta,
@@ -1491,6 +2479,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiDeviceBurumyDeviceInvitationsConstMeta => const TaskConstMeta(debugName: "BurumyDevice_invitations", argNames: ["that"]);
 
   @override
+  Future<List<InviteLinkRow>> crateApiDeviceBurumyDeviceInviteLinks({required BurumyDevice that, required String roomId}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 75, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_list_invite_link_row, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceInviteLinksConstMeta,
+        argValues: [that, roomId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceInviteLinksConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_invite_links", argNames: ["that", "roomId"]);
+
+  @override
   Future<void> crateApiDeviceBurumyDeviceInviteUsers({required BurumyDevice that, required String roomId, required List<String> users}) {
     return handler.executeNormal(
       NormalTask(
@@ -1499,7 +2508,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
           sse_encode_list_String(users, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 46, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 76, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceInviteUsersConstMeta,
@@ -1519,7 +2528,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 47)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 77)!;
         },
         codec: SseCodec(decodeSuccessData: sse_decode_list_String, decodeErrorData: null),
         constMeta: kCrateApiDeviceBurumyDeviceInvitedRoomsConstMeta,
@@ -1532,6 +2541,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiDeviceBurumyDeviceInvitedRoomsConstMeta => const TaskConstMeta(debugName: "BurumyDevice_invited_rooms", argNames: ["that"]);
 
   @override
+  Future<List<String>> crateApiDeviceBurumyDeviceInvitesBlocked({required BurumyDevice that, required String roomId}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 78, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_list_String, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceInvitesBlockedConstMeta,
+        argValues: [that, roomId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceInvitesBlockedConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_invites_blocked", argNames: ["that", "roomId"]);
+
+  @override
   Future<bool> crateApiDeviceBurumyDeviceIsChannel({required BurumyDevice that, required String roomId}) {
     return handler.executeNormal(
       NormalTask(
@@ -1539,7 +2569,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 48, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 79, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_bool, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceIsChannelConstMeta,
@@ -1558,7 +2588,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 49)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 80)!;
         },
         codec: SseCodec(decodeSuccessData: sse_decode_bool, decodeErrorData: null),
         constMeta: kCrateApiDeviceBurumyDeviceIsLoggedInConstMeta,
@@ -1578,7 +2608,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(userId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 50, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 81, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_bool, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceIsUserVerifiedConstMeta,
@@ -1599,7 +2629,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 51, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 82, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceJoinConstMeta,
@@ -1612,6 +2642,119 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiDeviceBurumyDeviceJoinConstMeta => const TaskConstMeta(debugName: "BurumyDevice_join", argNames: ["that", "roomId"]);
 
   @override
+  Future<List<String>> crateApiDeviceBurumyDeviceJoinCommunityChat({required BurumyDevice that, required String id, required String roomId}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(id, serializer);
+          sse_encode_String(roomId, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 83, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_list_String, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceJoinCommunityChatConstMeta,
+        argValues: [that, id, roomId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceJoinCommunityChatConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_join_community_chat", argNames: ["that", "id", "roomId"]);
+
+  @override
+  Future<List<String>> crateApiDeviceBurumyDeviceJoinLink({required BurumyDevice that, required String kind, required String code}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(kind, serializer);
+          sse_encode_String(code, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 84, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_list_String, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceJoinLinkConstMeta,
+        argValues: [that, kind, code],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceJoinLinkConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_join_link", argNames: ["that", "kind", "code"]);
+
+  @override
+  Future<List<String>> crateApiDeviceBurumyDeviceJoinLinkWith({
+    required BurumyDevice that,
+    required String kind,
+    required String code,
+    required List<String> answers,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(kind, serializer);
+          sse_encode_String(code, serializer);
+          sse_encode_list_String(answers, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 85, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_list_String, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceJoinLinkWithConstMeta,
+        argValues: [that, kind, code, answers],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceJoinLinkWithConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_join_link_with", argNames: ["that", "kind", "code", "answers"]);
+
+  @override
+  Future<List<JoinRequestRow>> crateApiDeviceBurumyDeviceJoinRequests({required BurumyDevice that, required String roomId}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 86, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_list_join_request_row, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceJoinRequestsConstMeta,
+        argValues: [that, roomId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceJoinRequestsConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_join_requests", argNames: ["that", "roomId"]);
+
+  @override
+  Future<String> crateApiDeviceBurumyDeviceKnockState({required BurumyDevice that, required String roomId}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 87, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceKnockStateConstMeta,
+        argValues: [that, roomId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceKnockStateConstMeta => const TaskConstMeta(debugName: "BurumyDevice_knock_state", argNames: ["that", "roomId"]);
+
+  @override
   Future<void> crateApiDeviceBurumyDeviceLeave({required BurumyDevice that, required String roomId}) {
     return handler.executeNormal(
       NormalTask(
@@ -1619,7 +2762,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 52, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 88, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceLeaveConstMeta,
@@ -1632,13 +2775,34 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiDeviceBurumyDeviceLeaveConstMeta => const TaskConstMeta(debugName: "BurumyDevice_leave", argNames: ["that", "roomId"]);
 
   @override
+  Future<void> crateApiDeviceBurumyDeviceLeaveCommunity({required BurumyDevice that, required String id}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(id, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 89, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceLeaveCommunityConstMeta,
+        argValues: [that, id],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceLeaveCommunityConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_leave_community", argNames: ["that", "id"]);
+
+  @override
   Future<bool> crateApiDeviceBurumyDeviceLinkPreviewsEnabled({required BurumyDevice that}) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 53, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 90, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_bool, decodeErrorData: null),
         constMeta: kCrateApiDeviceBurumyDeviceLinkPreviewsEnabledConstMeta,
@@ -1652,6 +2816,28 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "BurumyDevice_link_previews_enabled", argNames: ["that"]);
 
   @override
+  Future<Uint8List> crateApiDeviceBurumyDeviceLiveVideo({required BurumyDevice that, required String roomId, required String eventId}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_String(eventId, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 91, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_list_prim_u_8_strict, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceLiveVideoConstMeta,
+        argValues: [that, roomId, eventId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceLiveVideoConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_live_video", argNames: ["that", "roomId", "eventId"]);
+
+  @override
   Future<void> crateApiDeviceBurumyDeviceLogOutDevices({required BurumyDevice that, required List<String> ids, required String password}) {
     return handler.executeNormal(
       NormalTask(
@@ -1660,7 +2846,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_list_String(ids, serializer);
           sse_encode_String(password, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 54, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 92, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceLogOutDevicesConstMeta,
@@ -1683,7 +2869,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(username, serializer);
           sse_encode_String(password, serializer);
           sse_encode_String(deviceName, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 55, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 93, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceLoginConstMeta,
@@ -1697,13 +2883,35 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "BurumyDevice_login", argNames: ["that", "username", "password", "deviceName"]);
 
   @override
+  Future<String> crateApiDeviceBurumyDeviceLoginToken({required BurumyDevice that, required String token, required String deviceName}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(token, serializer);
+          sse_encode_String(deviceName, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 94, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceLoginTokenConstMeta,
+        argValues: [that, token, deviceName],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceLoginTokenConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_login_token", argNames: ["that", "token", "deviceName"]);
+
+  @override
   Future<void> crateApiDeviceBurumyDeviceLogout({required BurumyDevice that}) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 56, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 95, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceLogoutConstMeta,
@@ -1714,6 +2922,59 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateApiDeviceBurumyDeviceLogoutConstMeta => const TaskConstMeta(debugName: "BurumyDevice_logout", argNames: ["that"]);
+
+  @override
+  Future<List<String>> crateApiDeviceBurumyDeviceMainLinkUses({required BurumyDevice that, required String roomId}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 96, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_list_String, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceMainLinkUsesConstMeta,
+        argValues: [that, roomId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceMainLinkUsesConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_main_link_uses", argNames: ["that", "roomId"]);
+
+  @override
+  Future<InviteLinkRow> crateApiDeviceBurumyDeviceMakeInviteLink({
+    required BurumyDevice that,
+    required String roomId,
+    required String name,
+    required BigInt until,
+    required BigInt max,
+    required BigInt now,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_String(name, serializer);
+          sse_encode_u_64(until, serializer);
+          sse_encode_u_64(max, serializer);
+          sse_encode_u_64(now, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 97, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_invite_link_row, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceMakeInviteLinkConstMeta,
+        argValues: [that, roomId, name, until, max, now],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceMakeInviteLinkConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_make_invite_link", argNames: ["that", "roomId", "name", "until", "max", "now"]);
 
   @override
   Future<void> crateApiDeviceBurumyDeviceMarkChecklist({
@@ -1732,7 +2993,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(checklistId, serializer);
           sse_encode_String(item, serializer);
           sse_encode_bool(done, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 57, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 98, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceMarkChecklistConstMeta,
@@ -1755,7 +3016,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(roomId, serializer);
           sse_encode_String(eventId, serializer);
           sse_encode_bool(on_, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 58, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 99, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceMarkForDeleteConstMeta,
@@ -1769,6 +3030,29 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "BurumyDevice_mark_for_delete", argNames: ["that", "roomId", "eventId", "on_"]);
 
   @override
+  Future<void> crateApiDeviceBurumyDeviceMarkForHide({required BurumyDevice that, required String roomId, required String eventId, required bool on_}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_String(eventId, serializer);
+          sse_encode_bool(on_, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 100, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceMarkForHideConstMeta,
+        argValues: [that, roomId, eventId, on_],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceMarkForHideConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_mark_for_hide", argNames: ["that", "roomId", "eventId", "on_"]);
+
+  @override
   Future<void> crateApiDeviceBurumyDeviceMarkRead({required BurumyDevice that, required String roomId}) {
     return handler.executeNormal(
       NormalTask(
@@ -1776,7 +3060,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 59, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 101, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceMarkReadConstMeta,
@@ -1796,7 +3080,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 60, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 102, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_list_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceMarkedMessagesConstMeta,
@@ -1810,6 +3094,26 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "BurumyDevice_marked_messages", argNames: ["that", "roomId"]);
 
   @override
+  Future<List<String>> crateApiDeviceBurumyDeviceMemberTags({required BurumyDevice that, required String roomId}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 103, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_list_String, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceMemberTagsConstMeta,
+        argValues: [that, roomId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceMemberTagsConstMeta => const TaskConstMeta(debugName: "BurumyDevice_member_tags", argNames: ["that", "roomId"]);
+
+  @override
   Future<List<MemberRow>> crateApiDeviceBurumyDeviceMembers({required BurumyDevice that, required String roomId}) {
     return handler.executeNormal(
       NormalTask(
@@ -1817,7 +3121,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 61, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 104, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_list_member_row, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceMembersConstMeta,
@@ -1838,7 +3142,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
           sse_encode_u_32(limit, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 62, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 105, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_list_chat_message, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceMessagesConstMeta,
@@ -1858,7 +3162,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 63, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 106, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_list_String, decodeErrorData: null),
         constMeta: kCrateApiDeviceBurumyDeviceMyKeysConstMeta,
@@ -1877,7 +3181,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 64, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 107, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceMyNameConstMeta,
@@ -1896,7 +3200,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 65, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 108, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_opt_list_prim_u_8_strict, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceMyPhotoConstMeta,
@@ -1916,7 +3220,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 66, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 109, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceMyRoleConstMeta,
@@ -1929,13 +3233,54 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiDeviceBurumyDeviceMyRoleConstMeta => const TaskConstMeta(debugName: "BurumyDevice_my_role", argNames: ["that", "roomId"]);
 
   @override
+  Future<List<String>> crateApiDeviceBurumyDeviceNameColors({required BurumyDevice that, required String roomId}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 110, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_list_String, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceNameColorsConstMeta,
+        argValues: [that, roomId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceNameColorsConstMeta => const TaskConstMeta(debugName: "BurumyDevice_name_colors", argNames: ["that", "roomId"]);
+
+  @override
+  Future<RoomLinkRow> crateApiDeviceBurumyDeviceNewPrivateLink({required BurumyDevice that, required String roomId}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 111, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_room_link_row, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceNewPrivateLinkConstMeta,
+        argValues: [that, roomId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceNewPrivateLinkConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_new_private_link", argNames: ["that", "roomId"]);
+
+  @override
   Future<bool> crateApiDeviceBurumyDeviceNoticeTextHidden({required BurumyDevice that}) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 67, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 112, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_bool, decodeErrorData: null),
         constMeta: kCrateApiDeviceBurumyDeviceNoticeTextHiddenConstMeta,
@@ -1956,7 +3301,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_u_32(max, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 68, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 113, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_list_notice_row, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceNotificationsConstMeta,
@@ -1978,7 +3323,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(homeserver, serializer);
           sse_encode_String(dataDir, serializer);
           sse_encode_String(storePassphrase, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 69, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 114, port: port_);
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice,
@@ -1995,6 +3340,28 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "BurumyDevice_open", argNames: ["homeserver", "dataDir", "storePassphrase"]);
 
   @override
+  Future<String> crateApiDeviceBurumyDeviceOpenArticle({required BurumyDevice that, required String roomId, required String eventId}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_String(eventId, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 115, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceOpenArticleConstMeta,
+        argValues: [that, roomId, eventId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceOpenArticleConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_open_article", argNames: ["that", "roomId", "eventId"]);
+
+  @override
   Future<Uint8List> crateApiDeviceBurumyDeviceOpenViewOnce({required BurumyDevice that, required String roomId, required String eventId}) {
     return handler.executeNormal(
       NormalTask(
@@ -2003,7 +3370,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
           sse_encode_String(eventId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 70, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 116, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_list_prim_u_8_strict, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceOpenViewOnceConstMeta,
@@ -2017,6 +3384,46 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "BurumyDevice_open_view_once", argNames: ["that", "roomId", "eventId"]);
 
   @override
+  Future<String> crateApiDeviceBurumyDeviceOpenidToken({required BurumyDevice that}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 117, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceOpenidTokenConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceOpenidTokenConstMeta => const TaskConstMeta(debugName: "BurumyDevice_openid_token", argNames: ["that"]);
+
+  @override
+  Future<LinkPeekRow> crateApiDeviceBurumyDevicePeekAddress({required BurumyDevice that, required String address}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(address, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 118, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_link_peek_row, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDevicePeekAddressConstMeta,
+        argValues: [that, address],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDevicePeekAddressConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_peek_address", argNames: ["that", "address"]);
+
+  @override
   Future<List<PeerKey>> crateApiDeviceBurumyDevicePeerKeys({required BurumyDevice that, required String userId}) {
     return handler.executeNormal(
       NormalTask(
@@ -2024,7 +3431,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(userId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 71, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 119, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_list_peer_key, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDevicePeerKeysConstMeta,
@@ -2043,7 +3450,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 72, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 120, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_list_bubble_row, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDevicePendingBubblesConstMeta,
@@ -2065,7 +3472,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(roomId, serializer);
           sse_encode_String(eventId, serializer);
           sse_encode_bool(pinned, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 73, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 121, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDevicePinConstMeta,
@@ -2086,7 +3493,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 74)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 122)!;
         },
         codec: SseCodec(decodeSuccessData: sse_decode_list_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDevicePinnedConstMeta,
@@ -2097,6 +3504,65 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateApiDeviceBurumyDevicePinnedConstMeta => const TaskConstMeta(debugName: "BurumyDevice_pinned", argNames: ["that", "roomId"]);
+
+  @override
+  Future<Uint8List> crateApiDeviceBurumyDevicePollPhoto({required BurumyDevice that, required String roomId, required String pollId, required String slot}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_String(pollId, serializer);
+          sse_encode_String(slot, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 123, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_list_prim_u_8_strict, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDevicePollPhotoConstMeta,
+        argValues: [that, roomId, pollId, slot],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDevicePollPhotoConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_poll_photo", argNames: ["that", "roomId", "pollId", "slot"]);
+
+  @override
+  Future<StoryPostedRow> crateApiDeviceBurumyDevicePostStories({
+    required BurumyDevice that,
+    required String mime,
+    required List<int> data,
+    required String caption,
+    required List<String> only,
+    required int hours,
+    required List<String> extras,
+    required String room,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(mime, serializer);
+          sse_encode_list_prim_u_8_loose(data, serializer);
+          sse_encode_String(caption, serializer);
+          sse_encode_list_String(only, serializer);
+          sse_encode_u_32(hours, serializer);
+          sse_encode_list_String(extras, serializer);
+          sse_encode_String(room, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 124, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_story_posted_row, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDevicePostStoriesConstMeta,
+        argValues: [that, mime, data, caption, only, hours, extras, room],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDevicePostStoriesConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_post_stories", argNames: ["that", "mime", "data", "caption", "only", "hours", "extras", "room"]);
 
   @override
   Future<int> crateApiDeviceBurumyDevicePostStory({
@@ -2119,7 +3585,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_list_String(only, serializer);
           sse_encode_u_32(hours, serializer);
           sse_encode_String(extra, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 75, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 125, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_u_32, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDevicePostStoryConstMeta,
@@ -2141,7 +3607,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
           sse_encode_String(eventId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 76, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 126, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_list_prim_u_8_strict, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDevicePreviewImageConstMeta,
@@ -2155,6 +3621,25 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "BurumyDevice_preview_image", argNames: ["that", "roomId", "eventId"]);
 
   @override
+  Future<String> crateApiDeviceBurumyDevicePrivacyJson({required BurumyDevice that}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 127, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: null),
+        constMeta: kCrateApiDeviceBurumyDevicePrivacyJsonConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDevicePrivacyJsonConstMeta => const TaskConstMeta(debugName: "BurumyDevice_privacy_json", argNames: ["that"]);
+
+  @override
   Future<ProfileCardRow> crateApiDeviceBurumyDeviceProfileOf({required BurumyDevice that, required String userId}) {
     return handler.executeNormal(
       NormalTask(
@@ -2162,7 +3647,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(userId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 77, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 128, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_profile_card_row, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceProfileOfConstMeta,
@@ -2181,7 +3666,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 78, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 129, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_list_list_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceQuietListsConstMeta,
@@ -2203,7 +3688,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(roomId, serializer);
           sse_encode_String(eventId, serializer);
           sse_encode_String(key, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 79, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 130, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceReactConstMeta,
@@ -2217,6 +3702,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "BurumyDevice_react", argNames: ["that", "roomId", "eventId", "key"]);
 
   @override
+  Future<Uint64List> crateApiDeviceBurumyDeviceReadReceipt({required BurumyDevice that, required String roomId}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 131, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_list_prim_u_64_strict, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceReadReceiptConstMeta,
+        argValues: [that, roomId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceReadReceiptConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_read_receipt", argNames: ["that", "roomId"]);
+
+  @override
   Future<BigInt> crateApiDeviceBurumyDeviceReadUntil({required BurumyDevice that, required String roomId}) {
     return handler.executeNormal(
       NormalTask(
@@ -2224,7 +3730,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 80, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 132, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_u_64, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceReadUntilConstMeta,
@@ -2245,7 +3751,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(recoveryKey, serializer);
           sse_encode_String(roomId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 81, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 133, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceRecoverConstMeta,
@@ -2266,7 +3772,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(recoveryKey, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 82, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 134, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceRecoverAllConstMeta,
@@ -2289,7 +3795,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(username, serializer);
           sse_encode_String(password, serializer);
           sse_encode_opt_String(inviteCode, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 83, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 135, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceRegisterConstMeta,
@@ -2309,7 +3815,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 84, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 136, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceReleaseHiddenConstMeta,
@@ -2322,6 +3828,48 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiDeviceBurumyDeviceReleaseHiddenConstMeta => const TaskConstMeta(debugName: "BurumyDevice_release_hidden", argNames: ["that"]);
 
   @override
+  Future<void> crateApiDeviceBurumyDeviceRemoveFromCommunity({required BurumyDevice that, required String id, required String roomId}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(id, serializer);
+          sse_encode_String(roomId, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 137, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceRemoveFromCommunityConstMeta,
+        argValues: [that, id, roomId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceRemoveFromCommunityConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_remove_from_community", argNames: ["that", "id", "roomId"]);
+
+  @override
+  Future<void> crateApiDeviceBurumyDeviceRemoveLink({required BurumyDevice that, required String roomId}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 138, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceRemoveLinkConstMeta,
+        argValues: [that, roomId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceRemoveLinkConstMeta => const TaskConstMeta(debugName: "BurumyDevice_remove_link", argNames: ["that", "roomId"]);
+
+  @override
   Future<void> crateApiDeviceBurumyDeviceRemoveMember({required BurumyDevice that, required String roomId, required String userId}) {
     return handler.executeNormal(
       NormalTask(
@@ -2330,7 +3878,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
           sse_encode_String(userId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 85, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 139, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceRemoveMemberConstMeta,
@@ -2353,7 +3901,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(roomId, serializer);
           sse_encode_String(toEvent, serializer);
           sse_encode_String(text, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 86, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 140, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceReplyConstMeta,
@@ -2376,7 +3924,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(roomId, serializer);
           sse_encode_String(root, serializer);
           sse_encode_String(text, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 87, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 141, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceReplyInThreadConstMeta,
@@ -2388,6 +3936,38 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiDeviceBurumyDeviceReplyInThreadConstMeta =>
       const TaskConstMeta(debugName: "BurumyDevice_reply_in_thread", argNames: ["that", "roomId", "root", "text"]);
+
+  @override
+  Future<String> crateApiDeviceBurumyDeviceReplyQuote({
+    required BurumyDevice that,
+    required String roomId,
+    required String toEvent,
+    required String text,
+    required String quote,
+    required String quoteName,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_String(toEvent, serializer);
+          sse_encode_String(text, serializer);
+          sse_encode_String(quote, serializer);
+          sse_encode_String(quoteName, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 142, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceReplyQuoteConstMeta,
+        argValues: [that, roomId, toEvent, text, quote, quoteName],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceReplyQuoteConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_reply_quote", argNames: ["that", "roomId", "toEvent", "text", "quote", "quoteName"]);
 
   @override
   Future<void> crateApiDeviceBurumyDeviceReportMessage({
@@ -2406,7 +3986,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(eventId, serializer);
           sse_encode_String(reason, serializer);
           sse_encode_String(shown, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 88, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 143, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceReportMessageConstMeta,
@@ -2427,7 +4007,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(userId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 89, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 144, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceRequestUserVerificationConstMeta,
@@ -2441,6 +4021,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "BurumyDevice_request_user_verification", argNames: ["that", "userId"]);
 
   @override
+  Future<bool> crateApiDeviceBurumyDeviceReshareRoomPhoto({required BurumyDevice that, required String roomId}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 145, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_bool, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceReshareRoomPhotoConstMeta,
+        argValues: [that, roomId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceReshareRoomPhotoConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_reshare_room_photo", argNames: ["that", "roomId"]);
+
+  @override
   Future<void> crateApiDeviceBurumyDeviceRestore({required BurumyDevice that, required String sessionJson}) {
     return handler.executeNormal(
       NormalTask(
@@ -2448,7 +4049,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(sessionJson, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 90, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 146, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceRestoreConstMeta,
@@ -2461,13 +4062,57 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiDeviceBurumyDeviceRestoreConstMeta => const TaskConstMeta(debugName: "BurumyDevice_restore", argNames: ["that", "sessionJson"]);
 
   @override
+  Future<void> crateApiDeviceBurumyDeviceRestoreInviteLink({required BurumyDevice that, required String roomId, required String code}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_String(code, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 147, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceRestoreInviteLinkConstMeta,
+        argValues: [that, roomId, code],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceRestoreInviteLinkConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_restore_invite_link", argNames: ["that", "roomId", "code"]);
+
+  @override
+  Future<void> crateApiDeviceBurumyDeviceRevokeInviteLink({required BurumyDevice that, required String roomId, required String code}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_String(code, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 148, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceRevokeInviteLinkConstMeta,
+        argValues: [that, roomId, code],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceRevokeInviteLinkConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_revoke_invite_link", argNames: ["that", "roomId", "code"]);
+
+  @override
   Future<List<RingingRow>> crateApiDeviceBurumyDeviceRingingCalls({required BurumyDevice that}) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 91, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 149, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_list_ringing_row, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceRingingCallsConstMeta,
@@ -2487,7 +4132,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 92, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 150, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceRoomAboutConstMeta,
@@ -2507,7 +4152,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 93, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 151, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceRoomConfigConstMeta,
@@ -2520,6 +4165,46 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiDeviceBurumyDeviceRoomConfigConstMeta => const TaskConstMeta(debugName: "BurumyDevice_room_config", argNames: ["that", "roomId"]);
 
   @override
+  Future<RoomLinkRow> crateApiDeviceBurumyDeviceRoomLink({required BurumyDevice that, required String roomId}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 152, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_room_link_row, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceRoomLinkConstMeta,
+        argValues: [that, roomId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceRoomLinkConstMeta => const TaskConstMeta(debugName: "BurumyDevice_room_link", argNames: ["that", "roomId"]);
+
+  @override
+  Future<Uint8List?> crateApiDeviceBurumyDeviceRoomPhoto({required BurumyDevice that, required String roomId}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 153, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_opt_list_prim_u_8_strict, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceRoomPhotoConstMeta,
+        argValues: [that, roomId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceRoomPhotoConstMeta => const TaskConstMeta(debugName: "BurumyDevice_room_photo", argNames: ["that", "roomId"]);
+
+  @override
   Future<bool> crateApiDeviceBurumyDeviceRoomSwitch({required BurumyDevice that, required String roomId, required String key}) {
     return handler.executeNormal(
       NormalTask(
@@ -2528,7 +4213,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
           sse_encode_String(key, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 94, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 154, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_bool, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceRoomSwitchConstMeta,
@@ -2548,7 +4233,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 95, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 155, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_opt_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceRunDueLeavesConstMeta,
@@ -2567,7 +4252,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 96, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 156, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_u_32, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceRunExpiryConstMeta,
@@ -2588,7 +4273,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(userId, serializer);
           sse_encode_String(flowId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 97, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 157, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_opt_list_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceSasEmojiConstMeta,
@@ -2602,6 +4287,28 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "BurumyDevice_sas_emoji", argNames: ["that", "userId", "flowId"]);
 
   @override
+  Future<void> crateApiDeviceBurumyDeviceSaveBlob({required BurumyDevice that, required String name, required List<int> data}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(name, serializer);
+          sse_encode_list_prim_u_8_loose(data, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 158, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceSaveBlobConstMeta,
+        argValues: [that, name, data],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceSaveBlobConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_save_blob", argNames: ["that", "name", "data"]);
+
+  @override
   Future<String?> crateApiDeviceBurumyDeviceSavedRoom({required BurumyDevice that, required bool create}) {
     return handler.executeNormal(
       NormalTask(
@@ -2609,7 +4316,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_bool(create, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 98, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 159, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_opt_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceSavedRoomConstMeta,
@@ -2622,6 +4329,29 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiDeviceBurumyDeviceSavedRoomConstMeta => const TaskConstMeta(debugName: "BurumyDevice_saved_room", argNames: ["that", "create"]);
 
   @override
+  Future<List<FoundRow>> crateApiDeviceBurumyDeviceSearchAll({required BurumyDevice that, required String term, required String kind, required int limit}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(term, serializer);
+          sse_encode_String(kind, serializer);
+          sse_encode_u_32(limit, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 160, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_list_found_row, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceSearchAllConstMeta,
+        argValues: [that, term, kind, limit],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceSearchAllConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_search_all", argNames: ["that", "term", "kind", "limit"]);
+
+  @override
   Future<List<ChatMessage>> crateApiDeviceBurumyDeviceSearchMessages({required BurumyDevice that, required String roomId, required String term}) {
     return handler.executeNormal(
       NormalTask(
@@ -2630,7 +4360,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
           sse_encode_String(term, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 99, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 161, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_list_chat_message, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceSearchMessagesConstMeta,
@@ -2651,7 +4381,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(term, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 100, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 162, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_list_person_row, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceSearchPeopleConstMeta,
@@ -2663,6 +4393,50 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiDeviceBurumyDeviceSearchPeopleConstMeta =>
       const TaskConstMeta(debugName: "BurumyDevice_search_people", argNames: ["that", "term"]);
+
+  @override
+  Future<List<PublicRoomRow>> crateApiDeviceBurumyDeviceSearchPublic({required BurumyDevice that, required String term, required bool channelsOnly}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(term, serializer);
+          sse_encode_bool(channelsOnly, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 163, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_list_public_room_row, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceSearchPublicConstMeta,
+        argValues: [that, term, channelsOnly],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceSearchPublicConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_search_public", argNames: ["that", "term", "channelsOnly"]);
+
+  @override
+  Future<String> crateApiDeviceBurumyDeviceSendArticle({required BurumyDevice that, required String roomId, required String doc}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_String(doc, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 164, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceSendArticleConstMeta,
+        argValues: [that, roomId, doc],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceSendArticleConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_send_article", argNames: ["that", "roomId", "doc"]);
 
   @override
   Future<String> crateApiDeviceBurumyDeviceSendBubble({
@@ -2681,7 +4455,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(kind, serializer);
           sse_encode_String(mime, serializer);
           sse_encode_list_prim_u_8_loose(data, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 101, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 165, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceSendBubbleConstMeta,
@@ -2704,7 +4478,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(roomId, serializer);
           sse_encode_String(userId, serializer);
           sse_encode_String(name, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 102, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 166, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceSendContactConstMeta,
@@ -2734,7 +4508,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(name, serializer);
           sse_encode_String(mime, serializer);
           sse_encode_list_prim_u_8_loose(data, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 103, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 167, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceSendFileConstMeta,
@@ -2766,7 +4540,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(mime, serializer);
           sse_encode_list_prim_u_8_loose(data, serializer);
           sse_encode_String(caption, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 104, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 168, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceSendFileCaptionedConstMeta,
@@ -2778,6 +4552,137 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiDeviceBurumyDeviceSendFileCaptionedConstMeta =>
       const TaskConstMeta(debugName: "BurumyDevice_send_file_captioned", argNames: ["that", "roomId", "name", "mime", "data", "caption"]);
+
+  @override
+  Future<String> crateApiDeviceBurumyDeviceSendFileOpts({
+    required BurumyDevice that,
+    required String roomId,
+    required String name,
+    required String mime,
+    required List<int> data,
+    required String caption,
+    required bool captionAbove,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_String(name, serializer);
+          sse_encode_String(mime, serializer);
+          sse_encode_list_prim_u_8_loose(data, serializer);
+          sse_encode_String(caption, serializer);
+          sse_encode_bool(captionAbove, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 169, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceSendFileOptsConstMeta,
+        argValues: [that, roomId, name, mime, data, caption, captionAbove],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceSendFileOptsConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_send_file_opts", argNames: ["that", "roomId", "name", "mime", "data", "caption", "captionAbove"]);
+
+  @override
+  Future<int> crateApiDeviceBurumyDeviceSendHistory({required BurumyDevice that, required String roomId, required String userId, required int count}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_String(userId, serializer);
+          sse_encode_u_32(count, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 170, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_u_32, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceSendHistoryConstMeta,
+        argValues: [that, roomId, userId, count],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceSendHistoryConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_send_history", argNames: ["that", "roomId", "userId", "count"]);
+
+  @override
+  Future<String> crateApiDeviceBurumyDeviceSendLiveLocation({
+    required BurumyDevice that,
+    required String roomId,
+    required double lat,
+    required double lon,
+    double? accuracy,
+    required BigInt untilMs,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_f_64(lat, serializer);
+          sse_encode_f_64(lon, serializer);
+          sse_encode_opt_box_autoadd_f_64(accuracy, serializer);
+          sse_encode_u_64(untilMs, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 171, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceSendLiveLocationConstMeta,
+        argValues: [that, roomId, lat, lon, accuracy, untilMs],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceSendLiveLocationConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_send_live_location", argNames: ["that", "roomId", "lat", "lon", "accuracy", "untilMs"]);
+
+  @override
+  Future<String> crateApiDeviceBurumyDeviceSendLivePhoto({
+    required BurumyDevice that,
+    required String roomId,
+    required String name,
+    required String mime,
+    required List<int> data,
+    required String videoMime,
+    required List<int> video,
+    required BigInt durationMs,
+    required String style,
+    required String caption,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_String(name, serializer);
+          sse_encode_String(mime, serializer);
+          sse_encode_list_prim_u_8_loose(data, serializer);
+          sse_encode_String(videoMime, serializer);
+          sse_encode_list_prim_u_8_loose(video, serializer);
+          sse_encode_u_64(durationMs, serializer);
+          sse_encode_String(style, serializer);
+          sse_encode_String(caption, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 172, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceSendLivePhotoConstMeta,
+        argValues: [that, roomId, name, mime, data, videoMime, video, durationMs, style, caption],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceSendLivePhotoConstMeta => const TaskConstMeta(
+    debugName: "BurumyDevice_send_live_photo",
+    argNames: ["that", "roomId", "name", "mime", "data", "videoMime", "video", "durationMs", "style", "caption"],
+  );
 
   @override
   Future<String> crateApiDeviceBurumyDeviceSendLocation({
@@ -2796,7 +4701,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_f_64(lat, serializer);
           sse_encode_f_64(lon, serializer);
           sse_encode_opt_box_autoadd_f_64(accuracy, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 105, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 173, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceSendLocationConstMeta,
@@ -2810,6 +4715,52 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "BurumyDevice_send_location", argNames: ["that", "roomId", "lat", "lon", "accuracy"]);
 
   @override
+  Future<bool> crateApiDeviceBurumyDeviceSendMyDraft({required BurumyDevice that, required String roomId, required String text, required BigInt at}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_String(text, serializer);
+          sse_encode_u_64(at, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 174, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_bool, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceSendMyDraftConstMeta,
+        argValues: [that, roomId, text, at],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceSendMyDraftConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_send_my_draft", argNames: ["that", "roomId", "text", "at"]);
+
+  @override
+  Future<void> crateApiDeviceBurumyDeviceSendSignal({required BurumyDevice that, required String roomId, required String kind, required String data}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_String(kind, serializer);
+          sse_encode_String(data, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 175, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceSendSignalConstMeta,
+        argValues: [that, roomId, kind, data],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceSendSignalConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_send_signal", argNames: ["that", "roomId", "kind", "data"]);
+
+  @override
   Future<String> crateApiDeviceBurumyDeviceSendSticker({required BurumyDevice that, required String roomId, required String stickerId}) {
     return handler.executeNormal(
       NormalTask(
@@ -2818,7 +4769,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
           sse_encode_String(stickerId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 106, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 176, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceSendStickerConstMeta,
@@ -2840,7 +4791,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
           sse_encode_String(text, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 107, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 177, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceSendTextConstMeta,
@@ -2854,6 +4805,44 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "BurumyDevice_send_text", argNames: ["that", "roomId", "text"]);
 
   @override
+  Future<String> crateApiDeviceBurumyDeviceSendTextLink({
+    required BurumyDevice that,
+    required String roomId,
+    required String toEvent,
+    required String text,
+    required bool silent,
+    required String url,
+    required bool above,
+    required bool small,
+    required bool off,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_String(toEvent, serializer);
+          sse_encode_String(text, serializer);
+          sse_encode_bool(silent, serializer);
+          sse_encode_String(url, serializer);
+          sse_encode_bool(above, serializer);
+          sse_encode_bool(small, serializer);
+          sse_encode_bool(off, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 178, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceSendTextLinkConstMeta,
+        argValues: [that, roomId, toEvent, text, silent, url, above, small, off],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceSendTextLinkConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_send_text_link", argNames: ["that", "roomId", "toEvent", "text", "silent", "url", "above", "small", "off"]);
+
+  @override
   Future<String> crateApiDeviceBurumyDeviceSendTextQuietly({required BurumyDevice that, required String roomId, required String text}) {
     return handler.executeNormal(
       NormalTask(
@@ -2862,7 +4851,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
           sse_encode_String(text, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 108, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 179, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceSendTextQuietlyConstMeta,
@@ -2892,7 +4881,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(name, serializer);
           sse_encode_String(mime, serializer);
           sse_encode_list_prim_u_8_loose(data, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 109, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 180, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceSendViewOnceConstMeta,
@@ -2924,7 +4913,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_list_prim_u_8_loose(data, serializer);
           sse_encode_u_64(durationMs, serializer);
           sse_encode_list_prim_u_16_loose(waveform, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 110, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 181, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceSendVoiceConstMeta,
@@ -2944,7 +4933,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 111)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 182)!;
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceSessionJsonConstMeta,
@@ -2963,7 +4952,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 112)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 183)!;
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: null),
         constMeta: kCrateApiDeviceBurumyDeviceSessionRoleConstMeta,
@@ -2985,7 +4974,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(roomId, serializer);
           sse_encode_String(userId, serializer);
           sse_encode_bool(admin, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 113, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 184, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceSetAdminConstMeta,
@@ -3008,7 +4997,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(roomId, serializer);
           sse_encode_String(userId, serializer);
           sse_encode_bool(banned, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 114, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 185, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceSetBannedConstMeta,
@@ -3029,7 +5018,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(mode, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 115, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 186, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceSetCallWaitingConstMeta,
@@ -3051,7 +5040,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
           sse_encode_bool(on_, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 116, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 187, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceSetChatArchivedConstMeta,
@@ -3073,7 +5062,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
           sse_encode_bool(on_, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 117, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 188, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceSetChatMutedConstMeta,
@@ -3095,7 +5084,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
           sse_encode_bool(on_, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 118, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 189, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceSetChatPinnedConstMeta,
@@ -3109,6 +5098,189 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "BurumyDevice_set_chat_pinned", argNames: ["that", "roomId", "on_"]);
 
   @override
+  Future<void> crateApiDeviceBurumyDeviceSetCommunityAddAll({required BurumyDevice that, required String id, required bool all}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(id, serializer);
+          sse_encode_bool(all, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 190, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceSetCommunityAddAllConstMeta,
+        argValues: [that, id, all],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceSetCommunityAddAllConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_set_community_add_all", argNames: ["that", "id", "all"]);
+
+  @override
+  Future<void> crateApiDeviceBurumyDeviceSetCommunityAdmin({required BurumyDevice that, required String id, required String userId, required bool on_}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(id, serializer);
+          sse_encode_String(userId, serializer);
+          sse_encode_bool(on_, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 191, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceSetCommunityAdminConstMeta,
+        argValues: [that, id, userId, on_],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceSetCommunityAdminConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_set_community_admin", argNames: ["that", "id", "userId", "on_"]);
+
+  @override
+  Future<void> crateApiDeviceBurumyDeviceSetCommunityChatHidden({
+    required BurumyDevice that,
+    required String id,
+    required String roomId,
+    required bool hidden,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(id, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_bool(hidden, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 192, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceSetCommunityChatHiddenConstMeta,
+        argValues: [that, id, roomId, hidden],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceSetCommunityChatHiddenConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_set_community_chat_hidden", argNames: ["that", "id", "roomId", "hidden"]);
+
+  @override
+  Future<void> crateApiDeviceBurumyDeviceSetCommunityInfo({required BurumyDevice that, required String id, required String name, required String about}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(id, serializer);
+          sse_encode_String(name, serializer);
+          sse_encode_String(about, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 193, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceSetCommunityInfoConstMeta,
+        argValues: [that, id, name, about],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceSetCommunityInfoConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_set_community_info", argNames: ["that", "id", "name", "about"]);
+
+  @override
+  Future<int> crateApiDeviceBurumyDeviceSetEmojiStatus({required BurumyDevice that, required String emoji, required BigInt untilMs}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(emoji, serializer);
+          sse_encode_u_64(untilMs, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 194, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_u_32, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceSetEmojiStatusConstMeta,
+        argValues: [that, emoji, untilMs],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceSetEmojiStatusConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_set_emoji_status", argNames: ["that", "emoji", "untilMs"]);
+
+  @override
+  Future<void> crateApiDeviceBurumyDeviceSetGateHelper({required BurumyDevice that, required String roomId, required bool on_}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_bool(on_, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 195, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceSetGateHelperConstMeta,
+        argValues: [that, roomId, on_],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceSetGateHelperConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_set_gate_helper", argNames: ["that", "roomId", "on_"]);
+
+  @override
+  Future<void> crateApiDeviceBurumyDeviceSetIdSearchHidden({required BurumyDevice that, required bool on_}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_bool(on_, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 196, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceSetIdSearchHiddenConstMeta,
+        argValues: [that, on_],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceSetIdSearchHiddenConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_set_id_search_hidden", argNames: ["that", "on_"]);
+
+  @override
+  Future<void> crateApiDeviceBurumyDeviceSetLinkApproval({required BurumyDevice that, required String roomId, required bool on_}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_bool(on_, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 197, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceSetLinkApprovalConstMeta,
+        argValues: [that, roomId, on_],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceSetLinkApprovalConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_set_link_approval", argNames: ["that", "roomId", "on_"]);
+
+  @override
   Future<void> crateApiDeviceBurumyDeviceSetLinkPreviewsEnabled({required BurumyDevice that, required bool on_}) {
     return handler.executeNormal(
       NormalTask(
@@ -3116,7 +5288,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_bool(on_, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 119, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 198, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceSetLinkPreviewsEnabledConstMeta,
@@ -3130,6 +5302,56 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "BurumyDevice_set_link_previews_enabled", argNames: ["that", "on_"]);
 
   @override
+  Future<void> crateApiDeviceBurumyDeviceSetMediaKeep({required BurumyDevice that, BigInt? maxFile, BigInt? keepSecs}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_opt_box_autoadd_u_64(maxFile, serializer);
+          sse_encode_opt_box_autoadd_u_64(keepSecs, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 199, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceSetMediaKeepConstMeta,
+        argValues: [that, maxFile, keepSecs],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceSetMediaKeepConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_set_media_keep", argNames: ["that", "maxFile", "keepSecs"]);
+
+  @override
+  Future<void> crateApiDeviceBurumyDeviceSetMemberLevel({
+    required BurumyDevice that,
+    required String roomId,
+    required String userId,
+    required PlatformInt64 level,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_String(userId, serializer);
+          sse_encode_i_64(level, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 200, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceSetMemberLevelConstMeta,
+        argValues: [that, roomId, userId, level],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceSetMemberLevelConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_set_member_level", argNames: ["that", "roomId", "userId", "level"]);
+
+  @override
   Future<void> crateApiDeviceBurumyDeviceSetMyBio({required BurumyDevice that, required String text}) {
     return handler.executeNormal(
       NormalTask(
@@ -3137,7 +5359,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(text, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 120, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 201, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceSetMyBioConstMeta,
@@ -3157,7 +5379,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(name, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 121, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 202, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceSetMyNameConstMeta,
@@ -3178,7 +5400,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(mime, serializer);
           sse_encode_list_prim_u_8_loose(data, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 122, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 203, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceSetMyPhotoConstMeta,
@@ -3192,6 +5414,51 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "BurumyDevice_set_my_photo", argNames: ["that", "mime", "data"]);
 
   @override
+  Future<void> crateApiDeviceBurumyDeviceSetMyRoomLook({required BurumyDevice that, required String roomId, String? name, String? color}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_opt_String(name, serializer);
+          sse_encode_opt_String(color, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 204, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceSetMyRoomLookConstMeta,
+        argValues: [that, roomId, name, color],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceSetMyRoomLookConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_set_my_room_look", argNames: ["that", "roomId", "name", "color"]);
+
+  @override
+  Future<void> crateApiDeviceBurumyDeviceSetMyRoomTag({required BurumyDevice that, required String roomId, required String tag}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_String(tag, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 205, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceSetMyRoomTagConstMeta,
+        argValues: [that, roomId, tag],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceSetMyRoomTagConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_set_my_room_tag", argNames: ["that", "roomId", "tag"]);
+
+  @override
   Future<void> crateApiDeviceBurumyDeviceSetNoticeTextHidden({required BurumyDevice that, required bool on_}) {
     return handler.executeNormal(
       NormalTask(
@@ -3199,7 +5466,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_bool(on_, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 123, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 206, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceSetNoticeTextHiddenConstMeta,
@@ -3213,6 +5480,50 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "BurumyDevice_set_notice_text_hidden", argNames: ["that", "on_"]);
 
   @override
+  Future<void> crateApiDeviceBurumyDeviceSetPrivacyValue({required BurumyDevice that, required String key, required String valueJson}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(key, serializer);
+          sse_encode_String(valueJson, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 207, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceSetPrivacyValueConstMeta,
+        argValues: [that, key, valueJson],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceSetPrivacyValueConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_set_privacy_value", argNames: ["that", "key", "valueJson"]);
+
+  @override
+  Future<RoomLinkRow> crateApiDeviceBurumyDeviceSetPublicLink({required BurumyDevice that, required String roomId, required String address}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_String(address, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 208, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_room_link_row, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceSetPublicLinkConstMeta,
+        argValues: [that, roomId, address],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceSetPublicLinkConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_set_public_link", argNames: ["that", "roomId", "address"]);
+
+  @override
   Future<void> crateApiDeviceBurumyDeviceSetPush({required BurumyDevice that, required String gatewayUrl, required String pushkey, required String appId}) {
     return handler.executeNormal(
       NormalTask(
@@ -3222,7 +5533,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(gatewayUrl, serializer);
           sse_encode_String(pushkey, serializer);
           sse_encode_String(appId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 124, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 209, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceSetPushConstMeta,
@@ -3244,7 +5555,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_list_String(hide_, serializer);
           sse_encode_list_String(delete, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 125, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 210, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceSetQuietListsConstMeta,
@@ -3266,7 +5577,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
           sse_encode_String(text, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 126, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 211, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceSetRoomAboutConstMeta,
@@ -3289,7 +5600,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(roomId, serializer);
           sse_encode_String(key, serializer);
           sse_encode_String(value, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 127, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 212, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceSetRoomConfigConstMeta,
@@ -3311,7 +5622,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
           sse_encode_String(name, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 128, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 213, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceSetRoomNameConstMeta,
@@ -3325,6 +5636,29 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "BurumyDevice_set_room_name", argNames: ["that", "roomId", "name"]);
 
   @override
+  Future<void> crateApiDeviceBurumyDeviceSetRoomPhoto({required BurumyDevice that, required String roomId, required String mime, required List<int> data}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_String(mime, serializer);
+          sse_encode_list_prim_u_8_loose(data, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 214, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceSetRoomPhotoConstMeta,
+        argValues: [that, roomId, mime, data],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceSetRoomPhotoConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_set_room_photo", argNames: ["that", "roomId", "mime", "data"]);
+
+  @override
   Future<void> crateApiDeviceBurumyDeviceSetRoomSwitch({required BurumyDevice that, required String roomId, required String key, required bool on_}) {
     return handler.executeNormal(
       NormalTask(
@@ -3334,7 +5668,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(roomId, serializer);
           sse_encode_String(key, serializer);
           sse_encode_bool(on_, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 129, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 215, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceSetRoomSwitchConstMeta,
@@ -3348,6 +5682,50 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "BurumyDevice_set_room_switch", argNames: ["that", "roomId", "key", "on_"]);
 
   @override
+  void crateApiDeviceBurumyDeviceSetSendAs({required BurumyDevice that, required String roomId, required String asJson}) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_String(asJson, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 216)!;
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceSetSendAsConstMeta,
+        argValues: [that, roomId, asJson],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceSetSendAsConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_set_send_as", argNames: ["that", "roomId", "asJson"]);
+
+  @override
+  void crateApiDeviceBurumyDeviceSetSendTopic({required BurumyDevice that, required String roomId, String? topic}) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_opt_String(topic, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 217)!;
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: null),
+        constMeta: kCrateApiDeviceBurumyDeviceSetSendTopicConstMeta,
+        argValues: [that, roomId, topic],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceSetSendTopicConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_set_send_topic", argNames: ["that", "roomId", "topic"]);
+
+  @override
   Future<void> crateApiDeviceBurumyDeviceSetSetting({required BurumyDevice that, required String key, required String value}) {
     return handler.executeNormal(
       NormalTask(
@@ -3356,7 +5734,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(key, serializer);
           sse_encode_String(value, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 130, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 218, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceSetSettingConstMeta,
@@ -3377,7 +5755,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_bool(on_, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 131, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 219, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceSetStreaksEnabledConstMeta,
@@ -3399,7 +5777,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
           sse_encode_u_64(seconds, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 132, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 220, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceSetTimerConstMeta,
@@ -3421,7 +5799,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
           sse_encode_bool(typing, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 133, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 221, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceSetTypingConstMeta,
@@ -3442,7 +5820,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_i_32(minutes, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 134)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 222)!;
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: null),
         constMeta: kCrateApiDeviceBurumyDeviceSetTzOffsetConstMeta,
@@ -3456,13 +5834,35 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "BurumyDevice_set_tz_offset", argNames: ["that", "minutes"]);
 
   @override
+  Future<void> crateApiDeviceBurumyDeviceSetWebPage({required BurumyDevice that, required String roomId, required bool on_}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_bool(on_, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 223, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceSetWebPageConstMeta,
+        argValues: [that, roomId, on_],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceSetWebPageConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_set_web_page", argNames: ["that", "roomId", "on_"]);
+
+  @override
   Future<Map<String, String>> crateApiDeviceBurumyDeviceSettings({required BurumyDevice that}) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 135, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 224, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_Map_String_String_None, decodeErrorData: null),
         constMeta: kCrateApiDeviceBurumyDeviceSettingsConstMeta,
@@ -3499,7 +5899,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(whoBio, serializer);
           sse_encode_String(whoBirthday, serializer);
           sse_encode_list_String(only, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 136, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 225, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_u_32, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceShareProfileConstMeta,
@@ -3523,7 +5923,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
           sse_encode_bool(video, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 137, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 226, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceStartCallConstMeta,
@@ -3544,7 +5944,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(role, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 138, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 227, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceStartSessionConstMeta,
@@ -3564,7 +5964,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 139, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 228, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_list_story_row, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceStoriesConstMeta,
@@ -3577,13 +5977,34 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiDeviceBurumyDeviceStoriesConstMeta => const TaskConstMeta(debugName: "BurumyDevice_stories", argNames: ["that"]);
 
   @override
+  Future<StoryLinkRow> crateApiDeviceBurumyDeviceStoryLinkCard({required BurumyDevice that, required String url}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(url, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 229, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_story_link_row, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceStoryLinkCardConstMeta,
+        argValues: [that, url],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceStoryLinkCardConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_story_link_card", argNames: ["that", "url"]);
+
+  @override
   Future<bool> crateApiDeviceBurumyDeviceStreaksEnabled({required BurumyDevice that}) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 140, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 230, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_bool, decodeErrorData: null),
         constMeta: kCrateApiDeviceBurumyDeviceStreaksEnabledConstMeta,
@@ -3602,7 +6023,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 141, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 231, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceSyncOnceConstMeta,
@@ -3622,7 +6043,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_u_64(timeoutMs, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 142, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 232, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceSyncWaitConstMeta,
@@ -3641,7 +6062,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 143, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 233, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_list_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceTakeEraseNoticesConstMeta,
@@ -3655,13 +6076,52 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "BurumyDevice_take_erase_notices", argNames: ["that"]);
 
   @override
+  List<SignalRow> crateApiDeviceBurumyDeviceTakeSignals({required BurumyDevice that}) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 234)!;
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_list_signal_row, decodeErrorData: null),
+        constMeta: kCrateApiDeviceBurumyDeviceTakeSignalsConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceTakeSignalsConstMeta => const TaskConstMeta(debugName: "BurumyDevice_take_signals", argNames: ["that"]);
+
+  @override
+  Future<List<SyncedDraftRow>> crateApiDeviceBurumyDeviceTakeSyncedDrafts({required BurumyDevice that}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 235, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_list_synced_draft_row, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceTakeSyncedDraftsConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceTakeSyncedDraftsConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_take_synced_drafts", argNames: ["that"]);
+
+  @override
   Future<bool> crateApiDeviceBurumyDeviceThisDeviceVerified({required BurumyDevice that}) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 144, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 236, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_bool, decodeErrorData: null),
         constMeta: kCrateApiDeviceBurumyDeviceThisDeviceVerifiedConstMeta,
@@ -3683,7 +6143,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
           sse_encode_u_32(limit, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 145, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 237, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_list_chat_message, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceTimelineConstMeta,
@@ -3704,7 +6164,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 146, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 238, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_u_64, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceTimerConstMeta,
@@ -3724,7 +6184,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(roomId, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 147)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 239)!;
         },
         codec: SseCodec(decodeSuccessData: sse_decode_list_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceTypingUsersConstMeta,
@@ -3738,13 +6198,89 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "BurumyDevice_typing_users", argNames: ["that", "roomId"]);
 
   @override
+  Future<void> crateApiDeviceBurumyDeviceUpdateLiveLocation({
+    required BurumyDevice that,
+    required String roomId,
+    required String eventId,
+    required double lat,
+    required double lon,
+    double? accuracy,
+    required BigInt untilMs,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_String(eventId, serializer);
+          sse_encode_f_64(lat, serializer);
+          sse_encode_f_64(lon, serializer);
+          sse_encode_opt_box_autoadd_f_64(accuracy, serializer);
+          sse_encode_u_64(untilMs, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 240, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceUpdateLiveLocationConstMeta,
+        argValues: [that, roomId, eventId, lat, lon, accuracy, untilMs],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceUpdateLiveLocationConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_update_live_location", argNames: ["that", "roomId", "eventId", "lat", "lon", "accuracy", "untilMs"]);
+
+  @override
+  Future<String> crateApiDeviceBurumyDeviceUploadEncrypted({required BurumyDevice that, required List<int> data}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_list_prim_u_8_loose(data, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 241, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceUploadEncryptedConstMeta,
+        argValues: [that, data],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceUploadEncryptedConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_upload_encrypted", argNames: ["that", "data"]);
+
+  @override
+  Future<String> crateApiDeviceBurumyDeviceUploadSecret({required BurumyDevice that, required List<int> bytes}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_list_prim_u_8_loose(bytes, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 242, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceUploadSecretConstMeta,
+        argValues: [that, bytes],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceUploadSecretConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_upload_secret", argNames: ["that", "bytes"]);
+
+  @override
   String? crateApiDeviceBurumyDeviceUserId({required BurumyDevice that}) {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 148)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 243)!;
         },
         codec: SseCodec(decodeSuccessData: sse_decode_opt_String, decodeErrorData: null),
         constMeta: kCrateApiDeviceBurumyDeviceUserIdConstMeta,
@@ -3765,7 +6301,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
           sse_encode_String(userId, serializer);
           sse_encode_String(flowId, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 149, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 244, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceVerifyStateConstMeta,
@@ -3785,7 +6321,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 150, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 245, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_list_String, decodeErrorData: null),
         constMeta: kCrateApiDeviceBurumyDeviceVisibleInvitesConstMeta,
@@ -3807,7 +6343,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(roomId, serializer);
           sse_encode_String(pollId, serializer);
           sse_encode_list_String(choices, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 151, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 246, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiDeviceBurumyDeviceVoteConstMeta,
@@ -3821,12 +6357,88 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "BurumyDevice_vote", argNames: ["that", "roomId", "pollId", "choices"]);
 
   @override
+  Future<void> crateApiDeviceBurumyDeviceWebPost({
+    required BurumyDevice that,
+    required String roomId,
+    required String eventId,
+    required String text,
+    required BigInt ts,
+    String? photoMime,
+    Uint8List? photo,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_String(eventId, serializer);
+          sse_encode_String(text, serializer);
+          sse_encode_u_64(ts, serializer);
+          sse_encode_opt_String(photoMime, serializer);
+          sse_encode_opt_list_prim_u_8_strict(photo, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 247, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceWebPostConstMeta,
+        argValues: [that, roomId, eventId, text, ts, photoMime, photo],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceWebPostConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_web_post", argNames: ["that", "roomId", "eventId", "text", "ts", "photoMime", "photo"]);
+
+  @override
+  Future<List<String>> crateApiDeviceBurumyDeviceWebPosts({required BurumyDevice that, required String roomId}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 248, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_list_String, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceWebPostsConstMeta,
+        argValues: [that, roomId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceWebPostsConstMeta => const TaskConstMeta(debugName: "BurumyDevice_web_posts", argNames: ["that", "roomId"]);
+
+  @override
+  Future<void> crateApiDeviceBurumyDeviceWebUnpost({required BurumyDevice that, required String roomId, required String eventId}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBurumyDevice(that, serializer);
+          sse_encode_String(roomId, serializer);
+          sse_encode_String(eventId, serializer);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 249, port: port_);
+        },
+        codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: sse_decode_AnyhowException),
+        constMeta: kCrateApiDeviceBurumyDeviceWebUnpostConstMeta,
+        argValues: [that, roomId, eventId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeviceBurumyDeviceWebUnpostConstMeta =>
+      const TaskConstMeta(debugName: "BurumyDevice_web_unpost", argNames: ["that", "roomId", "eventId"]);
+
+  @override
   Future<void> crateApiDeviceInitApp() {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 152, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 250, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_unit, decodeErrorData: null),
         constMeta: kCrateApiDeviceInitAppConstMeta,
@@ -3847,7 +6459,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(file, serializer);
           sse_encode_String(old, serializer);
           sse_encode_String(new_, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 153, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 251, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiLockLockChangeNormalConstMeta,
@@ -3867,7 +6479,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_String(file, serializer);
           sse_encode_String(normal, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 154, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 252, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_list_bool, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiLockLockExtrasConstMeta,
@@ -3886,7 +6498,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_String(normal, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 155, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 253, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiLockLockNewConstMeta,
@@ -3905,7 +6517,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_String(pw, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 156)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 254)!;
         },
         codec: SseCodec(decodeSuccessData: sse_decode_bool, decodeErrorData: null),
         constMeta: kCrateApiLockLockPasswordOkConstMeta,
@@ -3927,7 +6539,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(normal, serializer);
           sse_encode_String(role, serializer);
           sse_encode_opt_String(pw, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 157, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 255, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiLockLockSetExtraConstMeta,
@@ -3948,7 +6560,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(file, serializer);
           sse_encode_String(normal, serializer);
           sse_encode_u_32(n, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 158, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 256, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_String, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiLockLockSetWipeAfterConstMeta,
@@ -3968,7 +6580,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_String(file, serializer);
           sse_encode_String(pw, serializer);
-          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 159, port: port_);
+          pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 257, port: port_);
         },
         codec: SseCodec(decodeSuccessData: sse_decode_lock_outcome, decodeErrorData: sse_decode_AnyhowException),
         constMeta: kCrateApiLockLockUnlockConstMeta,
@@ -3987,7 +6599,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_String(file, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 160)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 258)!;
         },
         codec: SseCodec(decodeSuccessData: sse_decode_u_32, decodeErrorData: null),
         constMeta: kCrateApiLockLockWipeAfterConstMeta,
@@ -4081,6 +6693,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   LinkPreviewRow dco_decode_box_autoadd_link_preview_row(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_link_preview_row(raw);
+  }
+
+  @protected
+  LiveRow dco_decode_box_autoadd_live_row(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_live_row(raw);
   }
 
   @protected
@@ -4190,7 +6808,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ChatMessage dco_decode_chat_message(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 25) throw Exception('unexpected arr length: expect 25 but see ${arr.length}');
+    if (arr.length != 36) throw Exception('unexpected arr length: expect 36 but see ${arr.length}');
     return ChatMessage(
       eventId: dco_decode_String(arr[0]),
       sender: dco_decode_String(arr[1]),
@@ -4201,22 +6819,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       kind: dco_decode_String(arr[6]),
       replyTo: dco_decode_opt_String(arr[7]),
       threadRoot: dco_decode_opt_String(arr[8]),
-      edited: dco_decode_bool(arr[9]),
-      reactions: dco_decode_list_reaction_row(arr[10]),
-      expiresAt: dco_decode_opt_box_autoadd_u_64(arr[11]),
-      viewOnce: dco_decode_bool(arr[12]),
-      opened: dco_decode_bool(arr[13]),
-      forwarded: dco_decode_bool(arr[14]),
-      preview: dco_decode_opt_box_autoadd_link_preview_row(arr[15]),
-      voice: dco_decode_opt_box_autoadd_voice_row(arr[16]),
-      poll: dco_decode_opt_box_autoadd_poll_row(arr[17]),
-      bubble: dco_decode_bool(arr[18]),
-      call: dco_decode_opt_box_autoadd_call_row(arr[19]),
-      caption: dco_decode_opt_String(arr[20]),
-      checklist: dco_decode_opt_box_autoadd_checklist_row(arr[21]),
-      meetup: dco_decode_opt_box_autoadd_meetup_row(arr[22]),
-      contact: dco_decode_opt_String(arr[23]),
-      card: dco_decode_opt_box_autoadd_card_row(arr[24]),
+      topic: dco_decode_opt_String(arr[9]),
+      edited: dco_decode_bool(arr[10]),
+      editedAt: dco_decode_opt_box_autoadd_u_64(arr[11]),
+      firstBody: dco_decode_opt_String(arr[12]),
+      reactions: dco_decode_list_reaction_row(arr[13]),
+      expiresAt: dco_decode_opt_box_autoadd_u_64(arr[14]),
+      viewOnce: dco_decode_bool(arr[15]),
+      opened: dco_decode_bool(arr[16]),
+      forwarded: dco_decode_bool(arr[17]),
+      preview: dco_decode_opt_box_autoadd_link_preview_row(arr[18]),
+      voice: dco_decode_opt_box_autoadd_voice_row(arr[19]),
+      live: dco_decode_opt_box_autoadd_live_row(arr[20]),
+      poll: dco_decode_opt_box_autoadd_poll_row(arr[21]),
+      bubble: dco_decode_bool(arr[22]),
+      call: dco_decode_opt_box_autoadd_call_row(arr[23]),
+      caption: dco_decode_opt_String(arr[24]),
+      size: dco_decode_opt_box_autoadd_u_64(arr[25]),
+      checklist: dco_decode_opt_box_autoadd_checklist_row(arr[26]),
+      meetup: dco_decode_opt_box_autoadd_meetup_row(arr[27]),
+      contact: dco_decode_opt_String(arr[28]),
+      card: dco_decode_opt_box_autoadd_card_row(arr[29]),
+      quote: dco_decode_opt_String(arr[30]),
+      quoteName: dco_decode_opt_String(arr[31]),
+      captionAbove: dco_decode_bool(arr[32]),
+      mediaFrom: dco_decode_opt_String(arr[33]),
+      mediaChanged: dco_decode_bool(arr[34]),
+      postAs: dco_decode_opt_String(arr[35]),
     );
   }
 
@@ -4269,6 +6898,38 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  CommunityChatRow dco_decode_community_chat_row(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 7) throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
+    return CommunityChatRow(
+      roomId: dco_decode_String(arr[0]),
+      name: dco_decode_String(arr[1]),
+      kind: dco_decode_String(arr[2]),
+      state: dco_decode_String(arr[3]),
+      hidden: dco_decode_bool(arr[4]),
+      by: dco_decode_String(arr[5]),
+      members: dco_decode_u_64(arr[6]),
+    );
+  }
+
+  @protected
+  CommunityRow dco_decode_community_row(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 7) throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
+    return CommunityRow(
+      id: dco_decode_String(arr[0]),
+      name: dco_decode_String(arr[1]),
+      about: dco_decode_String(arr[2]),
+      role: dco_decode_String(arr[3]),
+      addAll: dco_decode_bool(arr[4]),
+      members: dco_decode_u_64(arr[5]),
+      chats: dco_decode_list_community_chat_row(arr[6]),
+    );
+  }
+
+  @protected
   DeviceInfo dco_decode_device_info(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -4280,6 +6941,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       thisDevice: dco_decode_bool(arr[3]),
       verified: dco_decode_bool(arr[4]),
     );
+  }
+
+  @protected
+  EarlierRow dco_decode_earlier_row(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 7) throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
+    return EarlierRow(
+      sender: dco_decode_String(arr[0]),
+      ts: dco_decode_u_64(arr[1]),
+      kind: dco_decode_String(arr[2]),
+      body: dco_decode_String(arr[3]),
+      name: dco_decode_String(arr[4]),
+      mime: dco_decode_String(arr[5]),
+      hasThumb: dco_decode_bool(arr[6]),
+    );
+  }
+
+  @protected
+  EmojiStatusRow dco_decode_emoji_status_row(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return EmojiStatusRow(emoji: dco_decode_String(arr[0]), untilMs: dco_decode_u_64(arr[1]));
   }
 
   @protected
@@ -4297,6 +6982,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  FoundRow dco_decode_found_row(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return FoundRow(roomId: dco_decode_String(arr[0]), message: dco_decode_chat_message(arr[1]));
+  }
+
+  @protected
+  GateHelperRow dco_decode_gate_helper_row(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return GateHelperRow(joined: dco_decode_bool(arr[0]), devices: dco_decode_u_32(arr[1]));
+  }
+
+  @protected
   int dco_decode_i_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as int;
@@ -4309,6 +7010,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  InviteLinkRow dco_decode_invite_link_row(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 9) throw Exception('unexpected arr length: expect 9 but see ${arr.length}');
+    return InviteLinkRow(
+      code: dco_decode_String(arr[0]),
+      name: dco_decode_String(arr[1]),
+      until: dco_decode_u_64(arr[2]),
+      max: dco_decode_u_64(arr[3]),
+      uses: dco_decode_u_64(arr[4]),
+      joined: dco_decode_list_String(arr[5]),
+      by: dco_decode_String(arr[6]),
+      made: dco_decode_u_64(arr[7]),
+      revoked: dco_decode_bool(arr[8]),
+    );
+  }
+
+  @protected
   InviteRow dco_decode_invite_row(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -4317,16 +7036,43 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  JoinRequestRow dco_decode_join_request_row(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return JoinRequestRow(userId: dco_decode_String(arr[0]), name: dco_decode_String(arr[1]), answers: dco_decode_list_String(arr[2]));
+  }
+
+  @protected
+  LinkPeekRow dco_decode_link_peek_row(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 8) throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
+    return LinkPeekRow(
+      roomId: dco_decode_String(arr[0]),
+      name: dco_decode_String(arr[1]),
+      about: dco_decode_String(arr[2]),
+      members: dco_decode_u_64(arr[3]),
+      channel: dco_decode_bool(arr[4]),
+      approval: dco_decode_bool(arr[5]),
+      joined: dco_decode_bool(arr[6]),
+      photo: dco_decode_list_prim_u_8_strict(arr[7]),
+    );
+  }
+
+  @protected
   LinkPreviewRow dco_decode_link_preview_row(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 5) throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    if (arr.length != 7) throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
     return LinkPreviewRow(
       url: dco_decode_String(arr[0]),
       title: dco_decode_String(arr[1]),
       description: dco_decode_opt_String(arr[2]),
       site: dco_decode_opt_String(arr[3]),
       hasImage: dco_decode_bool(arr[4]),
+      above: dco_decode_bool(arr[5]),
+      small: dco_decode_bool(arr[6]),
     );
   }
 
@@ -4379,9 +7125,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<CommunityChatRow> dco_decode_list_community_chat_row(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_community_chat_row).toList();
+  }
+
+  @protected
+  List<CommunityRow> dco_decode_list_community_row(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_community_row).toList();
+  }
+
+  @protected
   List<DeviceInfo> dco_decode_list_device_info(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_device_info).toList();
+  }
+
+  @protected
+  List<EarlierRow> dco_decode_list_earlier_row(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_earlier_row).toList();
   }
 
   @protected
@@ -4391,9 +7155,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<FoundRow> dco_decode_list_found_row(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_found_row).toList();
+  }
+
+  @protected
+  List<InviteLinkRow> dco_decode_list_invite_link_row(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_invite_link_row).toList();
+  }
+
+  @protected
   List<InviteRow> dco_decode_list_invite_row(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_invite_row).toList();
+  }
+
+  @protected
+  List<JoinRequestRow> dco_decode_list_join_request_row(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_join_request_row).toList();
   }
 
   @protected
@@ -4433,6 +7215,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<PollPhotoIn> dco_decode_list_poll_photo_in(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_poll_photo_in).toList();
+  }
+
+  @protected
   List<int> dco_decode_list_prim_u_16_loose(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as List<int>;
@@ -4445,6 +7233,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  Uint32List dco_decode_list_prim_u_32_strict(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as Uint32List;
+  }
+
+  @protected
+  Uint64List dco_decode_list_prim_u_64_strict(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dcoDecodeUint64List(raw);
+  }
+
+  @protected
   List<int> dco_decode_list_prim_u_8_loose(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as List<int>;
@@ -4454,6 +7254,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as Uint8List;
+  }
+
+  @protected
+  List<PublicRoomRow> dco_decode_list_public_room_row(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_public_room_row).toList();
   }
 
   @protected
@@ -4475,9 +7281,29 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<SignalRow> dco_decode_list_signal_row(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_signal_row).toList();
+  }
+
+  @protected
   List<StoryRow> dco_decode_list_story_row(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_story_row).toList();
+  }
+
+  @protected
+  List<SyncedDraftRow> dco_decode_list_synced_draft_row(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_synced_draft_row).toList();
+  }
+
+  @protected
+  LiveRow dco_decode_live_row(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return LiveRow(style: dco_decode_String(arr[0]), durationMs: dco_decode_u_64(arr[1]));
   }
 
   @protected
@@ -4492,15 +7318,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   MeetupRow dco_decode_meetup_row(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 7) throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
+    if (arr.length != 9) throw Exception('unexpected arr length: expect 9 but see ${arr.length}');
     return MeetupRow(
       title: dco_decode_String(arr[0]),
       startsAt: dco_decode_u_64(arr[1]),
-      place: dco_decode_opt_String(arr[2]),
-      cancelled: dco_decode_bool(arr[3]),
-      yes: dco_decode_list_String(arr[4]),
-      no: dco_decode_list_String(arr[5]),
-      maybe: dco_decode_list_String(arr[6]),
+      endsAt: dco_decode_u_64(arr[2]),
+      place: dco_decode_opt_String(arr[3]),
+      cancelled: dco_decode_bool(arr[4]),
+      yes: dco_decode_list_String(arr[5]),
+      no: dco_decode_list_String(arr[6]),
+      maybe: dco_decode_list_String(arr[7]),
+      guests: dco_decode_list_prim_u_32_strict(arr[8]),
     );
   }
 
@@ -4508,8 +7336,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   MemberRow dco_decode_member_row(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
-    return MemberRow(userId: dco_decode_String(arr[0]), name: dco_decode_String(arr[1]), role: dco_decode_String(arr[2]));
+    if (arr.length != 4) throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    return MemberRow(userId: dco_decode_String(arr[0]), name: dco_decode_String(arr[1]), role: dco_decode_String(arr[2]), since: dco_decode_u_64(arr[3]));
   }
 
   @protected
@@ -4567,6 +7395,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   LinkPreviewRow? dco_decode_opt_box_autoadd_link_preview_row(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_box_autoadd_link_preview_row(raw);
+  }
+
+  @protected
+  LiveRow? dco_decode_opt_box_autoadd_live_row(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_live_row(raw);
   }
 
   @protected
@@ -4631,15 +7465,32 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PollAnswerRow dco_decode_poll_answer_row(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 4) throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
-    return PollAnswerRow(id: dco_decode_String(arr[0]), text: dco_decode_String(arr[1]), votes: dco_decode_u_32(arr[2]), who: dco_decode_list_String(arr[3]));
+    if (arr.length != 8) throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
+    return PollAnswerRow(
+      id: dco_decode_String(arr[0]),
+      text: dco_decode_String(arr[1]),
+      votes: dco_decode_u_32(arr[2]),
+      who: dco_decode_list_String(arr[3]),
+      hasPhoto: dco_decode_bool(arr[4]),
+      sticker: dco_decode_String(arr[5]),
+      geo: dco_decode_String(arr[6]),
+      addedBy: dco_decode_String(arr[7]),
+    );
+  }
+
+  @protected
+  PollPhotoIn dco_decode_poll_photo_in(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return PollPhotoIn(slot: dco_decode_String(arr[0]), mime: dco_decode_String(arr[1]), data: dco_decode_list_prim_u_8_strict(arr[2]));
   }
 
   @protected
   PollRow dco_decode_poll_row(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 10) throw Exception('unexpected arr length: expect 10 but see ${arr.length}');
+    if (arr.length != 16) throw Exception('unexpected arr length: expect 16 but see ${arr.length}');
     return PollRow(
       question: dco_decode_String(arr[0]),
       answers: dco_decode_list_poll_answer_row(arr[1]),
@@ -4651,6 +7502,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       correct: dco_decode_opt_String(arr[7]),
       explain: dco_decode_String(arr[8]),
       closeAt: dco_decode_i_64(arr[9]),
+      description: dco_decode_String(arr[10]),
+      hasPhoto: dco_decode_bool(arr[11]),
+      addOptions: dco_decode_bool(arr[12]),
+      changeVote: dco_decode_bool(arr[13]),
+      shuffle: dco_decode_bool(arr[14]),
+      hideResults: dco_decode_bool(arr[15]),
     );
   }
 
@@ -4664,6 +7521,23 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       bio: dco_decode_String(arr[1]),
       birthday: dco_decode_String(arr[2]),
       private: dco_decode_bool(arr[3]),
+    );
+  }
+
+  @protected
+  PublicRoomRow dco_decode_public_room_row(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 8) throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
+    return PublicRoomRow(
+      roomId: dco_decode_String(arr[0]),
+      address: dco_decode_String(arr[1]),
+      name: dco_decode_String(arr[2]),
+      about: dco_decode_String(arr[3]),
+      members: dco_decode_u_64(arr[4]),
+      channel: dco_decode_bool(arr[5]),
+      approval: dco_decode_bool(arr[6]),
+      joined: dco_decode_bool(arr[7]),
     );
   }
 
@@ -4700,10 +7574,54 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  RoomLinkRow dco_decode_room_link_row(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 4) throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    return RoomLinkRow(kind: dco_decode_String(arr[0]), code: dco_decode_String(arr[1]), approval: dco_decode_bool(arr[2]), web: dco_decode_bool(arr[3]));
+  }
+
+  @protected
+  SignalRow dco_decode_signal_row(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 6) throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    return SignalRow(
+      roomId: dco_decode_String(arr[0]),
+      eventId: dco_decode_String(arr[1]),
+      sender: dco_decode_String(arr[2]),
+      kind: dco_decode_String(arr[3]),
+      data: dco_decode_String(arr[4]),
+      ts: dco_decode_u_64(arr[5]),
+    );
+  }
+
+  @protected
+  StoryLinkRow dco_decode_story_link_row(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 4) throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    return StoryLinkRow(
+      title: dco_decode_String(arr[0]),
+      site: dco_decode_String(arr[1]),
+      description: dco_decode_String(arr[2]),
+      image: dco_decode_list_prim_u_8_strict(arr[3]),
+    );
+  }
+
+  @protected
+  StoryPostedRow dco_decode_story_posted_row(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return StoryPostedRow(sent: dco_decode_u_32(arr[0]), ids: dco_decode_list_String(arr[1]));
+  }
+
+  @protected
   StoryRow dco_decode_story_row(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 10) throw Exception('unexpected arr length: expect 10 but see ${arr.length}');
+    if (arr.length != 15) throw Exception('unexpected arr length: expect 15 but see ${arr.length}');
     return StoryRow(
       storyId: dco_decode_String(arr[0]),
       roomId: dco_decode_String(arr[1]),
@@ -4715,7 +7633,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       caption: dco_decode_opt_String(arr[7]),
       extra: dco_decode_opt_String(arr[8]),
       feed: dco_decode_bool(arr[9]),
+      pin: dco_decode_opt_String(arr[10]),
+      until: dco_decode_u_64(arr[11]),
+      edited: dco_decode_bool(arr[12]),
+      group: dco_decode_bool(arr[13]),
+      member: dco_decode_bool(arr[14]),
     );
+  }
+
+  @protected
+  SyncedDraftRow dco_decode_synced_draft_row(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3) throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return SyncedDraftRow(roomId: dco_decode_String(arr[0]), text: dco_decode_String(arr[1]), at: dco_decode_u_64(arr[2]));
   }
 
   @protected
@@ -4844,6 +7775,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  LiveRow sse_decode_box_autoadd_live_row(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_live_row(deserializer));
+  }
+
+  @protected
   MeetupRow sse_decode_box_autoadd_meetup_row(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_meetup_row(deserializer));
@@ -4962,7 +7899,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_kind = sse_decode_String(deserializer);
     var var_replyTo = sse_decode_opt_String(deserializer);
     var var_threadRoot = sse_decode_opt_String(deserializer);
+    var var_topic = sse_decode_opt_String(deserializer);
     var var_edited = sse_decode_bool(deserializer);
+    var var_editedAt = sse_decode_opt_box_autoadd_u_64(deserializer);
+    var var_firstBody = sse_decode_opt_String(deserializer);
     var var_reactions = sse_decode_list_reaction_row(deserializer);
     var var_expiresAt = sse_decode_opt_box_autoadd_u_64(deserializer);
     var var_viewOnce = sse_decode_bool(deserializer);
@@ -4970,14 +7910,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_forwarded = sse_decode_bool(deserializer);
     var var_preview = sse_decode_opt_box_autoadd_link_preview_row(deserializer);
     var var_voice = sse_decode_opt_box_autoadd_voice_row(deserializer);
+    var var_live = sse_decode_opt_box_autoadd_live_row(deserializer);
     var var_poll = sse_decode_opt_box_autoadd_poll_row(deserializer);
     var var_bubble = sse_decode_bool(deserializer);
     var var_call = sse_decode_opt_box_autoadd_call_row(deserializer);
     var var_caption = sse_decode_opt_String(deserializer);
+    var var_size = sse_decode_opt_box_autoadd_u_64(deserializer);
     var var_checklist = sse_decode_opt_box_autoadd_checklist_row(deserializer);
     var var_meetup = sse_decode_opt_box_autoadd_meetup_row(deserializer);
     var var_contact = sse_decode_opt_String(deserializer);
     var var_card = sse_decode_opt_box_autoadd_card_row(deserializer);
+    var var_quote = sse_decode_opt_String(deserializer);
+    var var_quoteName = sse_decode_opt_String(deserializer);
+    var var_captionAbove = sse_decode_bool(deserializer);
+    var var_mediaFrom = sse_decode_opt_String(deserializer);
+    var var_mediaChanged = sse_decode_bool(deserializer);
+    var var_postAs = sse_decode_opt_String(deserializer);
     return ChatMessage(
       eventId: var_eventId,
       sender: var_sender,
@@ -4988,7 +7936,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       kind: var_kind,
       replyTo: var_replyTo,
       threadRoot: var_threadRoot,
+      topic: var_topic,
       edited: var_edited,
+      editedAt: var_editedAt,
+      firstBody: var_firstBody,
       reactions: var_reactions,
       expiresAt: var_expiresAt,
       viewOnce: var_viewOnce,
@@ -4996,14 +7947,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       forwarded: var_forwarded,
       preview: var_preview,
       voice: var_voice,
+      live: var_live,
       poll: var_poll,
       bubble: var_bubble,
       call: var_call,
       caption: var_caption,
+      size: var_size,
       checklist: var_checklist,
       meetup: var_meetup,
       contact: var_contact,
       card: var_card,
+      quote: var_quote,
+      quoteName: var_quoteName,
+      captionAbove: var_captionAbove,
+      mediaFrom: var_mediaFrom,
+      mediaChanged: var_mediaChanged,
+      postAs: var_postAs,
     );
   }
 
@@ -5061,6 +8020,32 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  CommunityChatRow sse_decode_community_chat_row(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_roomId = sse_decode_String(deserializer);
+    var var_name = sse_decode_String(deserializer);
+    var var_kind = sse_decode_String(deserializer);
+    var var_state = sse_decode_String(deserializer);
+    var var_hidden = sse_decode_bool(deserializer);
+    var var_by = sse_decode_String(deserializer);
+    var var_members = sse_decode_u_64(deserializer);
+    return CommunityChatRow(roomId: var_roomId, name: var_name, kind: var_kind, state: var_state, hidden: var_hidden, by: var_by, members: var_members);
+  }
+
+  @protected
+  CommunityRow sse_decode_community_row(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_id = sse_decode_String(deserializer);
+    var var_name = sse_decode_String(deserializer);
+    var var_about = sse_decode_String(deserializer);
+    var var_role = sse_decode_String(deserializer);
+    var var_addAll = sse_decode_bool(deserializer);
+    var var_members = sse_decode_u_64(deserializer);
+    var var_chats = sse_decode_list_community_chat_row(deserializer);
+    return CommunityRow(id: var_id, name: var_name, about: var_about, role: var_role, addAll: var_addAll, members: var_members, chats: var_chats);
+  }
+
+  @protected
   DeviceInfo sse_decode_device_info(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_deviceId = sse_decode_String(deserializer);
@@ -5069,6 +8054,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_thisDevice = sse_decode_bool(deserializer);
     var var_verified = sse_decode_bool(deserializer);
     return DeviceInfo(deviceId: var_deviceId, name: var_name, lastSeen: var_lastSeen, thisDevice: var_thisDevice, verified: var_verified);
+  }
+
+  @protected
+  EarlierRow sse_decode_earlier_row(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_sender = sse_decode_String(deserializer);
+    var var_ts = sse_decode_u_64(deserializer);
+    var var_kind = sse_decode_String(deserializer);
+    var var_body = sse_decode_String(deserializer);
+    var var_name = sse_decode_String(deserializer);
+    var var_mime = sse_decode_String(deserializer);
+    var var_hasThumb = sse_decode_bool(deserializer);
+    return EarlierRow(sender: var_sender, ts: var_ts, kind: var_kind, body: var_body, name: var_name, mime: var_mime, hasThumb: var_hasThumb);
+  }
+
+  @protected
+  EmojiStatusRow sse_decode_emoji_status_row(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_emoji = sse_decode_String(deserializer);
+    var var_untilMs = sse_decode_u_64(deserializer);
+    return EmojiStatusRow(emoji: var_emoji, untilMs: var_untilMs);
   }
 
   @protected
@@ -5087,6 +8093,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  FoundRow sse_decode_found_row(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_roomId = sse_decode_String(deserializer);
+    var var_message = sse_decode_chat_message(deserializer);
+    return FoundRow(roomId: var_roomId, message: var_message);
+  }
+
+  @protected
+  GateHelperRow sse_decode_gate_helper_row(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_joined = sse_decode_bool(deserializer);
+    var var_devices = sse_decode_u_32(deserializer);
+    return GateHelperRow(joined: var_joined, devices: var_devices);
+  }
+
+  @protected
   int sse_decode_i_32(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getInt32();
@@ -5096,6 +8118,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PlatformInt64 sse_decode_i_64(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getPlatformInt64();
+  }
+
+  @protected
+  InviteLinkRow sse_decode_invite_link_row(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_code = sse_decode_String(deserializer);
+    var var_name = sse_decode_String(deserializer);
+    var var_until = sse_decode_u_64(deserializer);
+    var var_max = sse_decode_u_64(deserializer);
+    var var_uses = sse_decode_u_64(deserializer);
+    var var_joined = sse_decode_list_String(deserializer);
+    var var_by = sse_decode_String(deserializer);
+    var var_made = sse_decode_u_64(deserializer);
+    var var_revoked = sse_decode_bool(deserializer);
+    return InviteLinkRow(
+      code: var_code,
+      name: var_name,
+      until: var_until,
+      max: var_max,
+      uses: var_uses,
+      joined: var_joined,
+      by: var_by,
+      made: var_made,
+      revoked: var_revoked,
+    );
   }
 
   @protected
@@ -5109,6 +8156,38 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  JoinRequestRow sse_decode_join_request_row(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_userId = sse_decode_String(deserializer);
+    var var_name = sse_decode_String(deserializer);
+    var var_answers = sse_decode_list_String(deserializer);
+    return JoinRequestRow(userId: var_userId, name: var_name, answers: var_answers);
+  }
+
+  @protected
+  LinkPeekRow sse_decode_link_peek_row(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_roomId = sse_decode_String(deserializer);
+    var var_name = sse_decode_String(deserializer);
+    var var_about = sse_decode_String(deserializer);
+    var var_members = sse_decode_u_64(deserializer);
+    var var_channel = sse_decode_bool(deserializer);
+    var var_approval = sse_decode_bool(deserializer);
+    var var_joined = sse_decode_bool(deserializer);
+    var var_photo = sse_decode_list_prim_u_8_strict(deserializer);
+    return LinkPeekRow(
+      roomId: var_roomId,
+      name: var_name,
+      about: var_about,
+      members: var_members,
+      channel: var_channel,
+      approval: var_approval,
+      joined: var_joined,
+      photo: var_photo,
+    );
+  }
+
+  @protected
   LinkPreviewRow sse_decode_link_preview_row(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_url = sse_decode_String(deserializer);
@@ -5116,7 +8195,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_description = sse_decode_opt_String(deserializer);
     var var_site = sse_decode_opt_String(deserializer);
     var var_hasImage = sse_decode_bool(deserializer);
-    return LinkPreviewRow(url: var_url, title: var_title, description: var_description, site: var_site, hasImage: var_hasImage);
+    var var_above = sse_decode_bool(deserializer);
+    var var_small = sse_decode_bool(deserializer);
+    return LinkPreviewRow(
+      url: var_url,
+      title: var_title,
+      description: var_description,
+      site: var_site,
+      hasImage: var_hasImage,
+      above: var_above,
+      small: var_small,
+    );
   }
 
   @protected
@@ -5216,6 +8305,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<CommunityChatRow> sse_decode_list_community_chat_row(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <CommunityChatRow>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_community_chat_row(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<CommunityRow> sse_decode_list_community_row(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <CommunityRow>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_community_row(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
   List<DeviceInfo> sse_decode_list_device_info(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -5223,6 +8336,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var ans_ = <DeviceInfo>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_device_info(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<EarlierRow> sse_decode_list_earlier_row(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <EarlierRow>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_earlier_row(deserializer));
     }
     return ans_;
   }
@@ -5240,6 +8365,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<FoundRow> sse_decode_list_found_row(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <FoundRow>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_found_row(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<InviteLinkRow> sse_decode_list_invite_link_row(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <InviteLinkRow>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_invite_link_row(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
   List<InviteRow> sse_decode_list_invite_row(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -5247,6 +8396,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var ans_ = <InviteRow>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_invite_row(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<JoinRequestRow> sse_decode_list_join_request_row(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <JoinRequestRow>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_join_request_row(deserializer));
     }
     return ans_;
   }
@@ -5324,6 +8485,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<PollPhotoIn> sse_decode_list_poll_photo_in(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <PollPhotoIn>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_poll_photo_in(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
   List<int> sse_decode_list_prim_u_16_loose(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var len_ = sse_decode_i_32(deserializer);
@@ -5338,6 +8511,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  Uint32List sse_decode_list_prim_u_32_strict(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var len_ = sse_decode_i_32(deserializer);
+    return deserializer.buffer.getUint32List(len_);
+  }
+
+  @protected
+  Uint64List sse_decode_list_prim_u_64_strict(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var len_ = sse_decode_i_32(deserializer);
+    return deserializer.buffer.getUint64List(len_);
+  }
+
+  @protected
   List<int> sse_decode_list_prim_u_8_loose(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var len_ = sse_decode_i_32(deserializer);
@@ -5349,6 +8536,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var len_ = sse_decode_i_32(deserializer);
     return deserializer.buffer.getUint8List(len_);
+  }
+
+  @protected
+  List<PublicRoomRow> sse_decode_list_public_room_row(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <PublicRoomRow>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_public_room_row(deserializer));
+    }
+    return ans_;
   }
 
   @protected
@@ -5388,6 +8587,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<SignalRow> sse_decode_list_signal_row(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <SignalRow>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_signal_row(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
   List<StoryRow> sse_decode_list_story_row(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -5397,6 +8608,26 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       ans_.add(sse_decode_story_row(deserializer));
     }
     return ans_;
+  }
+
+  @protected
+  List<SyncedDraftRow> sse_decode_list_synced_draft_row(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <SyncedDraftRow>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_synced_draft_row(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  LiveRow sse_decode_live_row(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_style = sse_decode_String(deserializer);
+    var var_durationMs = sse_decode_u_64(deserializer);
+    return LiveRow(style: var_style, durationMs: var_durationMs);
   }
 
   @protected
@@ -5414,12 +8645,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_title = sse_decode_String(deserializer);
     var var_startsAt = sse_decode_u_64(deserializer);
+    var var_endsAt = sse_decode_u_64(deserializer);
     var var_place = sse_decode_opt_String(deserializer);
     var var_cancelled = sse_decode_bool(deserializer);
     var var_yes = sse_decode_list_String(deserializer);
     var var_no = sse_decode_list_String(deserializer);
     var var_maybe = sse_decode_list_String(deserializer);
-    return MeetupRow(title: var_title, startsAt: var_startsAt, place: var_place, cancelled: var_cancelled, yes: var_yes, no: var_no, maybe: var_maybe);
+    var var_guests = sse_decode_list_prim_u_32_strict(deserializer);
+    return MeetupRow(
+      title: var_title,
+      startsAt: var_startsAt,
+      endsAt: var_endsAt,
+      place: var_place,
+      cancelled: var_cancelled,
+      yes: var_yes,
+      no: var_no,
+      maybe: var_maybe,
+      guests: var_guests,
+    );
   }
 
   @protected
@@ -5428,7 +8671,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_userId = sse_decode_String(deserializer);
     var var_name = sse_decode_String(deserializer);
     var var_role = sse_decode_String(deserializer);
-    return MemberRow(userId: var_userId, name: var_name, role: var_role);
+    var var_since = sse_decode_u_64(deserializer);
+    return MemberRow(userId: var_userId, name: var_name, role: var_role, since: var_since);
   }
 
   @protected
@@ -5515,6 +8759,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
     if (sse_decode_bool(deserializer)) {
       return (sse_decode_box_autoadd_link_preview_row(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  LiveRow? sse_decode_opt_box_autoadd_live_row(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_live_row(deserializer));
     } else {
       return null;
     }
@@ -5623,7 +8878,29 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_text = sse_decode_String(deserializer);
     var var_votes = sse_decode_u_32(deserializer);
     var var_who = sse_decode_list_String(deserializer);
-    return PollAnswerRow(id: var_id, text: var_text, votes: var_votes, who: var_who);
+    var var_hasPhoto = sse_decode_bool(deserializer);
+    var var_sticker = sse_decode_String(deserializer);
+    var var_geo = sse_decode_String(deserializer);
+    var var_addedBy = sse_decode_String(deserializer);
+    return PollAnswerRow(
+      id: var_id,
+      text: var_text,
+      votes: var_votes,
+      who: var_who,
+      hasPhoto: var_hasPhoto,
+      sticker: var_sticker,
+      geo: var_geo,
+      addedBy: var_addedBy,
+    );
+  }
+
+  @protected
+  PollPhotoIn sse_decode_poll_photo_in(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_slot = sse_decode_String(deserializer);
+    var var_mime = sse_decode_String(deserializer);
+    var var_data = sse_decode_list_prim_u_8_strict(deserializer);
+    return PollPhotoIn(slot: var_slot, mime: var_mime, data: var_data);
   }
 
   @protected
@@ -5639,6 +8916,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_correct = sse_decode_opt_String(deserializer);
     var var_explain = sse_decode_String(deserializer);
     var var_closeAt = sse_decode_i_64(deserializer);
+    var var_description = sse_decode_String(deserializer);
+    var var_hasPhoto = sse_decode_bool(deserializer);
+    var var_addOptions = sse_decode_bool(deserializer);
+    var var_changeVote = sse_decode_bool(deserializer);
+    var var_shuffle = sse_decode_bool(deserializer);
+    var var_hideResults = sse_decode_bool(deserializer);
     return PollRow(
       question: var_question,
       answers: var_answers,
@@ -5650,6 +8933,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       correct: var_correct,
       explain: var_explain,
       closeAt: var_closeAt,
+      description: var_description,
+      hasPhoto: var_hasPhoto,
+      addOptions: var_addOptions,
+      changeVote: var_changeVote,
+      shuffle: var_shuffle,
+      hideResults: var_hideResults,
     );
   }
 
@@ -5661,6 +8950,29 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_birthday = sse_decode_String(deserializer);
     var var_private = sse_decode_bool(deserializer);
     return ProfileCardRow(photo: var_photo, bio: var_bio, birthday: var_birthday, private: var_private);
+  }
+
+  @protected
+  PublicRoomRow sse_decode_public_room_row(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_roomId = sse_decode_String(deserializer);
+    var var_address = sse_decode_String(deserializer);
+    var var_name = sse_decode_String(deserializer);
+    var var_about = sse_decode_String(deserializer);
+    var var_members = sse_decode_u_64(deserializer);
+    var var_channel = sse_decode_bool(deserializer);
+    var var_approval = sse_decode_bool(deserializer);
+    var var_joined = sse_decode_bool(deserializer);
+    return PublicRoomRow(
+      roomId: var_roomId,
+      address: var_address,
+      name: var_name,
+      about: var_about,
+      members: var_members,
+      channel: var_channel,
+      approval: var_approval,
+      joined: var_joined,
+    );
   }
 
   @protected
@@ -5692,6 +9004,46 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  RoomLinkRow sse_decode_room_link_row(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_kind = sse_decode_String(deserializer);
+    var var_code = sse_decode_String(deserializer);
+    var var_approval = sse_decode_bool(deserializer);
+    var var_web = sse_decode_bool(deserializer);
+    return RoomLinkRow(kind: var_kind, code: var_code, approval: var_approval, web: var_web);
+  }
+
+  @protected
+  SignalRow sse_decode_signal_row(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_roomId = sse_decode_String(deserializer);
+    var var_eventId = sse_decode_String(deserializer);
+    var var_sender = sse_decode_String(deserializer);
+    var var_kind = sse_decode_String(deserializer);
+    var var_data = sse_decode_String(deserializer);
+    var var_ts = sse_decode_u_64(deserializer);
+    return SignalRow(roomId: var_roomId, eventId: var_eventId, sender: var_sender, kind: var_kind, data: var_data, ts: var_ts);
+  }
+
+  @protected
+  StoryLinkRow sse_decode_story_link_row(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_title = sse_decode_String(deserializer);
+    var var_site = sse_decode_String(deserializer);
+    var var_description = sse_decode_String(deserializer);
+    var var_image = sse_decode_list_prim_u_8_strict(deserializer);
+    return StoryLinkRow(title: var_title, site: var_site, description: var_description, image: var_image);
+  }
+
+  @protected
+  StoryPostedRow sse_decode_story_posted_row(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_sent = sse_decode_u_32(deserializer);
+    var var_ids = sse_decode_list_String(deserializer);
+    return StoryPostedRow(sent: var_sent, ids: var_ids);
+  }
+
+  @protected
   StoryRow sse_decode_story_row(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_storyId = sse_decode_String(deserializer);
@@ -5704,6 +9056,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_caption = sse_decode_opt_String(deserializer);
     var var_extra = sse_decode_opt_String(deserializer);
     var var_feed = sse_decode_bool(deserializer);
+    var var_pin = sse_decode_opt_String(deserializer);
+    var var_until = sse_decode_u_64(deserializer);
+    var var_edited = sse_decode_bool(deserializer);
+    var var_group = sse_decode_bool(deserializer);
+    var var_member = sse_decode_bool(deserializer);
     return StoryRow(
       storyId: var_storyId,
       roomId: var_roomId,
@@ -5715,7 +9072,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       caption: var_caption,
       extra: var_extra,
       feed: var_feed,
+      pin: var_pin,
+      until: var_until,
+      edited: var_edited,
+      group: var_group,
+      member: var_member,
     );
+  }
+
+  @protected
+  SyncedDraftRow sse_decode_synced_draft_row(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_roomId = sse_decode_String(deserializer);
+    var var_text = sse_decode_String(deserializer);
+    var var_at = sse_decode_u_64(deserializer);
+    return SyncedDraftRow(roomId: var_roomId, text: var_text, at: var_at);
   }
 
   @protected
@@ -5840,6 +9211,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_live_row(LiveRow self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_live_row(self, serializer);
+  }
+
+  @protected
   void sse_encode_box_autoadd_meetup_row(MeetupRow self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_meetup_row(self, serializer);
@@ -5942,7 +9319,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(self.kind, serializer);
     sse_encode_opt_String(self.replyTo, serializer);
     sse_encode_opt_String(self.threadRoot, serializer);
+    sse_encode_opt_String(self.topic, serializer);
     sse_encode_bool(self.edited, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.editedAt, serializer);
+    sse_encode_opt_String(self.firstBody, serializer);
     sse_encode_list_reaction_row(self.reactions, serializer);
     sse_encode_opt_box_autoadd_u_64(self.expiresAt, serializer);
     sse_encode_bool(self.viewOnce, serializer);
@@ -5950,14 +9330,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_bool(self.forwarded, serializer);
     sse_encode_opt_box_autoadd_link_preview_row(self.preview, serializer);
     sse_encode_opt_box_autoadd_voice_row(self.voice, serializer);
+    sse_encode_opt_box_autoadd_live_row(self.live, serializer);
     sse_encode_opt_box_autoadd_poll_row(self.poll, serializer);
     sse_encode_bool(self.bubble, serializer);
     sse_encode_opt_box_autoadd_call_row(self.call, serializer);
     sse_encode_opt_String(self.caption, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.size, serializer);
     sse_encode_opt_box_autoadd_checklist_row(self.checklist, serializer);
     sse_encode_opt_box_autoadd_meetup_row(self.meetup, serializer);
     sse_encode_opt_String(self.contact, serializer);
     sse_encode_opt_box_autoadd_card_row(self.card, serializer);
+    sse_encode_opt_String(self.quote, serializer);
+    sse_encode_opt_String(self.quoteName, serializer);
+    sse_encode_bool(self.captionAbove, serializer);
+    sse_encode_opt_String(self.mediaFrom, serializer);
+    sse_encode_bool(self.mediaChanged, serializer);
+    sse_encode_opt_String(self.postAs, serializer);
   }
 
   @protected
@@ -5997,6 +9385,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_community_chat_row(CommunityChatRow self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.roomId, serializer);
+    sse_encode_String(self.name, serializer);
+    sse_encode_String(self.kind, serializer);
+    sse_encode_String(self.state, serializer);
+    sse_encode_bool(self.hidden, serializer);
+    sse_encode_String(self.by, serializer);
+    sse_encode_u_64(self.members, serializer);
+  }
+
+  @protected
+  void sse_encode_community_row(CommunityRow self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.id, serializer);
+    sse_encode_String(self.name, serializer);
+    sse_encode_String(self.about, serializer);
+    sse_encode_String(self.role, serializer);
+    sse_encode_bool(self.addAll, serializer);
+    sse_encode_u_64(self.members, serializer);
+    sse_encode_list_community_chat_row(self.chats, serializer);
+  }
+
+  @protected
   void sse_encode_device_info(DeviceInfo self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.deviceId, serializer);
@@ -6004,6 +9416,25 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_u_64(self.lastSeen, serializer);
     sse_encode_bool(self.thisDevice, serializer);
     sse_encode_bool(self.verified, serializer);
+  }
+
+  @protected
+  void sse_encode_earlier_row(EarlierRow self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.sender, serializer);
+    sse_encode_u_64(self.ts, serializer);
+    sse_encode_String(self.kind, serializer);
+    sse_encode_String(self.body, serializer);
+    sse_encode_String(self.name, serializer);
+    sse_encode_String(self.mime, serializer);
+    sse_encode_bool(self.hasThumb, serializer);
+  }
+
+  @protected
+  void sse_encode_emoji_status_row(EmojiStatusRow self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.emoji, serializer);
+    sse_encode_u_64(self.untilMs, serializer);
   }
 
   @protected
@@ -6021,6 +9452,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_found_row(FoundRow self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.roomId, serializer);
+    sse_encode_chat_message(self.message, serializer);
+  }
+
+  @protected
+  void sse_encode_gate_helper_row(GateHelperRow self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_bool(self.joined, serializer);
+    sse_encode_u_32(self.devices, serializer);
+  }
+
+  @protected
   void sse_encode_i_32(int self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putInt32(self);
@@ -6033,12 +9478,47 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_invite_link_row(InviteLinkRow self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.code, serializer);
+    sse_encode_String(self.name, serializer);
+    sse_encode_u_64(self.until, serializer);
+    sse_encode_u_64(self.max, serializer);
+    sse_encode_u_64(self.uses, serializer);
+    sse_encode_list_String(self.joined, serializer);
+    sse_encode_String(self.by, serializer);
+    sse_encode_u_64(self.made, serializer);
+    sse_encode_bool(self.revoked, serializer);
+  }
+
+  @protected
   void sse_encode_invite_row(InviteRow self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.roomId, serializer);
     sse_encode_String(self.name, serializer);
     sse_encode_String(self.inviter, serializer);
     sse_encode_bool(self.direct, serializer);
+  }
+
+  @protected
+  void sse_encode_join_request_row(JoinRequestRow self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.userId, serializer);
+    sse_encode_String(self.name, serializer);
+    sse_encode_list_String(self.answers, serializer);
+  }
+
+  @protected
+  void sse_encode_link_peek_row(LinkPeekRow self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.roomId, serializer);
+    sse_encode_String(self.name, serializer);
+    sse_encode_String(self.about, serializer);
+    sse_encode_u_64(self.members, serializer);
+    sse_encode_bool(self.channel, serializer);
+    sse_encode_bool(self.approval, serializer);
+    sse_encode_bool(self.joined, serializer);
+    sse_encode_list_prim_u_8_strict(self.photo, serializer);
   }
 
   @protected
@@ -6049,6 +9529,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_String(self.description, serializer);
     sse_encode_opt_String(self.site, serializer);
     sse_encode_bool(self.hasImage, serializer);
+    sse_encode_bool(self.above, serializer);
+    sse_encode_bool(self.small, serializer);
   }
 
   @protected
@@ -6124,11 +9606,38 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_community_chat_row(List<CommunityChatRow> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_community_chat_row(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_community_row(List<CommunityRow> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_community_row(item, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_list_device_info(List<DeviceInfo> self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
       sse_encode_device_info(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_earlier_row(List<EarlierRow> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_earlier_row(item, serializer);
     }
   }
 
@@ -6142,11 +9651,38 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_found_row(List<FoundRow> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_found_row(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_invite_link_row(List<InviteLinkRow> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_invite_link_row(item, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_list_invite_row(List<InviteRow> self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
       sse_encode_invite_row(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_join_request_row(List<JoinRequestRow> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_join_request_row(item, serializer);
     }
   }
 
@@ -6205,6 +9741,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_poll_photo_in(List<PollPhotoIn> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_poll_photo_in(item, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_list_prim_u_16_loose(List<int> self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
@@ -6219,6 +9764,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_prim_u_32_strict(Uint32List self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    serializer.buffer.putUint32List(self);
+  }
+
+  @protected
+  void sse_encode_list_prim_u_64_strict(Uint64List self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    serializer.buffer.putUint64List(self);
+  }
+
+  @protected
   void sse_encode_list_prim_u_8_loose(List<int> self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
@@ -6230,6 +9789,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     serializer.buffer.putUint8List(self);
+  }
+
+  @protected
+  void sse_encode_list_public_room_row(List<PublicRoomRow> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_public_room_row(item, serializer);
+    }
   }
 
   @protected
@@ -6260,12 +9828,37 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_signal_row(List<SignalRow> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_signal_row(item, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_list_story_row(List<StoryRow> self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
       sse_encode_story_row(item, serializer);
     }
+  }
+
+  @protected
+  void sse_encode_list_synced_draft_row(List<SyncedDraftRow> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_synced_draft_row(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_live_row(LiveRow self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.style, serializer);
+    sse_encode_u_64(self.durationMs, serializer);
   }
 
   @protected
@@ -6282,11 +9875,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.title, serializer);
     sse_encode_u_64(self.startsAt, serializer);
+    sse_encode_u_64(self.endsAt, serializer);
     sse_encode_opt_String(self.place, serializer);
     sse_encode_bool(self.cancelled, serializer);
     sse_encode_list_String(self.yes, serializer);
     sse_encode_list_String(self.no, serializer);
     sse_encode_list_String(self.maybe, serializer);
+    sse_encode_list_prim_u_32_strict(self.guests, serializer);
   }
 
   @protected
@@ -6295,6 +9890,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(self.userId, serializer);
     sse_encode_String(self.name, serializer);
     sse_encode_String(self.role, serializer);
+    sse_encode_u_64(self.since, serializer);
   }
 
   @protected
@@ -6375,6 +9971,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_bool(self != null, serializer);
     if (self != null) {
       sse_encode_box_autoadd_link_preview_row(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_live_row(LiveRow? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_live_row(self, serializer);
     }
   }
 
@@ -6472,6 +10078,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(self.text, serializer);
     sse_encode_u_32(self.votes, serializer);
     sse_encode_list_String(self.who, serializer);
+    sse_encode_bool(self.hasPhoto, serializer);
+    sse_encode_String(self.sticker, serializer);
+    sse_encode_String(self.geo, serializer);
+    sse_encode_String(self.addedBy, serializer);
+  }
+
+  @protected
+  void sse_encode_poll_photo_in(PollPhotoIn self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.slot, serializer);
+    sse_encode_String(self.mime, serializer);
+    sse_encode_list_prim_u_8_strict(self.data, serializer);
   }
 
   @protected
@@ -6487,6 +10105,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_String(self.correct, serializer);
     sse_encode_String(self.explain, serializer);
     sse_encode_i_64(self.closeAt, serializer);
+    sse_encode_String(self.description, serializer);
+    sse_encode_bool(self.hasPhoto, serializer);
+    sse_encode_bool(self.addOptions, serializer);
+    sse_encode_bool(self.changeVote, serializer);
+    sse_encode_bool(self.shuffle, serializer);
+    sse_encode_bool(self.hideResults, serializer);
   }
 
   @protected
@@ -6496,6 +10120,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(self.bio, serializer);
     sse_encode_String(self.birthday, serializer);
     sse_encode_bool(self.private, serializer);
+  }
+
+  @protected
+  void sse_encode_public_room_row(PublicRoomRow self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.roomId, serializer);
+    sse_encode_String(self.address, serializer);
+    sse_encode_String(self.name, serializer);
+    sse_encode_String(self.about, serializer);
+    sse_encode_u_64(self.members, serializer);
+    sse_encode_bool(self.channel, serializer);
+    sse_encode_bool(self.approval, serializer);
+    sse_encode_bool(self.joined, serializer);
   }
 
   @protected
@@ -6524,6 +10161,42 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_room_link_row(RoomLinkRow self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.kind, serializer);
+    sse_encode_String(self.code, serializer);
+    sse_encode_bool(self.approval, serializer);
+    sse_encode_bool(self.web, serializer);
+  }
+
+  @protected
+  void sse_encode_signal_row(SignalRow self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.roomId, serializer);
+    sse_encode_String(self.eventId, serializer);
+    sse_encode_String(self.sender, serializer);
+    sse_encode_String(self.kind, serializer);
+    sse_encode_String(self.data, serializer);
+    sse_encode_u_64(self.ts, serializer);
+  }
+
+  @protected
+  void sse_encode_story_link_row(StoryLinkRow self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.title, serializer);
+    sse_encode_String(self.site, serializer);
+    sse_encode_String(self.description, serializer);
+    sse_encode_list_prim_u_8_strict(self.image, serializer);
+  }
+
+  @protected
+  void sse_encode_story_posted_row(StoryPostedRow self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_32(self.sent, serializer);
+    sse_encode_list_String(self.ids, serializer);
+  }
+
+  @protected
   void sse_encode_story_row(StoryRow self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.storyId, serializer);
@@ -6536,6 +10209,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_String(self.caption, serializer);
     sse_encode_opt_String(self.extra, serializer);
     sse_encode_bool(self.feed, serializer);
+    sse_encode_opt_String(self.pin, serializer);
+    sse_encode_u_64(self.until, serializer);
+    sse_encode_bool(self.edited, serializer);
+    sse_encode_bool(self.group, serializer);
+    sse_encode_bool(self.member, serializer);
+  }
+
+  @protected
+  void sse_encode_synced_draft_row(SyncedDraftRow self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.roomId, serializer);
+    sse_encode_String(self.text, serializer);
+    sse_encode_u_64(self.at, serializer);
   }
 
   @protected
@@ -6601,12 +10287,25 @@ class BurumyDeviceImpl extends RustOpaque implements BurumyDevice {
   Future<void> addChecklistItem({required String roomId, required String checklistId, required String text}) =>
       RustLib.instance.api.crateApiDeviceBurumyDeviceAddChecklistItem(that: this, roomId: roomId, checklistId: checklistId, text: text);
 
+  /// A member adds an answer (when the poll allows it).
+  Future<String> addPollOption({required String roomId, required String pollId, required String text}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceAddPollOption(that: this, roomId: roomId, pollId: pollId, text: text);
+
+  Future<void> addToCommunity({required String id, required String roomId, required bool hidden}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceAddToCommunity(that: this, id: id, roomId: roomId, hidden: hidden);
+
+  Future<bool> addressFree({required String roomId, required String address}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceAddressFree(that: this, roomId: roomId, address: address);
+
   Future<void> answerCall({required String roomId, required String callId}) =>
       RustLib.instance.api.crateApiDeviceBurumyDeviceAnswerCall(that: this, roomId: roomId, callId: callId);
 
   /// Answers a card (JSON; null takes it back). Goes only to the maker.
   Future<void> answerCard({required String roomId, required String cardId, required String answer}) =>
       RustLib.instance.api.crateApiDeviceBurumyDeviceAnswerCard(that: this, roomId: roomId, cardId: cardId, answer: answer);
+
+  Future<void> answerJoinRequest({required String roomId, required String userId, required bool accept}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceAnswerJoinRequest(that: this, roomId: roomId, userId: userId, accept: accept);
 
   Future<void> answerMeetup({required String roomId, required String meetupId, required String answer}) =>
       RustLib.instance.api.crateApiDeviceBurumyDeviceAnswerMeetup(that: this, roomId: roomId, meetupId: meetupId, answer: answer);
@@ -6615,10 +10314,17 @@ class BurumyDeviceImpl extends RustOpaque implements BurumyDevice {
 
   Future<String> bioOf({required String userId}) => RustLib.instance.api.crateApiDeviceBurumyDeviceBioOf(that: this, userId: userId);
 
+  Future<Uint8List?> blob({required String name}) => RustLib.instance.api.crateApiDeviceBurumyDeviceBlob(that: this, name: name);
+
   Future<void> block({required String userId, required bool on_}) => RustLib.instance.api.crateApiDeviceBurumyDeviceBlock(that: this, userId: userId, on_: on_);
 
   /// People I blocked.
   Future<List<String>> blocked() => RustLib.instance.api.crateApiDeviceBurumyDeviceBlocked(that: this);
+
+  /// Messages already on this phone (no server round trip), for the chat
+  /// list's unseen mention / reaction marks.
+  Future<List<ChatMessage>> cachedMessages({required String roomId}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceCachedMessages(that: this, roomId: roomId);
 
   Future<CallAskRow> callAsk({required String roomId, required String callId}) =>
       RustLib.instance.api.crateApiDeviceBurumyDeviceCallAsk(that: this, roomId: roomId, callId: callId);
@@ -6633,6 +10339,9 @@ class BurumyDeviceImpl extends RustOpaque implements BurumyDevice {
   Future<String> callWaiting() => RustLib.instance.api.crateApiDeviceBurumyDeviceCallWaiting(that: this);
 
   Future<bool> canPost({required String roomId}) => RustLib.instance.api.crateApiDeviceBurumyDeviceCanPost(that: this, roomId: roomId);
+
+  /// Stops a running cached download (true = one was running).
+  Future<bool> cancelDownload({required String eventId}) => RustLib.instance.api.crateApiDeviceBurumyDeviceCancelDownload(that: this, eventId: eventId);
 
   Future<void> cancelMeetup({required String roomId, required String meetupId}) =>
       RustLib.instance.api.crateApiDeviceBurumyDeviceCancelMeetup(that: this, roomId: roomId, meetupId: meetupId);
@@ -6655,6 +10364,8 @@ class BurumyDeviceImpl extends RustOpaque implements BurumyDevice {
 
   Future<void> closePoll({required String roomId, required String pollId}) =>
       RustLib.instance.api.crateApiDeviceBurumyDeviceClosePoll(that: this, roomId: roomId, pollId: pollId);
+
+  Future<List<CommunityRow>> communities() => RustLib.instance.api.crateApiDeviceBurumyDeviceCommunities(that: this);
 
   Future<bool> confirmSas({required String userId, required String flowId}) =>
       RustLib.instance.api.crateApiDeviceBurumyDeviceConfirmSas(that: this, userId: userId, flowId: flowId);
@@ -6680,14 +10391,21 @@ class BurumyDeviceImpl extends RustOpaque implements BurumyDevice {
     othersAdd: othersAdd,
   );
 
+  Future<String> createCommunity({required String name, required String about}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceCreateCommunity(that: this, name: name, about: about);
+
   Future<String> createDm({required String userId}) => RustLib.instance.api.crateApiDeviceBurumyDeviceCreateDm(that: this, userId: userId);
+
+  /// 1:1 chat with an 아이디 키 proof ("" = a plain 1:1 chat).
+  Future<String> createDmKeyed({required String userId, required String proof}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceCreateDmKeyed(that: this, userId: userId, proof: proof);
 
   /// New group (channel = true: only I can post). Returns the room id.
   Future<String> createGroup({required String name, required List<String> invite, required bool channel}) =>
       RustLib.instance.api.crateApiDeviceBurumyDeviceCreateGroup(that: this, name: name, invite: invite, channel: channel);
 
-  Future<String> createMeetup({required String roomId, required String title, required BigInt startsAt, required String place}) =>
-      RustLib.instance.api.crateApiDeviceBurumyDeviceCreateMeetup(that: this, roomId: roomId, title: title, startsAt: startsAt, place: place);
+  Future<String> createMeetup({required String roomId, required String title, required BigInt startsAt, required BigInt endsAt, required String place}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceCreateMeetup(that: this, roomId: roomId, title: title, startsAt: startsAt, endsAt: endsAt, place: place);
 
   Future<String> createPoll({
     required String roomId,
@@ -6698,6 +10416,8 @@ class BurumyDeviceImpl extends RustOpaque implements BurumyDevice {
     int? quiz,
     required String explain,
     required PlatformInt64 closeAt,
+    required String extra,
+    required List<PollPhotoIn> photos,
   }) => RustLib.instance.api.crateApiDeviceBurumyDeviceCreatePoll(
     that: this,
     roomId: roomId,
@@ -6708,12 +10428,22 @@ class BurumyDeviceImpl extends RustOpaque implements BurumyDevice {
     quiz: quiz,
     explain: explain,
     closeAt: closeAt,
+    extra: extra,
+    photos: photos,
   );
 
   Future<void> decline({required String roomId}) => RustLib.instance.api.crateApiDeviceBurumyDeviceDecline(that: this, roomId: roomId);
 
+  /// Turn down an invitation because only contacts may add me (tip 385).
+  Future<void> declineBlocked({required String roomId}) => RustLib.instance.api.crateApiDeviceBurumyDeviceDeclineBlocked(that: this, roomId: roomId);
+
+  Future<void> deleteCommunity({required String id}) => RustLib.instance.api.crateApiDeviceBurumyDeviceDeleteCommunity(that: this, id: id);
+
   /// Deletes a 1:1 chat on both phones.
   Future<void> deleteForBoth({required String roomId}) => RustLib.instance.api.crateApiDeviceBurumyDeviceDeleteForBoth(that: this, roomId: roomId);
+
+  Future<void> deleteInviteLink({required String roomId, required String code}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceDeleteInviteLink(that: this, roomId: roomId, code: code);
 
   Future<void> deleteMessage({required String roomId, required String eventId}) =>
       RustLib.instance.api.crateApiDeviceBurumyDeviceDeleteMessage(that: this, roomId: roomId, eventId: eventId);
@@ -6723,12 +10453,81 @@ class BurumyDeviceImpl extends RustOpaque implements BurumyDevice {
 
   Future<List<DeviceInfo>> devices() => RustLib.instance.api.crateApiDeviceBurumyDeviceDevices(that: this);
 
+  /// Downloads and decrypts a file reference from inside a document.
+  Future<Uint8List> downloadEncrypted({required String file}) => RustLib.instance.api.crateApiDeviceBurumyDeviceDownloadEncrypted(that: this, file: file);
+
   /// Returns the file bytes (decrypted on this device).
   Future<Uint8List> downloadFile({required String roomId, required String eventId}) =>
       RustLib.instance.api.crateApiDeviceBurumyDeviceDownloadFile(that: this, roomId: roomId, eventId: eventId);
 
+  /// Same, keeping a copy in the encrypted store when [cache] is true.
+  Future<Uint8List> downloadFileCached({required String roomId, required String eventId, required bool cache}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceDownloadFileCached(that: this, roomId: roomId, eventId: eventId, cache: cache);
+
+  /// Downloads and decrypts a file from [upload_secret].
+  Future<Uint8List> downloadSecret({required String file}) => RustLib.instance.api.crateApiDeviceBurumyDeviceDownloadSecret(that: this, file: file);
+
+  Future<void> dropBlob({required String name}) => RustLib.instance.api.crateApiDeviceBurumyDeviceDropBlob(that: this, name: name);
+
+  /// The photo / video / file of earlier message [index] (or its small
+  /// picture), decrypted on this phone.
+  Future<Uint8List> earlierFile({required String roomId, required int index, required bool thumb}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceEarlierFile(that: this, roomId: roomId, index: index, thumb: thumb);
+
+  /// Messages from before I came, if a member sent them (oldest first).
+  Future<List<EarlierRow>> earlierMessages({required String roomId}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceEarlierMessages(that: this, roomId: roomId);
+
   Future<void> edit({required String roomId, required String eventId, required String text}) =>
       RustLib.instance.api.crateApiDeviceBurumyDeviceEdit(that: this, roomId: roomId, eventId: eventId, text: text);
+
+  Future<InviteLinkRow> editInviteLink({required String roomId, required String code, required String name, required BigInt until, required BigInt max}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceEditInviteLink(that: this, roomId: roomId, code: code, name: name, until: until, max: max);
+
+  /// Edit my photo/video/file message: words, above/under, and with a
+  /// new file swap it (not in public chats). Tips 452 B, 482, 81, 224.
+  Future<void> editMedia({
+    required String roomId,
+    required String eventId,
+    required String caption,
+    required bool captionAbove,
+    String? fileName,
+    String? fileMime,
+    Uint8List? fileData,
+  }) => RustLib.instance.api.crateApiDeviceBurumyDeviceEditMedia(
+    that: this,
+    roomId: roomId,
+    eventId: eventId,
+    caption: caption,
+    captionAbove: captionAbove,
+    fileName: fileName,
+    fileMime: fileMime,
+    fileData: fileData,
+  );
+
+  /// Changes a story I posted (tip 393) or keeps it on my profile (pin
+  /// JSON; "" = not kept). Empty `data` keeps the picture.
+  Future<int> editStory({
+    required String storyId,
+    required String mime,
+    required List<int> data,
+    required String caption,
+    required String extra,
+    required List<String> only,
+    required String pin,
+  }) => RustLib.instance.api.crateApiDeviceBurumyDeviceEditStory(
+    that: this,
+    storyId: storyId,
+    mime: mime,
+    data: data,
+    caption: caption,
+    extra: extra,
+    only: only,
+    pin: pin,
+  );
+
+  /// Someone's emoji status: (emoji or "", until ms or 0).
+  Future<EmojiStatusRow> emojiStatusOf({required String userId}) => RustLib.instance.api.crateApiDeviceBurumyDeviceEmojiStatusOf(that: this, userId: userId);
 
   Future<String> enableRecovery() => RustLib.instance.api.crateApiDeviceBurumyDeviceEnableRecovery(that: this);
 
@@ -6740,10 +10539,23 @@ class BurumyDeviceImpl extends RustOpaque implements BurumyDevice {
 
   Future<List<FeedLikeRow>> feedLikes() => RustLib.instance.api.crateApiDeviceBurumyDeviceFeedLikes(that: this);
 
+  /// Drops the kept copy of one file.
+  Future<void> forgetFile({required String roomId, required String eventId}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceForgetFile(that: this, roomId: roomId, eventId: eventId);
+
   /// Oldest first, from this device's own copy.
   /// Passes a message on to another chat.
   Future<String> forward({required String fromRoom, required String eventId, required String toRoom}) =>
       RustLib.instance.api.crateApiDeviceBurumyDeviceForward(that: this, fromRoom: fromRoom, eventId: eventId, toRoom: toRoom);
+
+  Future<GateHelperRow> gateHelperState({required String roomId}) => RustLib.instance.api.crateApiDeviceBurumyDeviceGateHelperState(that: this, roomId: roomId);
+
+  /// The helper's decision log as JSON ({"e": [...]}).
+  Future<String> gateLog({required String roomId}) => RustLib.instance.api.crateApiDeviceBurumyDeviceGateLog(that: this, roomId: roomId);
+
+  /// 누가 읽었는지 (384): "user\tread up to ms\twhen ms" per member
+  /// (groups of up to 100; empty otherwise).
+  Future<List<String>> groupReceipts({required String roomId}) => RustLib.instance.api.crateApiDeviceBurumyDeviceGroupReceipts(that: this, roomId: roomId);
 
   Future<void> hangupCall({required String roomId, required String callId, required String reason}) =>
       RustLib.instance.api.crateApiDeviceBurumyDeviceHangupCall(that: this, roomId: roomId, callId: callId, reason: reason);
@@ -6753,13 +10565,27 @@ class BurumyDeviceImpl extends RustOpaque implements BurumyDevice {
   /// Hiding is on (shown only inside a hide session).
   Future<bool> hideActive() => RustLib.instance.api.crateApiDeviceBurumyDeviceHideActive(that: this);
 
+  /// Event ids in this chat marked for the hide password.
+  Future<List<String>> hideMarkedMessages({required String roomId}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceHideMarkedMessages(that: this, roomId: roomId);
+
+  /// 다른 앱 대화 가져오기: the checked messages of an import card (JSON,
+  /// oldest first), downloaded and decrypted once, then kept on this phone.
+  Future<String> importedMessages({required String roomId, required String cardId}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceImportedMessages(that: this, roomId: roomId, cardId: cardId);
+
   /// Invitations to show, with name, sender and 1:1-or-not.
   Future<List<InviteRow>> invitations() => RustLib.instance.api.crateApiDeviceBurumyDeviceInvitations(that: this);
+
+  Future<List<InviteLinkRow>> inviteLinks({required String roomId}) => RustLib.instance.api.crateApiDeviceBurumyDeviceInviteLinks(that: this, roomId: roomId);
 
   Future<void> inviteUsers({required String roomId, required List<String> users}) =>
       RustLib.instance.api.crateApiDeviceBurumyDeviceInviteUsers(that: this, roomId: roomId, users: users);
 
   List<String> invitedRooms() => RustLib.instance.api.crateApiDeviceBurumyDeviceInvitedRooms(that: this);
+
+  /// People who turned down this room's invitation for that reason.
+  Future<List<String>> invitesBlocked({required String roomId}) => RustLib.instance.api.crateApiDeviceBurumyDeviceInvitesBlocked(that: this, roomId: roomId);
 
   Future<bool> isChannel({required String roomId}) => RustLib.instance.api.crateApiDeviceBurumyDeviceIsChannel(that: this, roomId: roomId);
 
@@ -6769,9 +10595,33 @@ class BurumyDeviceImpl extends RustOpaque implements BurumyDevice {
 
   Future<void> join({required String roomId}) => RustLib.instance.api.crateApiDeviceBurumyDeviceJoin(that: this, roomId: roomId);
 
+  /// [room id, "asked" | "joined"].
+  Future<List<String>> joinCommunityChat({required String id, required String roomId}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceJoinCommunityChat(that: this, id: id, roomId: roomId);
+
+  /// Returns [room id, "asked" or "joined"].
+  Future<List<String>> joinLink({required String kind, required String code}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceJoinLink(that: this, kind: kind, code: code);
+
+  /// Like join_link, sending answers to the join questions with a request.
+  Future<List<String>> joinLinkWith({required String kind, required String code, required List<String> answers}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceJoinLinkWith(that: this, kind: kind, code: code, answers: answers);
+
+  Future<List<JoinRequestRow>> joinRequests({required String roomId}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceJoinRequests(that: this, roomId: roomId);
+
+  /// "in", "no", "waiting" or "unknown" after asking to come in.
+  Future<String> knockState({required String roomId}) => RustLib.instance.api.crateApiDeviceBurumyDeviceKnockState(that: this, roomId: roomId);
+
   Future<void> leave({required String roomId}) => RustLib.instance.api.crateApiDeviceBurumyDeviceLeave(that: this, roomId: roomId);
 
+  Future<void> leaveCommunity({required String id}) => RustLib.instance.api.crateApiDeviceBurumyDeviceLeaveCommunity(that: this, id: id);
+
   Future<bool> linkPreviewsEnabled() => RustLib.instance.api.crateApiDeviceBurumyDeviceLinkPreviewsEnabled(that: this);
+
+  /// The decrypted clip of a 움직이는 사진 (its bytes; always MP4/MOV).
+  Future<Uint8List> liveVideo({required String roomId, required String eventId}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceLiveVideo(that: this, roomId: roomId, eventId: eventId);
 
   Future<void> logOutDevices({required List<String> ids, required String password}) =>
       RustLib.instance.api.crateApiDeviceBurumyDeviceLogOutDevices(that: this, ids: ids, password: password);
@@ -6779,7 +10629,17 @@ class BurumyDeviceImpl extends RustOpaque implements BurumyDevice {
   Future<String> login({required String username, required String password, required String deviceName}) =>
       RustLib.instance.api.crateApiDeviceBurumyDeviceLogin(that: this, username: username, password: password, deviceName: deviceName);
 
+  /// QR로 PC 연결: sign in with a one-time token (returns my user id).
+  Future<String> loginToken({required String token, required String deviceName}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceLoginToken(that: this, token: token, deviceName: deviceName);
+
   Future<void> logout() => RustLib.instance.api.crateApiDeviceBurumyDeviceLogout(that: this);
+
+  /// The main private link's count: [people, ...who came in].
+  Future<List<String>> mainLinkUses({required String roomId}) => RustLib.instance.api.crateApiDeviceBurumyDeviceMainLinkUses(that: this, roomId: roomId);
+
+  Future<InviteLinkRow> makeInviteLink({required String roomId, required String name, required BigInt until, required BigInt max, required BigInt now}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceMakeInviteLink(that: this, roomId: roomId, name: name, until: until, max: max, now: now);
 
   Future<void> markChecklist({required String roomId, required String checklistId, required String item, required bool done}) =>
       RustLib.instance.api.crateApiDeviceBurumyDeviceMarkChecklist(that: this, roomId: roomId, checklistId: checklistId, item: item, done: done);
@@ -6788,10 +10648,17 @@ class BurumyDeviceImpl extends RustOpaque implements BurumyDevice {
   Future<void> markForDelete({required String roomId, required String eventId, required bool on_}) =>
       RustLib.instance.api.crateApiDeviceBurumyDeviceMarkForDelete(that: this, roomId: roomId, eventId: eventId, on_: on_);
 
+  /// Marks one message for the hide password (or takes the mark off).
+  Future<void> markForHide({required String roomId, required String eventId, required bool on_}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceMarkForHide(that: this, roomId: roomId, eventId: eventId, on_: on_);
+
   Future<void> markRead({required String roomId}) => RustLib.instance.api.crateApiDeviceBurumyDeviceMarkRead(that: this, roomId: roomId);
 
   /// Event ids in this chat marked for the delete password.
   Future<List<String>> markedMessages({required String roomId}) => RustLib.instance.api.crateApiDeviceBurumyDeviceMarkedMessages(that: this, roomId: roomId);
+
+  /// "user\ttag" per person who tagged themselves here.
+  Future<List<String>> memberTags({required String roomId}) => RustLib.instance.api.crateApiDeviceBurumyDeviceMemberTags(that: this, roomId: roomId);
 
   Future<List<MemberRow>> members({required String roomId}) => RustLib.instance.api.crateApiDeviceBurumyDeviceMembers(that: this, roomId: roomId);
 
@@ -6807,14 +10674,28 @@ class BurumyDeviceImpl extends RustOpaque implements BurumyDevice {
 
   Future<String> myRole({required String roomId}) => RustLib.instance.api.crateApiDeviceBurumyDeviceMyRole(that: this, roomId: roomId);
 
+  /// "user\tcolour" per person who picked a name colour.
+  Future<List<String>> nameColors({required String roomId}) => RustLib.instance.api.crateApiDeviceBurumyDeviceNameColors(that: this, roomId: roomId);
+
+  Future<RoomLinkRow> newPrivateLink({required String roomId}) => RustLib.instance.api.crateApiDeviceBurumyDeviceNewPrivateLink(that: this, roomId: roomId);
+
   Future<bool> noticeTextHidden() => RustLib.instance.api.crateApiDeviceBurumyDeviceNoticeTextHidden(that: this);
 
   /// New messages to notify about (each once; muted/hidden chats never).
   Future<List<NoticeRow>> notifications({required int max}) => RustLib.instance.api.crateApiDeviceBurumyDeviceNotifications(that: this, max: max);
 
+  /// The whole document of a long post (checked again on this phone).
+  Future<String> openArticle({required String roomId, required String eventId}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceOpenArticle(that: this, roomId: roomId, eventId: eventId);
+
   /// Bytes of a view-once photo, one time only.
   Future<Uint8List> openViewOnce({required String roomId, required String eventId}) =>
       RustLib.instance.api.crateApiDeviceBurumyDeviceOpenViewOnce(that: this, roomId: roomId, eventId: eventId);
+
+  /// Short-lived OpenID token for our trust service (badges, reports).
+  Future<String> openidToken() => RustLib.instance.api.crateApiDeviceBurumyDeviceOpenidToken(that: this);
+
+  Future<LinkPeekRow> peekAddress({required String address}) => RustLib.instance.api.crateApiDeviceBurumyDevicePeekAddress(that: this, address: address);
 
   Future<List<PeerKey>> peerKeys({required String userId}) => RustLib.instance.api.crateApiDeviceBurumyDevicePeerKeys(that: this, userId: userId);
 
@@ -6824,6 +10705,32 @@ class BurumyDeviceImpl extends RustOpaque implements BurumyDevice {
       RustLib.instance.api.crateApiDeviceBurumyDevicePin(that: this, roomId: roomId, eventId: eventId, pinned: pinned);
 
   List<String> pinned({required String roomId}) => RustLib.instance.api.crateApiDeviceBurumyDevicePinned(that: this, roomId: roomId);
+
+  /// A poll's photo, decrypted: slot "" = under the question, else answer id.
+  Future<Uint8List> pollPhoto({required String roomId, required String pollId, required String slot}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDevicePollPhoto(that: this, roomId: roomId, pollId: pollId, slot: slot);
+
+  /// One upload, several stories (tip 525: parts of a long video, each
+  /// with its own `extras` entry). `room` empty: to my 1:1 friends; else
+  /// a group's or channel's story (admins only, tip 428).
+  Future<StoryPostedRow> postStories({
+    required String mime,
+    required List<int> data,
+    required String caption,
+    required List<String> only,
+    required int hours,
+    required List<String> extras,
+    required String room,
+  }) => RustLib.instance.api.crateApiDeviceBurumyDevicePostStories(
+    that: this,
+    mime: mime,
+    data: data,
+    caption: caption,
+    only: only,
+    hours: hours,
+    extras: extras,
+    room: room,
+  );
 
   /// A photo or video to my 1:1 friends (all, or the chats in `only`) for
   /// 6 / 12 / 24 / 48 hours; returns how many got it.
@@ -6840,6 +10747,9 @@ class BurumyDeviceImpl extends RustOpaque implements BurumyDevice {
   Future<Uint8List> previewImage({required String roomId, required String eventId}) =>
       RustLib.instance.api.crateApiDeviceBurumyDevicePreviewImage(that: this, roomId: roomId, eventId: eventId);
 
+  /// My privacy settings kept in my account, as JSON (see the engine).
+  Future<String> privacyJson() => RustLib.instance.api.crateApiDeviceBurumyDevicePrivacyJson(that: this);
+
   Future<ProfileCardRow> profileOf({required String userId}) => RustLib.instance.api.crateApiDeviceBurumyDeviceProfileOf(that: this, userId: userId);
 
   /// [hide list, delete list] (user ids and chat ids).
@@ -6847,6 +10757,9 @@ class BurumyDeviceImpl extends RustOpaque implements BurumyDevice {
 
   Future<String> react({required String roomId, required String eventId, required String key}) =>
       RustLib.instance.api.crateApiDeviceBurumyDeviceReact(that: this, roomId: roomId, eventId: eventId, key: key);
+
+  /// [read up to, when they read it] in ms (1:1 read time, tip 421).
+  Future<Uint64List> readReceipt({required String roomId}) => RustLib.instance.api.crateApiDeviceBurumyDeviceReadReceipt(that: this, roomId: roomId);
 
   /// Others have read everything sent up to this time (ms).
   Future<BigInt> readUntil({required String roomId}) => RustLib.instance.api.crateApiDeviceBurumyDeviceReadUntil(that: this, roomId: roomId);
@@ -6862,6 +10775,11 @@ class BurumyDeviceImpl extends RustOpaque implements BurumyDevice {
 
   Future<void> releaseHidden() => RustLib.instance.api.crateApiDeviceBurumyDeviceReleaseHidden(that: this);
 
+  Future<void> removeFromCommunity({required String id, required String roomId}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceRemoveFromCommunity(that: this, id: id, roomId: roomId);
+
+  Future<void> removeLink({required String roomId}) => RustLib.instance.api.crateApiDeviceBurumyDeviceRemoveLink(that: this, roomId: roomId);
+
   Future<void> removeMember({required String roomId, required String userId}) =>
       RustLib.instance.api.crateApiDeviceBurumyDeviceRemoveMember(that: this, roomId: roomId, userId: userId);
 
@@ -6872,6 +10790,11 @@ class BurumyDeviceImpl extends RustOpaque implements BurumyDevice {
   Future<String> replyInThread({required String roomId, required String root, required String text}) =>
       RustLib.instance.api.crateApiDeviceBurumyDeviceReplyInThread(that: this, roomId: roomId, root: root, text: text);
 
+  /// 부분 인용 답장 / 다른 대화에서 답장 (tip 399); `to_event` "" = from
+  /// another chat (then `quote_name` is shown as the writer).
+  Future<String> replyQuote({required String roomId, required String toEvent, required String text, required String quote, required String quoteName}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceReplyQuote(that: this, roomId: roomId, toEvent: toEvent, text: text, quote: quote, quoteName: quoteName);
+
   /// "메시지 신고": reason plus the reported words go to our operators.
   Future<void> reportMessage({required String roomId, required String eventId, required String reason, required String shown}) =>
       RustLib.instance.api.crateApiDeviceBurumyDeviceReportMessage(that: this, roomId: roomId, eventId: eventId, reason: reason, shown: shown);
@@ -6880,13 +10803,27 @@ class BurumyDeviceImpl extends RustOpaque implements BurumyDevice {
   Future<String> requestUserVerification({required String userId}) =>
       RustLib.instance.api.crateApiDeviceBurumyDeviceRequestUserVerification(that: this, userId: userId);
 
+  /// An admin's phone sends the photo again for people who joined later.
+  Future<bool> reshareRoomPhoto({required String roomId}) => RustLib.instance.api.crateApiDeviceBurumyDeviceReshareRoomPhoto(that: this, roomId: roomId);
+
   Future<void> restore({required String sessionJson}) => RustLib.instance.api.crateApiDeviceBurumyDeviceRestore(that: this, sessionJson: sessionJson);
+
+  Future<void> restoreInviteLink({required String roomId, required String code}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceRestoreInviteLink(that: this, roomId: roomId, code: code);
+
+  Future<void> revokeInviteLink({required String roomId, required String code}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceRevokeInviteLink(that: this, roomId: roomId, code: code);
 
   Future<List<RingingRow>> ringingCalls() => RustLib.instance.api.crateApiDeviceBurumyDeviceRingingCalls(that: this);
 
   Future<String> roomAbout({required String roomId}) => RustLib.instance.api.crateApiDeviceBurumyDeviceRoomAbout(that: this, roomId: roomId);
 
   Future<String> roomConfig({required String roomId}) => RustLib.instance.api.crateApiDeviceBurumyDeviceRoomConfig(that: this, roomId: roomId);
+
+  Future<RoomLinkRow> roomLink({required String roomId}) => RustLib.instance.api.crateApiDeviceBurumyDeviceRoomLink(that: this, roomId: roomId);
+
+  /// Group/channel photo bytes, or None.
+  Future<Uint8List?> roomPhoto({required String roomId}) => RustLib.instance.api.crateApiDeviceBurumyDeviceRoomPhoto(that: this, roomId: roomId);
 
   Future<bool> roomSwitch({required String roomId, required String key}) =>
       RustLib.instance.api.crateApiDeviceBurumyDeviceRoomSwitch(that: this, roomId: roomId, key: key);
@@ -6899,14 +10836,31 @@ class BurumyDeviceImpl extends RustOpaque implements BurumyDevice {
   Future<List<String>?> sasEmoji({required String userId, required String flowId}) =>
       RustLib.instance.api.crateApiDeviceBurumyDeviceSasEmoji(that: this, userId: userId, flowId: flowId);
 
+  /// 내 알림음 (tip 329): small data kept in the encrypted local store.
+  Future<void> saveBlob({required String name, required List<int> data}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceSaveBlob(that: this, name: name, data: data);
+
   /// My "saved messages" chat id (made when `create` and missing).
   Future<String?> savedRoom({required bool create}) => RustLib.instance.api.crateApiDeviceBurumyDeviceSavedRoom(that: this, create: create);
+
+  /// 전체 검색 on this phone: kind "text", "media", "link", "file",
+  /// "music" or "voice"; newest first, at most `limit`.
+  Future<List<FoundRow>> searchAll({required String term, required String kind, required int limit}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceSearchAll(that: this, term: term, kind: kind, limit: limit);
 
   /// Messages in one chat containing the words, newest first (on this phone only).
   Future<List<ChatMessage>> searchMessages({required String roomId, required String term}) =>
       RustLib.instance.api.crateApiDeviceBurumyDeviceSearchMessages(that: this, roomId: roomId, term: term);
 
   Future<List<PersonRow>> searchPeople({required String term}) => RustLib.instance.api.crateApiDeviceBurumyDeviceSearchPeople(that: this, term: term);
+
+  /// Public groups / channels with these words (server's public list).
+  Future<List<PublicRoomRow>> searchPublic({required String term, required bool channelsOnly}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceSearchPublic(that: this, term: term, channelsOnly: channelsOnly);
+
+  /// Posts a long post / formatted message (document JSON).
+  Future<String> sendArticle({required String roomId, required String doc}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceSendArticle(that: this, roomId: roomId, doc: doc);
 
   /// kind: "emoji" (data = the emoji as text), "photo" or "voice".
   Future<String> sendBubble({required String roomId, required String kind, required String mime, required List<int> data}) =>
@@ -6922,14 +10876,98 @@ class BurumyDeviceImpl extends RustOpaque implements BurumyDevice {
   Future<String> sendFileCaptioned({required String roomId, required String name, required String mime, required List<int> data, required String caption}) =>
       RustLib.instance.api.crateApiDeviceBurumyDeviceSendFileCaptioned(that: this, roomId: roomId, name: name, mime: mime, data: data, caption: caption);
 
+  /// With words above the photo or video (설명 위로, tip 452).
+  Future<String> sendFileOpts({
+    required String roomId,
+    required String name,
+    required String mime,
+    required List<int> data,
+    required String caption,
+    required bool captionAbove,
+  }) => RustLib.instance.api.crateApiDeviceBurumyDeviceSendFileOpts(
+    that: this,
+    roomId: roomId,
+    name: name,
+    mime: mime,
+    data: data,
+    caption: caption,
+    captionAbove: captionAbove,
+  );
+
+  /// 새 멤버에게 지난 메시지 보내기: the last [count] (≤50) messages, end-to-end
+  /// encrypted to that person's phones only. Returns how many went.
+  Future<int> sendHistory({required String roomId, required String userId, required int count}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceSendHistory(that: this, roomId: roomId, userId: userId, count: count);
+
+  /// 실시간 위치: starts sharing until `until_ms`.
+  Future<String> sendLiveLocation({required String roomId, required double lat, required double lon, double? accuracy, required BigInt untilMs}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceSendLiveLocation(that: this, roomId: roomId, lat: lat, lon: lon, accuracy: accuracy, untilMs: untilMs);
+
+  /// 움직이는 사진: still photo + short clip, both encrypted here.
+  Future<String> sendLivePhoto({
+    required String roomId,
+    required String name,
+    required String mime,
+    required List<int> data,
+    required String videoMime,
+    required List<int> video,
+    required BigInt durationMs,
+    required String style,
+    required String caption,
+  }) => RustLib.instance.api.crateApiDeviceBurumyDeviceSendLivePhoto(
+    that: this,
+    roomId: roomId,
+    name: name,
+    mime: mime,
+    data: data,
+    videoMime: videoMime,
+    video: video,
+    durationMs: durationMs,
+    style: style,
+    caption: caption,
+  );
+
   Future<String> sendLocation({required String roomId, required double lat, required double lon, double? accuracy}) =>
       RustLib.instance.api.crateApiDeviceBurumyDeviceSendLocation(that: this, roomId: roomId, lat: lat, lon: lon, accuracy: accuracy);
+
+  /// 임시 글 이어쓰기 (tip 241): my draft for a chat to my other devices
+  /// (end-to-end encrypted). False when this is my only device.
+  Future<bool> sendMyDraft({required String roomId, required String text, required BigInt at}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceSendMyDraft(that: this, roomId: roomId, text: text, at: at);
+
+  /// Sends a hidden end-to-end encrypted signal into a chat.
+  Future<void> sendSignal({required String roomId, required String kind, required String data}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceSendSignal(that: this, roomId: roomId, kind: kind, data: data);
 
   Future<String> sendSticker({required String roomId, required String stickerId}) =>
       RustLib.instance.api.crateApiDeviceBurumyDeviceSendSticker(that: this, roomId: roomId, stickerId: stickerId);
 
   Future<String> sendText({required String roomId, required String text}) =>
       RustLib.instance.api.crateApiDeviceBurumyDeviceSendText(that: this, roomId: roomId, text: text);
+
+  /// Text (or a reply when `to_event` is set) with the sender's link
+  /// card set-up (tips 400 + 401): `url` = the picked link ("" = first),
+  /// card `above` the words, `small` picture, or `off` = no card.
+  Future<String> sendTextLink({
+    required String roomId,
+    required String toEvent,
+    required String text,
+    required bool silent,
+    required String url,
+    required bool above,
+    required bool small,
+    required bool off,
+  }) => RustLib.instance.api.crateApiDeviceBurumyDeviceSendTextLink(
+    that: this,
+    roomId: roomId,
+    toEvent: toEvent,
+    text: text,
+    silent: silent,
+    url: url,
+    above: above,
+    small: small,
+    off: off,
+  );
 
   /// Sends without a notification sound on the other phones.
   Future<String> sendTextQuietly({required String roomId, required String text}) =>
@@ -6963,7 +11001,41 @@ class BurumyDeviceImpl extends RustOpaque implements BurumyDevice {
   Future<void> setChatPinned({required String roomId, required bool on_}) =>
       RustLib.instance.api.crateApiDeviceBurumyDeviceSetChatPinned(that: this, roomId: roomId, on_: on_);
 
+  Future<void> setCommunityAddAll({required String id, required bool all}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceSetCommunityAddAll(that: this, id: id, all: all);
+
+  Future<void> setCommunityAdmin({required String id, required String userId, required bool on_}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceSetCommunityAdmin(that: this, id: id, userId: userId, on_: on_);
+
+  Future<void> setCommunityChatHidden({required String id, required String roomId, required bool hidden}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceSetCommunityChatHidden(that: this, id: id, roomId: roomId, hidden: hidden);
+
+  Future<void> setCommunityInfo({required String id, required String name, required String about}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceSetCommunityInfo(that: this, id: id, name: name, about: about);
+
+  /// 이모지 상태 (tip 359): my emoji to each friend's 1:1 chat,
+  /// end-to-end encrypted. `until_ms` 0 = until I change it.
+  Future<int> setEmojiStatus({required String emoji, required BigInt untilMs}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceSetEmojiStatus(that: this, emoji: emoji, untilMs: untilMs);
+
+  Future<void> setGateHelper({required String roomId, required bool on_}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceSetGateHelper(that: this, roomId: roomId, on_: on_);
+
+  /// "아이디 검색 막기" on my account (our server hides me from search).
+  Future<void> setIdSearchHidden({required bool on_}) => RustLib.instance.api.crateApiDeviceBurumyDeviceSetIdSearchHidden(that: this, on_: on_);
+
+  Future<void> setLinkApproval({required String roomId, required bool on_}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceSetLinkApproval(that: this, roomId: roomId, on_: on_);
+
   Future<void> setLinkPreviewsEnabled({required bool on_}) => RustLib.instance.api.crateApiDeviceBurumyDeviceSetLinkPreviewsEnabled(that: this, on_: on_);
+
+  /// Biggest kept file and how long kept copies stay (None = no limit).
+  Future<void> setMediaKeep({BigInt? maxFile, BigInt? keepSecs}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceSetMediaKeep(that: this, maxFile: maxFile, keepSecs: keepSecs);
+
+  /// Someone's level: -1 (can't write), 0, 50 (admin), 100 (owner).
+  Future<void> setMemberLevel({required String roomId, required String userId, required PlatformInt64 level}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceSetMemberLevel(that: this, roomId: roomId, userId: userId, level: level);
 
   Future<void> setMyBio({required String text}) => RustLib.instance.api.crateApiDeviceBurumyDeviceSetMyBio(that: this, text: text);
 
@@ -6972,7 +11044,22 @@ class BurumyDeviceImpl extends RustOpaque implements BurumyDevice {
   Future<void> setMyPhoto({required String mime, required List<int> data}) =>
       RustLib.instance.api.crateApiDeviceBurumyDeviceSetMyPhoto(that: this, mime: mime, data: data);
 
+  /// My name / name colour in one room (None = keep).
+  Future<void> setMyRoomLook({required String roomId, String? name, String? color}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceSetMyRoomLook(that: this, roomId: roomId, name: name, color: color);
+
+  /// 멤버 태그 (556): my own tag in this room ("" removes it).
+  Future<void> setMyRoomTag({required String roomId, required String tag}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceSetMyRoomTag(that: this, roomId: roomId, tag: tag);
+
   Future<void> setNoticeTextHidden({required bool on_}) => RustLib.instance.api.crateApiDeviceBurumyDeviceSetNoticeTextHidden(that: this, on_: on_);
+
+  /// Changes one account privacy setting; `value_json` "null" removes it.
+  Future<void> setPrivacyValue({required String key, required String valueJson}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceSetPrivacyValue(that: this, key: key, valueJson: valueJson);
+
+  Future<RoomLinkRow> setPublicLink({required String roomId, required String address}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceSetPublicLink(that: this, roomId: roomId, address: address);
 
   Future<void> setPush({required String gatewayUrl, required String pushkey, required String appId}) =>
       RustLib.instance.api.crateApiDeviceBurumyDeviceSetPush(that: this, gatewayUrl: gatewayUrl, pushkey: pushkey, appId: appId);
@@ -6989,8 +11076,22 @@ class BurumyDeviceImpl extends RustOpaque implements BurumyDevice {
   Future<void> setRoomName({required String roomId, required String name}) =>
       RustLib.instance.api.crateApiDeviceBurumyDeviceSetRoomName(that: this, roomId: roomId, name: name);
 
+  /// Group/channel photo (no bytes = take it off). Admins only.
+  Future<void> setRoomPhoto({required String roomId, required String mime, required List<int> data}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceSetRoomPhoto(that: this, roomId: roomId, mime: mime, data: data);
+
   Future<void> setRoomSwitch({required String roomId, required String key, required bool on_}) =>
       RustLib.instance.api.crateApiDeviceBurumyDeviceSetRoomSwitch(that: this, roomId: roomId, key: key, on_: on_);
+
+  /// 보내는 이름 (tips 472 + 310): my next messages in this chat are sent
+  /// as `as_json` ("" = as myself).
+  void setSendAs({required String roomId, required String asJson}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceSetSendAs(that: this, roomId: roomId, asJson: asJson);
+
+  /// 주제 (tip 527): messages I send into this chat from now on carry this
+  /// topic inside their encryption; None or "g" = 일반.
+  void setSendTopic({required String roomId, String? topic}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceSetSendTopic(that: this, roomId: roomId, topic: topic);
 
   /// Stores one on-device setting (empty value removes it).
   Future<void> setSetting({required String key, required String value}) =>
@@ -7007,6 +11108,9 @@ class BurumyDeviceImpl extends RustOpaque implements BurumyDevice {
 
   /// The phone's time zone in minutes from UTC (for streak days).
   void setTzOffset({required int minutes}) => RustLib.instance.api.crateApiDeviceBurumyDeviceSetTzOffset(that: this, minutes: minutes);
+
+  Future<void> setWebPage({required String roomId, required bool on_}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceSetWebPage(that: this, roomId: roomId, on_: on_);
 
   /// Every on-device setting stored by name.
   Future<Map<String, String>> settings() => RustLib.instance.api.crateApiDeviceBurumyDeviceSettings(that: this);
@@ -7040,6 +11144,11 @@ class BurumyDeviceImpl extends RustOpaque implements BurumyDevice {
 
   Future<List<StoryRow>> stories() => RustLib.instance.api.crateApiDeviceBurumyDeviceStories(that: this);
 
+  /// Story link sticker: this phone reads the page's title and picture
+  /// (like a chat link card). The friends who see the story never contact
+  /// the website; the card travels inside the encrypted story.
+  Future<StoryLinkRow> storyLinkCard({required String url}) => RustLib.instance.api.crateApiDeviceBurumyDeviceStoryLinkCard(that: this, url: url);
+
   Future<bool> streaksEnabled() => RustLib.instance.api.crateApiDeviceBurumyDeviceStreaksEnabled(that: this);
 
   Future<void> syncOnce() => RustLib.instance.api.crateApiDeviceBurumyDeviceSyncOnce(that: this);
@@ -7050,6 +11159,12 @@ class BurumyDeviceImpl extends RustOpaque implements BurumyDevice {
   /// Friends (user ids) who deleted a 1:1 chat for both; told once.
   Future<List<String>> takeEraseNotices() => RustLib.instance.api.crateApiDeviceBurumyDeviceTakeEraseNotices(that: this);
 
+  /// Hidden signals that arrived since the last call.
+  List<SignalRow> takeSignals() => RustLib.instance.api.crateApiDeviceBurumyDeviceTakeSignals(that: this);
+
+  /// Drafts my other devices sent since the last call.
+  Future<List<SyncedDraftRow>> takeSyncedDrafts() => RustLib.instance.api.crateApiDeviceBurumyDeviceTakeSyncedDrafts(that: this);
+
   Future<bool> thisDeviceVerified() => RustLib.instance.api.crateApiDeviceBurumyDeviceThisDeviceVerified(that: this);
 
   Future<List<ChatMessage>> timeline({required String roomId, required int limit}) =>
@@ -7058,6 +11173,32 @@ class BurumyDeviceImpl extends RustOpaque implements BurumyDevice {
   Future<BigInt> timer({required String roomId}) => RustLib.instance.api.crateApiDeviceBurumyDeviceTimer(that: this, roomId: roomId);
 
   List<String> typingUsers({required String roomId}) => RustLib.instance.api.crateApiDeviceBurumyDeviceTypingUsers(that: this, roomId: roomId);
+
+  /// Moves (or, with until_ms = now, ends) my live location.
+  Future<void> updateLiveLocation({
+    required String roomId,
+    required String eventId,
+    required double lat,
+    required double lon,
+    double? accuracy,
+    required BigInt untilMs,
+  }) => RustLib.instance.api.crateApiDeviceBurumyDeviceUpdateLiveLocation(
+    that: this,
+    roomId: roomId,
+    eventId: eventId,
+    lat: lat,
+    lon: lon,
+    accuracy: accuracy,
+    untilMs: untilMs,
+  );
+
+  /// Encrypts and uploads bytes (a long post's photo); returns the file
+  /// reference JSON to place in the document.
+  Future<String> uploadEncrypted({required List<int> data}) => RustLib.instance.api.crateApiDeviceBurumyDeviceUploadEncrypted(that: this, data: data);
+
+  /// Encrypts bytes on this phone and uploads them; returns the key and
+  /// address (JSON) to put inside an encrypted signal.
+  Future<String> uploadSecret({required List<int> bytes}) => RustLib.instance.api.crateApiDeviceBurumyDeviceUploadSecret(that: this, bytes: bytes);
 
   String? userId() => RustLib.instance.api.crateApiDeviceBurumyDeviceUserId(that: this);
 
@@ -7070,4 +11211,21 @@ class BurumyDeviceImpl extends RustOpaque implements BurumyDevice {
 
   Future<void> vote({required String roomId, required String pollId, required List<String> choices}) =>
       RustLib.instance.api.crateApiDeviceBurumyDeviceVote(that: this, roomId: roomId, pollId: pollId, choices: choices);
+
+  Future<void> webPost({required String roomId, required String eventId, required String text, required BigInt ts, String? photoMime, Uint8List? photo}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceWebPost(
+        that: this,
+        roomId: roomId,
+        eventId: eventId,
+        text: text,
+        ts: ts,
+        photoMime: photoMime,
+        photo: photo,
+      );
+
+  /// Event ids of posts now on the web page, newest first.
+  Future<List<String>> webPosts({required String roomId}) => RustLib.instance.api.crateApiDeviceBurumyDeviceWebPosts(that: this, roomId: roomId);
+
+  Future<void> webUnpost({required String roomId, required String eventId}) =>
+      RustLib.instance.api.crateApiDeviceBurumyDeviceWebUnpost(that: this, roomId: roomId, eventId: eventId);
 }

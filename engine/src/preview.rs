@@ -25,17 +25,24 @@ pub struct Page {
 
 /// The first web link in a text, if any.
 pub fn first_link(text: &str) -> Option<String> {
-    text.split_whitespace()
-        .map(|w| {
-            w.trim_end_matches(|c: char| ".,!?)]}>\"'".contains(c))
-                .trim_start_matches(|c: char| "(<[\"'".contains(c))
-        })
-        .find(|w| {
-            (w.starts_with("https://") || w.starts_with("http://"))
-                && w.len() > 10
-                && w[8..].contains('.')
-        })
-        .map(str::to_owned)
+    all_links(text).into_iter().next()
+}
+
+/// Every web link in a text, in order, without repeats (tip 400: the sender
+/// can pick which one gets the card).
+pub fn all_links(text: &str) -> Vec<String> {
+    let mut out: Vec<String> = Vec::new();
+    for w in text.split_whitespace() {
+        // "[words](https://…)" marks: the address inside the brackets.
+        let w = w.rsplit("](").next().unwrap_or(w);
+        let w = w
+            .trim_end_matches(|c: char| ".,!?)]}>\"'".contains(c))
+            .trim_start_matches(|c: char| "(<[\"'".contains(c));
+        if (w.starts_with("https://") || w.starts_with("http://")) && w.len() > 10 && w[8..].contains('.') && !out.iter().any(|x| x == w) {
+            out.push(w.to_owned());
+        }
+    }
+    out
 }
 
 fn client() -> Result<reqwest::Client> {
@@ -266,6 +273,13 @@ mod tests {
         );
         assert_eq!(first_link("no link here"), None);
         assert_eq!(first_link("ftp://example.com"), None);
+    }
+
+    #[test]
+    fn lists_every_link_once() {
+        let t = "목록 https://a.com/x 그리고 [커피](https://b.org/c). 또 https://a.com/x 와 (t:123)";
+        assert_eq!(all_links(t), vec!["https://a.com/x".to_string(), "https://b.org/c".to_string()]);
+        assert!(all_links("링크 없음 [내일](t:1772272800)").is_empty());
     }
 
     #[test]

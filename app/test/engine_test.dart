@@ -21,6 +21,8 @@ Future<void> until(String what, List<BurumyDevice> devices, Future<bool> Functio
   fail('timed out: $what');
 }
 
+Future<Uint8List> alice2Probe(BurumyDevice d, String ref) => d.downloadSecret(file: ref);
+
 void main() {
   final server = Platform.environment['BURUMY_TEST_SERVER'] ?? 'http://127.0.0.1:6167';
   final invite = Platform.environment['BURUMY_TEST_INVITE'];
@@ -75,7 +77,7 @@ void main() {
     expect(seen.items[2].addedBy, bobId);
 
     // Plan: answers count per person; bob cannot cancel alice's plan.
-    final plan = await alice.createMeetup(roomId: room, title: '저녁', startsAt: BigInt.from(DateTime(2030).millisecondsSinceEpoch), place: '을지로');
+    final plan = await alice.createMeetup(roomId: room, title: '저녁', startsAt: BigInt.from(DateTime(2030).millisecondsSinceEpoch), endsAt: BigInt.zero, place: '을지로');
     await until('plan', [bob, alice], () async => (await bob.messages(roomId: room, limit: 50)).any((x) => x.meetup != null));
     await bob.answerMeetup(roomId: room, meetupId: plan, answer: 'maybe');
     await bob.answerMeetup(roomId: room, meetupId: plan, answer: 'yes');
@@ -114,6 +116,13 @@ void main() {
     await expectLater(bob.removeMember(roomId: g, userId: aliceId), throwsA(anything));
     await alice.removeMember(roomId: g, userId: bobId);
     await until('bob removed', [alice], () async => !(await alice.members(roomId: g)).any((m) => m.userId == bobId));
+
+    // 환영 인사 photo: encrypted on the phone, only the key travels (in a
+    // hidden encrypted signal); another phone decrypts the same bytes.
+    final pic = Uint8List.fromList(List.generate(70000, (i) => i % 251));
+    final ref = await alice.uploadSecret(bytes: pic);
+    expect(ref, contains('"key"'));
+    expect(await alice2Probe(bob, ref), pic);
 
     // Let the room key reach the backup, then a new phone opens history.
     await Future<void>.delayed(const Duration(seconds: 2));

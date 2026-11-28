@@ -43,7 +43,7 @@ void main() {
   testWidgets('menu rows follow the v1 order, select comes last after a gap', (t) async {
     final (_, b, room) = await start(t);
     await hold(t, '첫 글');
-    const order = ['reply', 'copy', 'edit', 'pin', 'forward', 'save', 'remind', 'emergency', 'hide-room', 'delete', 'select'];
+    const order = ['reply', 'copy', 'edit', 'pin', 'forward', 'save', 'remind', 'emergency', 'emergency-hide', 'delete', 'select'];
     final ys = [for (final id in order) t.getTopLeft(find.byKey(Key('menu-$id'))).dy];
     for (var i = 1; i < ys.length; i++) {
       expect(ys[i], greaterThan(ys[i - 1]), reason: order[i]);
@@ -113,15 +113,48 @@ void main() {
     expect(left.map((m) => m.body), ['둘째 글']);
   });
 
-  testWidgets('hide this chat in emergency: on the hide list, then off again', (t) async {
-    final (_, b, room) = await start(t);
+  testWidgets('message menu has only message items: chat hide lives on the chat list (Eric 2026-11-26)', (t) async {
+    await start(t);
     await hold(t, '첫 글');
-    await tap(t, 'menu-hide-room');
-    expect((await b.quietLists()).first, [room]);
+    expect(find.byKey(const Key('menu-hide-room')), findsNothing);
+    expect(find.text('이 메시지 비상 시 삭제'), findsOneWidget);
+    await t.tapAt(const Offset(10, 10));
+    await t.pumpAndSettle();
+  });
+
+  testWidgets('emergency hide: a marked message goes while hiding is on, a mark shows only to me', (t) async {
+    final (s, b, room) = await start(t);
+    await hold(t, '첫 글');
+    await tap(t, 'menu-emergency-hide');
+    expect(await b.hideMarkedMessages(room), hasLength(1));
+    expect(find.text('숨김 비밀번호로 열면 이 메시지가 사라져요'), findsOneWidget);
+    expect(find.byKey(const Key('mark-hide')), findsOneWidget);
     await t.pump(const Duration(seconds: 3));
     await hold(t, '첫 글');
-    await tap(t, 'menu-hide-room');
-    expect((await b.quietLists()).first, isEmpty);
+    await tap(t, 'menu-emergency');
+    expect(find.byKey(const Key('mark-delete')), findsOneWidget);
+    await t.pump(const Duration(seconds: 3));
+    // Hide password: the message is gone, also later with the normal one.
+    await b.startSession('hide');
+    await b.startSession('normal');
+    expect((await b.timeline(room)).map((m) => m.body), ['둘째 글']);
+    // Inside a hide-password session it shows again.
+    await b.startSession('hide');
+    expect((await b.timeline(room)).map((m) => m.body), ['첫 글', '둘째 글']);
+  });
+
+  testWidgets('chat info 더 보기: this chat on the hide / delete lists', (t) async {
+    final (_, b, room) = await start(t);
+    await tap(t, 'title-photo');
+    await tap(t, 'info-more');
+    expect(find.text('이 대화방 비상 시 숨김'), findsOneWidget);
+    expect(find.text('이 대화방 비상 시 삭제'), findsOneWidget);
+    await tap(t, 'more-hide-room');
+    expect((await b.quietLists()).first, [room]);
+    await t.pump(const Duration(seconds: 3));
+    await tap(t, 'info-more');
+    await tap(t, 'more-delete-room');
+    expect((await b.quietLists()).last, [room]);
     await t.pump(const Duration(seconds: 3));
   });
 
@@ -279,7 +312,7 @@ void main() {
     await tap(t, 'select-more');
     await tap(t, 'more-report');
     expect(find.textContaining('운영자가 이 글을 봐요'), findsOneWidget);
-    await tap(t, 'report-0');
+    await tap(t, 'report-1');
     expect(b.reports, [(r'$bad', '스팸', '나쁜 글')]);
     expect(find.text('신고했어요. 운영자가 확인할게요.'), findsOneWidget);
     await t.pump(const Duration(seconds: 3));
